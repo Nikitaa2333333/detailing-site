@@ -4,7 +4,7 @@ import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
 import content from '../data/content.json';
 
-const { whyUsed, catalog, testing, buyback, services, reviews, cta, contacts, brand } = content;
+const { whyUsed, catalog, newAkb, testing, buyback, roadside, reviews, cta, contacts, brand } = content;
 const fmt = new Intl.NumberFormat('ru-RU');
 ---
 
@@ -70,6 +70,22 @@ const fmt = new Intl.NumberFormat('ru-RU');
       <div class="brand-row" data-reveal-group>
         {catalog.brands.map((b) => <span class="chip" data-reveal>{b}</span>)}
       </div>
+
+      <!-- Есть и новые аккумуляторы -->
+      <div class="dark-panel new-akb" data-reveal>
+        <div class="new-akb-grid">
+          <div>
+            <h2 class="new-akb-title">{newAkb.title}</h2>
+            <p class="panel-lead">{newAkb.lead}</p>
+          </div>
+          <div class="new-akb-side">
+            <ul class="buyback-points">
+              {newAkb.points.map((point) => <li>{point}</li>)}
+            </ul>
+            <a class="btn btn--primary" href="#contacts">{newAkb.cta}</a>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -117,14 +133,29 @@ const fmt = new Intl.NumberFormat('ru-RU');
     </div>
   </section>
 
-  <!-- Услуги -->
-  <section class="section" id="services">
+  <!-- Помощь на дороге — фото во весь экран, минимум текста поверх -->
+  <section class="roadside-full" id="roadside">
+    <div class="container roadside-inner">
+      <div class="roadside-head" data-reveal>
+        <h2 class="section-title">{roadside.title}</h2>
+        <p class="panel-lead">{roadside.lead}</p>
+      </div>
+      <div class="roadside-cta" data-reveal>
+        <a class="btn btn--primary" href={`tel:${contacts.phoneHref}`}>{roadside.cta}: {contacts.phone}</a>
+        <span class="roadside-note">{roadside.note}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Карточки помощи — под фото, на чёрном -->
+  <section class="section roadside-details">
     <div class="container">
-      <div class="services-grid" data-reveal-group>
-        {services.map((s) => (
-          <article class="service-card" data-reveal>
-            <h3 class="service-title">{s.title}</h3>
-            <p class="service-text">{s.text}</p>
+      <div class="roadside-grid" data-reveal-group>
+        {roadside.items.map((s) => (
+          <article class="roadside-card" data-reveal>
+            <span class="roadside-num accent-text">{s.num}</span>
+            <h3 class="roadside-title">{s.title}</h3>
+            <p class="roadside-text">{s.text}</p>
           </article>
         ))}
       </div>
@@ -273,12 +304,9 @@ const fmt = new Intl.NumberFormat('ru-RU');
     transition: transform 0.35s var(--ease-spring);
   }
   .product-card:hover { transform: translateY(-6px); }
-  /* §3.2 подложка под фото товара — синий рефлекс */
+  /* Подложка под фото — тот же чёрный, что и фон картинок: бесшовно */
   .product-media {
-    background:
-      radial-gradient(120% 120% at 50% 100%, rgba(10, 132, 255, 0.16), transparent 60%),
-      radial-gradient(80% 80% at 50% 0%, rgba(255, 255, 255, 0.05), transparent 70%),
-      var(--surface-coal);
+    background: var(--color-void);
     padding: var(--sp-16);
   }
   .product-img {
@@ -405,19 +433,64 @@ const fmt = new Intl.NumberFormat('ru-RU');
     background: var(--color-azure-bright);
   }
 
-  /* Услуги */
-  .services-grid {
+  /* Есть и новые аккумуляторы */
+  .new-akb { margin-top: var(--sp-48); }
+  .new-akb-title {
+    font-size: var(--text-heading);
+    margin-bottom: var(--sp-20);
+  }
+  .new-akb-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: var(--sp-48);
+    align-items: center;
+  }
+  @media (max-width: 860px) {
+    .new-akb-grid { grid-template-columns: 1fr; gap: var(--sp-32); }
+  }
+
+  /* Помощь на дороге — фото на весь экран, без плашки */
+  .roadside-full {
+    min-height: 100svh;
+    display: flex;
+    align-items: flex-end;
+    padding-block: var(--section-gap);
+    color: var(--color-white);
+    /* слои: затемнение для текста → фото → синий градиент (fallback, пока фото нет) */
+    background:
+      linear-gradient(180deg, rgba(10, 10, 11, 0.55) 0%, rgba(10, 10, 11, 0.15) 35%, rgba(10, 10, 11, 0.72) 100%),
+      url('/img/roadside.jpg') center / cover no-repeat,
+      linear-gradient(115deg, #0a5cff 0%, #0a84ff 35%, #3b3bff 70%, #00c2ff 100%);
+  }
+  .roadside-inner { width: 100%; }
+  .roadside-head { max-width: 60ch; }
+  .roadside-head .section-title { max-width: none; }
+  .roadside-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: var(--sp-16);
+    margin-top: var(--sp-40);
   }
-  .service-card {
+  .roadside-card {
+    background: rgba(20, 20, 24, 0.55);
+    backdrop-filter: blur(10px);
     border-radius: var(--r-compact);
     padding: var(--sp-24);
-    background: var(--surface-charcoal);
   }
-  .service-title { font-size: 1.15rem; margin-bottom: var(--sp-8); }
-  .service-text { font-size: 0.9375rem; }
+  .roadside-num {
+    font-size: var(--text-heading-sm);
+    font-weight: var(--w-black);
+  }
+  .roadside-title { font-size: 1.15rem; margin: var(--sp-12) 0 var(--sp-8); }
+  .roadside-text { font-size: 0.9375rem; }
+  .roadside-cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-24);
+    margin-top: var(--sp-40);
+  }
+  .roadside-note { font-weight: var(--w-medium); }
 
   /* Отзывы — карточки на белой плашке */
   .reviews-grid {

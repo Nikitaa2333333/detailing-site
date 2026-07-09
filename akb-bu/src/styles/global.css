@@ -172,10 +172,20 @@ button, input, textarea, select { font: inherit; }
 }
 
 .btn--primary {
+  color: var(--color-white);
+  background: linear-gradient(115deg, #0a5cff 0%, #0a84ff 35%, #3b3bff 70%, #00c2ff 100%);
+  background-size: 220% 220%;
+  background-position: 0% 50%;
+  transition: background-position 0.4s ease-out, opacity 0.18s ease-out;
+}
+.btn--primary:hover { background-position: 100% 50%; }
+
+/* На градиентной плашке градиентная кнопка сольётся с фоном — оставляем белую */
+.gradient-panel .btn--primary {
   background: var(--color-white);
   color: var(--color-void);
 }
-.btn--primary:hover { opacity: 0.88; }
+.gradient-panel .btn--primary:hover { opacity: 0.88; }
 
 .btn--ghost {
   background: rgba(255, 255, 255, 0.1);
