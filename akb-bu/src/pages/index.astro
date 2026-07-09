@@ -12,20 +12,18 @@ const fmt = new Intl.NumberFormat('ru-RU');
   <Header />
   <Hero />
 
-  <!-- Почему Б/У выгодно — белая смысловая плашка -->
-  <section class="section" id="why">
+  <!-- Почему Б/У выгодно — белая секция во всю ширину -->
+  <section class="section section--light" id="why">
     <div class="container">
-      <div class="light-panel" data-reveal>
-        <h2 class="section-title">{whyUsed.title}</h2>
-        <div class="why-grid" data-reveal-group>
-          {whyUsed.items.map((item) => (
-            <article class="why-card" data-reveal>
-              <span class="why-num accent-text">{item.num}</span>
-              <h3 class="why-title">{item.title}</h3>
-              <p class="why-text">{item.text}</p>
-            </article>
-          ))}
-        </div>
+      <h2 class="section-title" data-reveal>{whyUsed.title}</h2>
+      <div class="why-grid" data-reveal-group>
+        {whyUsed.items.map((item) => (
+          <article class="why-card" data-reveal>
+            <span class="why-num accent-text">{item.num}</span>
+            <h3 class="why-title">{item.title}</h3>
+            <p class="why-text">{item.text}</p>
+          </article>
+        ))}
       </div>
     </div>
   </section>
@@ -85,7 +83,13 @@ const fmt = new Intl.NumberFormat('ru-RU');
   <section class="section" id="testing">
     <div class="container">
       <div class="gradient-panel testing-panel" data-reveal>
-        <h2 class="section-title">{testing.title}</h2>
+        <h2 class="section-title">
+          {testing.title}
+          <svg class="title-bolt" viewBox="0 0 24 24" aria-hidden="true">
+            <path class="title-bolt__splash" d="M13.295 10.769l2.552-5.787-7.979 7.28 3.254.225-3.353 6.362 8.485-7.388-2.959-.692z" />
+            <path d="M13.295 10.769l2.552-5.787-7.979 7.28 3.254.225-3.353 6.362 8.485-7.388-2.959-.692z" />
+          </svg>
+        </h2>
         <div class="steps-grid" data-reveal-group>
           {testing.steps.map((s) => (
             <article class="step-card" data-reveal>
@@ -133,22 +137,20 @@ const fmt = new Intl.NumberFormat('ru-RU');
     </div>
   </section>
 
-  <!-- Отзывы — белая смысловая плашка -->
-  <section class="section" id="reviews">
+  <!-- Отзывы — белая секция во всю ширину -->
+  <section class="section section--light" id="reviews">
     <div class="container">
-      <div class="light-panel" data-reveal>
-        <h2 class="section-title">{reviews.title}</h2>
-        <div class="reviews-grid" data-reveal-group>
-          {reviews.items.map((r) => (
-            <article class="review-card" data-reveal>
-              <p class="review-text">{r.text}</p>
-              <p class="review-author">
-                <strong>{r.name}</strong>
-                <span class="review-car accent-text">{r.car}</span>
-              </p>
-            </article>
-          ))}
-        </div>
+      <h2 class="section-title" data-reveal>{reviews.title}</h2>
+      <div class="reviews-grid" data-reveal-group>
+        {reviews.items.map((r) => (
+          <article class="review-card" data-reveal>
+            <p class="review-text">{r.text}</p>
+            <p class="review-author">
+              <strong>{r.name}</strong>
+              <span class="review-car accent-text">{r.car}</span>
+            </p>
+          </article>
+        ))}
       </div>
     </div>
   </section>
@@ -330,6 +332,24 @@ const fmt = new Intl.NumberFormat('ru-RU');
   /* Акцентная градиентная плашка «Как мы проверяем» */
   .testing-panel {
     padding: clamp(28px, 5vw, 64px);
+  }
+  /* Молния в заголовке — ровно в кегль строки */
+  .title-bolt {
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.08em;
+    margin-left: 0.06em;
+    overflow: visible;
+    fill: #0a0a30;
+  }
+  .title-bolt__splash {
+    animation: bolt-splash 1.5s cubic-bezier(0.165, 0.84, 0.44, 1) infinite both;
+    transform-origin: 12px 12px;
+  }
+  @keyframes bolt-splash {
+    0% { transform: scale(0.2); opacity: 0.8; }
+    80% { transform: scale(1.2); opacity: 0; }
+    100% { transform: scale(2.2); opacity: 0; }
   }
   .steps-grid {
     display: grid;

@@ -116,14 +116,12 @@ button, input, textarea, select { font: inherit; }
   color: var(--color-azure-bright);
 }
 
-/* Белая смысловая плашка — «включённый свет», текст тёмный */
-.light-panel {
+/* Белая секция во всю ширину — «включённый свет», текст тёмный */
+.section--light {
   background: #ffffff;
   color: var(--color-ink);
-  border-radius: var(--r-hero);
-  padding: clamp(28px, 5vw, 64px);
 }
-.light-panel .accent-text { color: var(--color-azure); }
+.section--light .accent-text { color: var(--color-azure); }
 
 /* Акцентная плашка — мощный анимированный сине-голубой градиент */
 .gradient-panel {
