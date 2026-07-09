@@ -1,0 +1,489 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import content from '../data/content.json';
+
+const { whyUsed, catalog, testing, buyback, services, reviews, cta, contacts, brand } = content;
+const fmt = new Intl.NumberFormat('ru-RU');
+---
+
+<Layout>
+  <Header />
+  <Hero />
+
+  <!-- Почему Б/У выгодно — белая смысловая плашка -->
+  <section class="section" id="why">
+    <div class="container">
+      <div class="light-panel" data-reveal>
+        <h2 class="section-title">{whyUsed.title}</h2>
+        <div class="why-grid" data-reveal-group>
+          {whyUsed.items.map((item) => (
+            <article class="why-card" data-reveal>
+              <span class="why-num accent-text">{item.num}</span>
+              <h3 class="why-title">{item.title}</h3>
+              <p class="why-text">{item.text}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Каталог -->
+  <section class="section" id="catalog">
+    <div class="container">
+      <h2 class="section-title" data-reveal>{catalog.title}</h2>
+
+      <div class="cat-grid" data-reveal-group>
+        {catalog.categories.map((c) => (
+          <a class="cat-card" href="#contacts" data-reveal>
+            <h3 class="cat-title">{c.title}</h3>
+            <p class="cat-desc">{c.desc}</p>
+            <p class="cat-price">от <span class="accent-text">{fmt.format(c.priceFrom)} ₽</span></p>
+          </a>
+        ))}
+      </div>
+
+      <div class="product-grid" data-reveal-group>
+        {catalog.products.map((p) => (
+          <article class="product-card glow" data-reveal>
+            <div class="product-media">
+              <svg class="product-img" viewBox="0 0 200 130" aria-hidden="true">
+                <rect x="30" y="35" width="140" height="80" rx="10" fill="#26262b" />
+                <rect x="30" y="35" width="140" height="26" rx="10" fill="#2e2e34" />
+                <rect x="48" y="24" width="18" height="14" rx="3" fill="#0a84ff" />
+                <rect x="134" y="24" width="18" height="14" rx="3" fill="#8f8f96" />
+                <text x="100" y="95" text-anchor="middle" fill="#8f8f96" font-size="13" font-family="sans-serif">{p.capacity}</text>
+              </svg>
+            </div>
+            <div class="product-body">
+              <h3 class="product-name">{p.name}</h3>
+              <div class="product-chips">
+                <span class="chip">{p.capacity}</span>
+                <span class="chip">{p.condition}</span>
+                <span class="chip">гарантия {p.warranty}</span>
+              </div>
+              <p class="product-price">
+                <span class="accent-text price-now">{fmt.format(p.price)} ₽</span>
+                <s class="price-old">{fmt.format(p.priceNew)} ₽ новый</s>
+              </p>
+              <p class="product-meta">{p.country}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <p class="catalog-note" data-reveal>{catalog.note}</p>
+      <div class="brand-row" data-reveal-group>
+        {catalog.brands.map((b) => <span class="chip" data-reveal>{b}</span>)}
+      </div>
+    </div>
+  </section>
+
+  <!-- Как мы проверяем — светлая вставка -->
+  <section class="section" id="testing">
+    <div class="container">
+      <div class="gradient-panel testing-panel" data-reveal>
+        <h2 class="section-title">{testing.title}</h2>
+        <div class="steps-grid" data-reveal-group>
+          {testing.steps.map((s) => (
+            <article class="step-card" data-reveal>
+              <span class="step-num">{s.num}</span>
+              <h3 class="step-title">{s.title}</h3>
+              <p class="step-text">{s.text}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Выкуп старых АКБ -->
+  <section class="section" id="buyback">
+    <div class="container">
+      <div class="dark-panel" data-reveal>
+        <div class="buyback-grid">
+          <div>
+            <h2 class="section-title">{buyback.title}</h2>
+            <p class="panel-lead">{buyback.lead}</p>
+          </div>
+          <div class="buyback-side" data-reveal-group>
+            <ul class="buyback-points">
+              {buyback.points.map((point) => <li data-reveal>{point}</li>)}
+            </ul>
+            <a class="btn btn--primary" href="#contacts" data-reveal>{buyback.cta}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Услуги -->
+  <section class="section" id="services">
+    <div class="container">
+      <div class="services-grid" data-reveal-group>
+        {services.map((s) => (
+          <article class="service-card" data-reveal>
+            <h3 class="service-title">{s.title}</h3>
+            <p class="service-text">{s.text}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Отзывы — белая смысловая плашка -->
+  <section class="section" id="reviews">
+    <div class="container">
+      <div class="light-panel" data-reveal>
+        <h2 class="section-title">{reviews.title}</h2>
+        <div class="reviews-grid" data-reveal-group>
+          {reviews.items.map((r) => (
+            <article class="review-card" data-reveal>
+              <p class="review-text">{r.text}</p>
+              <p class="review-author">
+                <strong>{r.name}</strong>
+                <span class="review-car accent-text">{r.car}</span>
+              </p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Заявка и контакты -->
+  <section class="section" id="contacts">
+    <div class="container">
+      <div class="gradient-panel cta-panel" data-reveal>
+        <div class="cta-grid">
+          <div>
+            <h2 class="section-title">{cta.title}</h2>
+            <p class="panel-lead">{cta.lead}</p>
+            <form class="cta-form" data-reveal-group>
+              <input class="field" type="text" name="name" placeholder="Как вас зовут" data-reveal />
+              <input class="field" type="tel" name="phone" placeholder="+7 (___) ___-__-__" required data-reveal />
+              <input class="field" type="text" name="car" placeholder="Марка и модель авто" data-reveal />
+              <button class="btn btn--primary" type="submit" data-reveal>{cta.button}</button>
+            </form>
+          </div>
+          <div class="contact-list">
+            <div class="contact-item">
+              <span class="contact-label">Телефон</span>
+              <a class="contact-value" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+            </div>
+            <div class="contact-item">
+              <span class="contact-label">WhatsApp</span>
+              <a class="contact-value" href={`https://wa.me/${contacts.whatsappHref}`}>{contacts.whatsapp}</a>
+            </div>
+            <div class="contact-item">
+              <span class="contact-label">Адрес</span>
+              <span class="contact-value">{contacts.address}</span>
+            </div>
+            <div class="contact-item">
+              <span class="contact-label">Режим работы</span>
+              <span class="contact-value">{contacts.hours}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <a class="logo" href="/">АКБ<span class="accent-text">СЕРВИС</span></a>
+      <p class="footer-tagline">{brand.tagline} · {content.meta.city}</p>
+      <p class="footer-legal">© 2026 {brand.name}. Б/У аккумуляторы с проверкой и гарантией.</p>
+    </div>
+  </footer>
+</Layout>
+
+<style>
+  .section-title {
+    font-size: var(--text-heading-lg);
+    margin: var(--sp-16) 0 var(--sp-40);
+    max-width: 20ch;
+  }
+
+  /* §3.1 свечение за карточкой — синее */
+  .glow {
+    position: relative;
+  }
+  .glow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(60% 60% at 30% 20%, rgba(10, 132, 255, 0.2), transparent 70%);
+    filter: blur(90px);
+    transition: opacity 0.2s ease-out;
+    z-index: -1;
+  }
+  .glow:hover::before {
+    background: radial-gradient(60% 60% at 30% 20%, rgba(10, 132, 255, 0.32), transparent 70%);
+  }
+
+  /* Почему Б/У — карточки на белой плашке */
+  .why-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--sp-20);
+  }
+  .why-card {
+    background: #f2f2f4;
+    border-radius: var(--r-compact);
+    padding: var(--sp-28);
+  }
+  .why-num {
+    font-size: var(--text-heading-sm);
+    font-weight: var(--w-black);
+  }
+  .why-title {
+    font-size: var(--text-heading-sm);
+    margin: var(--sp-16) 0 var(--sp-12);
+  }
+  .why-text { font-weight: var(--w-regular); }
+
+  /* Каталог */
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--sp-16);
+    margin-bottom: var(--sp-40);
+  }
+  .cat-card {
+    display: block;
+    border-radius: var(--r-compact);
+    padding: var(--sp-24);
+    background: var(--surface-charcoal);
+    transition: transform 0.35s var(--ease-spring);
+  }
+  .cat-card:hover { transform: translateY(-6px); }
+  .cat-title { font-size: 1.25rem; }
+  .cat-desc { margin: var(--sp-8) 0 var(--sp-16); }
+  .cat-price { font-weight: var(--w-bold); font-size: var(--text-body-lg); }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--sp-20);
+  }
+  .product-card {
+    background: var(--surface-charcoal);
+    border-radius: var(--r-card);
+    overflow: hidden;
+    transition: transform 0.35s var(--ease-spring);
+  }
+  .product-card:hover { transform: translateY(-6px); }
+  /* §3.2 подложка под фото товара — синий рефлекс */
+  .product-media {
+    background:
+      radial-gradient(120% 120% at 50% 100%, rgba(10, 132, 255, 0.16), transparent 60%),
+      radial-gradient(80% 80% at 50% 0%, rgba(255, 255, 255, 0.05), transparent 70%),
+      var(--surface-coal);
+    padding: var(--sp-16);
+  }
+  .product-img {
+    width: 100%;
+    height: auto;
+    transition: transform 0.35s var(--ease-spring);
+  }
+  .product-card:hover .product-img { transform: scale(1.04); }
+  .product-body { padding: var(--sp-24); }
+  .product-name { font-size: 1.2rem; }
+  .product-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-8);
+    margin: var(--sp-16) 0;
+  }
+  .product-price {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-12);
+  }
+  .price-now {
+    font-size: 1.75rem;
+    font-weight: var(--w-black);
+  }
+  .price-old {
+    color: var(--color-smoke);
+    font-size: var(--text-caption);
+  }
+  .product-meta {
+    margin-top: var(--sp-8);
+    font-size: var(--text-caption);
+    color: var(--color-ash);
+  }
+  .catalog-note {
+    margin: var(--sp-32) 0 var(--sp-16);
+    font-weight: var(--w-medium);
+  }
+  .brand-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-8);
+  }
+
+  /* Акцентная градиентная плашка «Как мы проверяем» */
+  .testing-panel {
+    padding: clamp(28px, 5vw, 64px);
+  }
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: var(--sp-16);
+  }
+  .step-card {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: var(--r-compact);
+    padding: var(--sp-24);
+  }
+  .step-num {
+    font-size: var(--text-heading-sm);
+    font-weight: var(--w-black);
+    color: var(--color-white);
+  }
+  .step-title { font-size: 1.15rem; margin: var(--sp-12) 0 var(--sp-8); }
+  .step-text { font-size: 0.9375rem; }
+
+  /* Тёмные панели */
+  .dark-panel {
+    position: relative;
+    background: var(--surface-coal);
+    border-radius: var(--r-hero);
+    padding: clamp(28px, 5vw, 64px);
+  }
+  .panel-lead {
+    font-size: var(--text-body-lg);
+    font-weight: var(--w-medium);
+    max-width: 46ch;
+  }
+  .buyback-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: var(--sp-48);
+    align-items: center;
+  }
+  .buyback-points {
+    list-style: none;
+    margin: 0 0 var(--sp-28);
+    padding: 0;
+    display: grid;
+    gap: var(--sp-16);
+  }
+  .buyback-points li {
+    padding-left: var(--sp-24);
+    position: relative;
+    font-weight: var(--w-medium);
+  }
+  .buyback-points li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 12px;
+    height: 1px;
+    background: var(--color-azure-bright);
+  }
+
+  /* Услуги */
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--sp-16);
+  }
+  .service-card {
+    border-radius: var(--r-compact);
+    padding: var(--sp-24);
+    background: var(--surface-charcoal);
+  }
+  .service-title { font-size: 1.15rem; margin-bottom: var(--sp-8); }
+  .service-text { font-size: 0.9375rem; }
+
+  /* Отзывы — карточки на белой плашке */
+  .reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--sp-20);
+  }
+  .review-card {
+    background: #f2f2f4;
+    border-radius: var(--r-card);
+    padding: var(--sp-28);
+    display: grid;
+    gap: var(--sp-20);
+    align-content: space-between;
+  }
+  .review-author {
+    display: grid;
+    gap: 2px;
+  }
+  .review-car { font-size: var(--text-caption); font-weight: var(--w-semibold); }
+
+  /* Заявка — градиентная плашка */
+  .cta-panel {
+    padding: clamp(28px, 5vw, 64px);
+  }
+  .cta-panel :global(.field) {
+    background: rgba(255, 255, 255, 0.94);
+    color: var(--color-ink);
+  }
+  .cta-panel :global(.field::placeholder) { color: #55555e; }
+  .cta-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: var(--sp-48);
+  }
+  .cta-form {
+    margin-top: var(--sp-28);
+    display: grid;
+    gap: var(--sp-12);
+    max-width: 420px;
+  }
+  .contact-list {
+    display: grid;
+    gap: var(--sp-20);
+    align-content: center;
+  }
+  .contact-item {
+    display: grid;
+    gap: 2px;
+    padding-bottom: var(--sp-16);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+  }
+  .contact-label {
+    font-size: var(--text-caption);
+    color: var(--color-white);
+    font-weight: var(--w-semibold);
+  }
+  .contact-value {
+    font-size: var(--text-body-lg);
+    font-weight: var(--w-semibold);
+  }
+
+  /* Футер */
+  .footer {
+    background: var(--surface-void);
+    border-top: 1px solid var(--color-line-soft);
+    padding-block: var(--sp-40);
+  }
+  .footer-inner {
+    display: grid;
+    gap: var(--sp-8);
+    justify-items: start;
+  }
+  .logo {
+    font-weight: var(--w-black);
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
+  }
+  .footer-tagline { font-weight: var(--w-medium); }
+  .footer-legal { font-size: var(--text-caption); color: var(--color-ash); }
+
+  @media (max-width: 860px) {
+    .buyback-grid, .cta-grid { grid-template-columns: 1fr; gap: var(--sp-32); }
+  }
+</style>

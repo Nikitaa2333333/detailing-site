@@ -1,0 +1,74 @@
+---
+import content from '../data/content.json';
+const { brand, contacts } = content;
+const nav = [
+  { href: '#catalog', label: 'Каталог' },
+  { href: '#testing', label: 'Проверка' },
+  { href: '#buyback', label: 'Выкуп' },
+  { href: '#contacts', label: 'Контакты' },
+];
+---
+
+<header class="header">
+  <a class="logo" href="/">АКБ<span class="accent-text">СЕРВИС</span></a>
+  <nav class="nav">
+    {nav.map((item) => <a href={item.href}>{item.label}</a>)}
+  </nav>
+  <div class="header-right">
+    <a class="phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+    <a class="btn btn--primary header-cta" href="#contacts">Оставить заявку</a>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    translate: -50% 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-32);
+    width: min(calc(100% - 40px), 1080px);
+    padding: 10px 12px 10px 28px;
+    border-radius: var(--r-pill);
+    background: rgba(28, 28, 32, 0.86);
+    backdrop-filter: blur(14px);
+  }
+  .logo {
+    font-weight: var(--w-black);
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
+  }
+  .nav {
+    display: flex;
+    gap: var(--sp-24);
+    margin-left: auto;
+  }
+  .nav a {
+    font-size: 0.9375rem;
+    font-weight: var(--w-medium);
+    transition: color 0.18s ease-out;
+  }
+  .nav a:hover { color: var(--color-azure-bright); }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-20);
+  }
+  .phone {
+    font-weight: var(--w-semibold);
+    font-size: 0.9375rem;
+    white-space: nowrap;
+  }
+  .header-cta {
+    padding: 12px 22px;
+    font-size: 0.9375rem;
+  }
+  @media (max-width: 900px) {
+    .nav, .phone { display: none; }
+    .header { gap: var(--sp-16); }
+    .header-right { margin-left: auto; }
+  }
+</style>

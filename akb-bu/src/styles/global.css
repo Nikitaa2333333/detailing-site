@@ -1,0 +1,247 @@
+/* АКБ Уфа — дизайн-токены (источник: DESIGN-BU.md, 1-в-1) */
+
+:root {
+  /* Цвета */
+  --color-void: #0a0a0b;
+  --color-coal: #131316;
+  --color-charcoal: #1c1c20;
+  --color-graphite: #26262b;
+  --color-line: #35353c;
+  --color-line-soft: rgba(255, 255, 255, 0.08);
+  --color-smoke: #8f8f96;
+  --color-ash: #c6c6cc;
+  --color-paper: #f7f5f0;
+  --color-paper-card: #ffffff;
+  --color-ink: #0a0a0b;
+  --color-white: #ffffff;
+
+  /* Поверхности */
+  --surface-void: var(--color-void);
+  --surface-coal: var(--color-coal);
+  --surface-charcoal: var(--color-charcoal);
+  --surface-graphite: var(--color-graphite);
+  --surface-paper: var(--color-paper);
+
+  /* Шрифт */
+  --font-body: 'Onest Variable', system-ui, sans-serif;
+  --font-display: var(--font-body);
+  --w-regular: 400;
+  --w-medium: 500;
+  --w-semibold: 600;
+  --w-bold: 700;
+  --w-black: 900;
+
+  /* Кегль */
+  --text-caption: 0.75rem;
+  --text-body: 1rem;
+  --text-body-lg: 1.125rem;
+  --text-heading-sm: 1.5rem;
+  --text-heading: clamp(2rem, 4vw, 3rem);
+  --text-heading-lg: clamp(2.5rem, 6vw, 4.5rem);
+  --text-display: clamp(3rem, 9vw, 7.5rem);
+  --text-stat: clamp(2.5rem, 5vw, 4rem);
+
+  /* Spacing */
+  --sp-4: 4px; --sp-8: 8px; --sp-12: 12px; --sp-16: 16px; --sp-20: 20px;
+  --sp-24: 24px; --sp-28: 28px; --sp-32: 32px; --sp-40: 40px; --sp-48: 48px;
+  --sp-64: 64px; --sp-80: 80px; --sp-120: 120px;
+
+  /* Раскладка */
+  --page-max: 1680px;
+  --section-gap: clamp(56px, 7vw, 96px);
+
+  /* Радиусы */
+  --r-badge: 12px;
+  --r-input: 14px;
+  --r-compact: 28px;
+  --r-card: 36px;
+  --r-hero: 48px;
+  --r-pill: 10000px;
+
+  /* Синий акцент */
+  --color-azure: #0a84ff;
+  --color-azure-bright: #3ea6ff;
+  --color-cyan: #5ac8fa;
+  --color-indigo: #3b3bff;
+
+  /* Движение */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-count: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-void);
+  color: var(--color-white);
+  font-family: var(--font-body);
+  font-weight: var(--w-regular);
+  font-size: var(--text-body);
+  line-height: 1.55;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-weight: var(--w-black);
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+}
+
+p { margin: 0; }
+
+a { color: inherit; text-decoration: none; }
+
+img, video { max-width: 100%; display: block; }
+
+button, input, textarea, select { font: inherit; }
+
+/* Раскладка */
+.container {
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: clamp(20px, 4vw, 56px);
+}
+
+.section { padding-block: var(--section-gap); }
+
+/* Акцентный текст — сплошной синий, без градиента */
+.accent-text {
+  color: var(--color-azure-bright);
+}
+
+/* Белая смысловая плашка — «включённый свет», текст тёмный */
+.light-panel {
+  background: #ffffff;
+  color: var(--color-ink);
+  border-radius: var(--r-hero);
+  padding: clamp(28px, 5vw, 64px);
+}
+.light-panel .accent-text { color: var(--color-azure); }
+
+/* Акцентная плашка — мощный анимированный сине-голубой градиент */
+.gradient-panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-hero);
+  color: var(--color-white);
+  background: linear-gradient(
+    115deg,
+    #0a5cff 0%,
+    #0a84ff 24%,
+    #3b3bff 48%,
+    #00c2ff 72%,
+    #0a84ff 100%
+  );
+  background-size: 300% 300%;
+  animation: panel-flow 14s ease-in-out infinite;
+}
+.gradient-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(80% 90% at 85% 10%, rgba(90, 200, 250, 0.55), transparent 60%),
+    radial-gradient(70% 80% at 10% 95%, rgba(59, 59, 255, 0.5), transparent 60%);
+  pointer-events: none;
+}
+.gradient-panel > * { position: relative; }
+
+@keyframes panel-flow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Кнопки — простые пилюли, без движения и обводок */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-8);
+  padding: 16px 28px;
+  border-radius: var(--r-pill);
+  font-weight: var(--w-semibold);
+  font-size: var(--text-body);
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.18s ease-out, opacity 0.18s ease-out;
+}
+
+.btn--primary {
+  background: var(--color-white);
+  color: var(--color-void);
+}
+.btn--primary:hover { opacity: 0.88; }
+
+.btn--ghost {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-white);
+}
+.btn--ghost:hover { background: rgba(255, 255, 255, 0.16); }
+
+.btn--dark {
+  background: var(--color-void);
+  color: var(--color-white);
+}
+.btn--dark:hover { opacity: 0.88; }
+
+/* Чип / бейдж */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: var(--r-badge);
+  font-size: var(--text-caption);
+  font-weight: var(--w-medium);
+  color: var(--color-white);
+  background: var(--surface-graphite);
+}
+
+/* Поле формы */
+.field {
+  width: 100%;
+  background: var(--surface-graphite);
+  color: var(--color-white);
+  border: 1px solid transparent;
+  border-radius: var(--r-input);
+  padding: 14px 16px;
+  outline: none;
+}
+.field::placeholder { color: var(--color-smoke); }
+.field:focus {
+  border-color: var(--color-cyan);
+}
+
+/* §8 Reveal при скролле */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.7s var(--ease-out-expo),
+    transform 0.7s var(--ease-out-expo);
+  transition-delay: var(--reveal-delay, 0s);
+}
+[data-reveal].is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .gradient-panel { animation: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
