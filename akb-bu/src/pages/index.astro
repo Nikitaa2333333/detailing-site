@@ -47,13 +47,7 @@ const fmt = new Intl.NumberFormat('ru-RU');
         {catalog.products.map((p) => (
           <article class="product-card glow" data-reveal>
             <div class="product-media">
-              <svg class="product-img" viewBox="0 0 200 130" aria-hidden="true">
-                <rect x="30" y="35" width="140" height="80" rx="10" fill="#26262b" />
-                <rect x="30" y="35" width="140" height="26" rx="10" fill="#2e2e34" />
-                <rect x="48" y="24" width="18" height="14" rx="3" fill="#0a84ff" />
-                <rect x="134" y="24" width="18" height="14" rx="3" fill="#8f8f96" />
-                <text x="100" y="95" text-anchor="middle" fill="#8f8f96" font-size="13" font-family="sans-serif">{p.capacity}</text>
-              </svg>
+              <img class="product-img" src={p.img} alt={`Б/У аккумулятор ${p.name}`} loading="lazy" />
             </div>
             <div class="product-body">
               <h3 class="product-name">{p.name}</h3>
@@ -289,7 +283,8 @@ const fmt = new Intl.NumberFormat('ru-RU');
   }
   .product-img {
     width: 100%;
-    height: auto;
+    height: 180px;
+    object-fit: contain;
     transition: transform 0.35s var(--ease-spring);
   }
   .product-card:hover .product-img { transform: scale(1.04); }
@@ -338,18 +333,19 @@ const fmt = new Intl.NumberFormat('ru-RU');
     width: 1em;
     height: 1em;
     vertical-align: -0.08em;
-    margin-left: 0.06em;
+    margin-left: 0.12em;
     overflow: visible;
-    fill: #0a0a30;
+    fill: var(--color-white);
+    transform: scale(1.35);
+    transform-origin: center;
   }
   .title-bolt__splash {
     animation: bolt-splash 1.5s cubic-bezier(0.165, 0.84, 0.44, 1) infinite both;
     transform-origin: 12px 12px;
   }
   @keyframes bolt-splash {
-    0% { transform: scale(0.2); opacity: 0.8; }
-    80% { transform: scale(1.2); opacity: 0; }
-    100% { transform: scale(2.2); opacity: 0; }
+    0% { transform: scale(1); opacity: 0.9; }
+    70%, 100% { transform: scale(2.3); opacity: 0; }
   }
   .steps-grid {
     display: grid;

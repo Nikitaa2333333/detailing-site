@@ -68,12 +68,12 @@
       { "title": "AGM / EFB", "desc": "Start-Stop системы, премиум-авто", "priceFrom": 4500 }
     ],
     "products": [
-      { "name": "EXTRA START L2 60 Ач", "country": "Россия", "capacity": "60 Ач", "condition": "ресурс 85%", "price": 3450, "priceNew": 7950, "warranty": "6 мес" },
-      { "name": "SOLITE 70 Ач", "country": "Корея", "capacity": "70 Ач", "condition": "ресурс 80%", "price": 2950, "priceNew": 5850, "warranty": "6 мес" },
-      { "name": "Varta Blue Dynamic 74 Ач", "country": "Германия", "capacity": "74 Ач", "condition": "ресурс 85%", "price": 4200, "priceNew": 9600, "warranty": "6 мес" },
-      { "name": "Akom Standart 62 Ач", "country": "Россия", "capacity": "62 Ач", "condition": "ресурс 75%", "price": 2600, "priceNew": 6400, "warranty": "3 мес" },
-      { "name": "HITEC Camel 100 Ач", "country": "Китай", "capacity": "100 Ач", "condition": "ресурс 80%", "price": 4900, "priceNew": 10950, "warranty": "6 мес" },
-      { "name": "Westa 192 Ач (грузовой)", "country": "Россия", "capacity": "192 Ач", "condition": "ресурс 80%", "price": 6450, "priceNew": 12950, "warranty": "6 мес" }
+      { "name": "EXTRA START L2 60 Ач", "country": "Россия", "capacity": "60 Ач", "condition": "ресурс 85%", "price": 3450, "priceNew": 7950, "warranty": "6 мес", "img": "/img/products/extra-start-60.jpg" },
+      { "name": "SOLITE 70 Ач", "country": "Корея", "capacity": "70 Ач", "condition": "ресурс 80%", "price": 2950, "priceNew": 5850, "warranty": "6 мес", "img": "/img/products/solite-70.jpg" },
+      { "name": "Varta Blue Dynamic 74 Ач", "country": "Германия", "capacity": "74 Ач", "condition": "ресурс 85%", "price": 4200, "priceNew": 9600, "warranty": "6 мес", "img": "/img/products/varta-74.png" },
+      { "name": "Akom Standart 62 Ач", "country": "Россия", "capacity": "62 Ач", "condition": "ресурс 75%", "price": 2600, "priceNew": 6400, "warranty": "3 мес", "img": "/img/products/akom-62.png" },
+      { "name": "HITEC Camel 100 Ач", "country": "Китай", "capacity": "100 Ач", "condition": "ресурс 80%", "price": 4900, "priceNew": 10950, "warranty": "6 мес", "img": "/img/products/hitec-100.png" },
+      { "name": "Westa 192 Ач (грузовой)", "country": "Россия", "capacity": "192 Ач", "condition": "ресурс 80%", "price": 6450, "priceNew": 12950, "warranty": "6 мес", "img": "/img/products/westa-192.png" }
     ],
     "brands": ["Varta", "SOLITE", "Extra Start", "Akom", "Westa", "HITEC", "Bosch", "Mutlu"]
   },
