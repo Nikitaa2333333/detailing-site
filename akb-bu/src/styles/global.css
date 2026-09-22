@@ -1,73 +1,68 @@
-/* АКБ Уфа — дизайн-токены (источник: DESIGN-BU.md, 1-в-1) */
+/* Детейлинг — база. Светлая основа, серые плашки, чёрный на акцентах.
+   Швейцарская типографика на Onest. Кнопки и чипы — пилюли. */
 
 :root {
-  /* Цвета */
-  --color-void: #0a0a0b;
-  --color-coal: #131316;
-  --color-charcoal: #1c1c20;
-  --color-graphite: #26262b;
-  --color-line: #35353c;
-  --color-line-soft: rgba(255, 255, 255, 0.08);
-  --color-smoke: #8f8f96;
-  --color-ash: #c6c6cc;
-  --color-paper: #f7f5f0;
-  --color-paper-card: #ffffff;
-  --color-ink: #0a0a0b;
+  /* Цвета — монохром */
+  --color-page: #f5f5f5;        /* фон страницы */
+  --color-tile: #e4e4e6;        /* серая плашка на светлом */
+  --color-tile-hover: #dcdcdf;
+  --color-tile-dark: #1c1c20;   /* графитовая плашка на тёмной полосе */
+  --color-tile-back: #2a2a30;   /* оборот плашки по наведению — светлее и плашки, и полосы */
   --color-white: #ffffff;
+  --color-ink: #0a0a0b;         /* текст на светлом, тёмные плашки и полосы */
+  --color-coal: #131316;
+  --color-grey-text: #8a8a8f;   /* ТОЛЬКО плейсхолдеры */
+  --color-grey-text-dark: #a9a9b0; /* ТОЛЬКО описания услуг в обороте плашки (по запросу заказчика) */
+  --color-line-ink: rgba(10, 10, 11, 0.12);
+  --color-line-white: rgba(255, 255, 255, 0.14);
 
-  /* Поверхности */
-  --surface-void: var(--color-void);
-  --surface-coal: var(--color-coal);
-  --surface-charcoal: var(--color-charcoal);
-  --surface-graphite: var(--color-graphite);
-  --surface-paper: var(--color-paper);
+  /* Янтарь из hero — единственный цветной акцент (плашка-призыв). Взят из световой балки на фото */
+  --color-amber: #ffb35c;       /* светлый край балки */
+  --color-orange: #ff8a2a;      /* ядро свечения */
+  --color-ember: #e8560f;       /* тёмный край, к которому уходит градиент */
+  --gradient-sparks: linear-gradient(160deg, var(--color-amber) 0%, var(--color-orange) 45%, var(--color-ember) 100%);
 
   /* Шрифт */
   --font-body: 'Onest Variable', system-ui, sans-serif;
-  --font-display: var(--font-body);
   --w-regular: 400;
   --w-medium: 500;
   --w-semibold: 600;
   --w-bold: 700;
-  --w-black: 900;
 
   /* Кегль */
-  --text-caption: 0.75rem;
+  --text-caption: 0.8125rem;
   --text-body: 1rem;
   --text-body-lg: 1.125rem;
-  --text-heading-sm: 1.5rem;
-  --text-heading: clamp(2rem, 4vw, 3rem);
-  --text-heading-lg: clamp(2.5rem, 6vw, 4.5rem);
-  --text-display: clamp(3rem, 9vw, 7.5rem);
-  --text-stat: clamp(2.5rem, 5vw, 4rem);
+  --text-tile: clamp(1.5rem, 2.2vw, 2.125rem);          /* название услуги в плашке */
+  --text-heading: clamp(1.75rem, 3vw, 2.75rem);          /* заголовок секции */
+  --text-display: clamp(2.25rem, 4.2vw, 4.5rem);         /* h1 — две строки над фото */
+  --text-stat: clamp(2.5rem, 4.5vw, 4rem);
 
   /* Spacing */
   --sp-4: 4px; --sp-8: 8px; --sp-12: 12px; --sp-16: 16px; --sp-20: 20px;
   --sp-24: 24px; --sp-28: 28px; --sp-32: 32px; --sp-40: 40px; --sp-48: 48px;
   --sp-64: 64px; --sp-80: 80px; --sp-120: 120px;
 
-  /* Раскладка */
-  --page-max: 1680px;
-  --section-gap: clamp(56px, 7vw, 96px);
+  /* Раскладка — крутить здесь, не в секциях */
+  --page-max: 1680px;                        /* ширина контента */
+  --gutter: clamp(20px, 3.5vw, 48px);        /* боковые поля */
+  --section-gap: clamp(40px, 5.5vw, 80px);   /* половина разрыва между секциями */
+  --header-h: 72px;
+
+  /* Мера строки, в ch — ставить на сам текстовый элемент */
+  --measure-text: 68ch;
+  --measure-lead: 56ch;
+  --measure-head: 24ch;
 
   /* Радиусы */
-  --r-badge: 12px;
-  --r-input: 14px;
-  --r-compact: 28px;
-  --r-card: 36px;
-  --r-hero: 48px;
+  --r-input: 12px;
+  --r-tile: 20px;
+  --r-panel: 24px;
   --r-pill: 10000px;
-
-  /* Синий акцент */
-  --color-azure: #0a84ff;
-  --color-azure-bright: #3ea6ff;
-  --color-cyan: #5ac8fa;
-  --color-indigo: #3b3bff;
 
   /* Движение */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-count: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -75,181 +70,189 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  background: var(--color-page);
 }
 
 body {
   margin: 0;
-  background: var(--surface-void);
-  color: var(--color-white);
+  background: var(--color-page);
+  color: var(--color-ink);
   font-family: var(--font-body);
   font-weight: var(--w-regular);
   font-size: var(--text-body);
-  line-height: 1.55;
+  line-height: 1.5;
 }
 
+/* Швейцарская типографика: плотный интерлиньяж, отрицательный трекинг, средний вес */
 h1, h2, h3, h4 {
   margin: 0;
-  font-weight: var(--w-black);
+  font-weight: var(--w-semibold);
   line-height: 1.02;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.03em;
 }
 
 p { margin: 0; }
-
 a { color: inherit; text-decoration: none; }
-
 img, video { max-width: 100%; display: block; }
-
 button, input, textarea, select { font: inherit; }
+
+/* Предохранитель: жирность внутри наборного текста запрещена */
+p b, p strong, p em, p i,
+li > b, li > strong, li > em, li > i,
+dd b, dd strong, td b, td strong {
+  font-weight: inherit !important;
+  color: inherit !important;
+  font-style: normal;
+}
+
+/* Фирменный маркер — инверсная подложка, прямоугольная */
+mark {
+  display: inline-block;
+  line-height: 0.95;
+  padding: 0.02em 0.1em 0.06em;
+  background: var(--color-ink);
+  color: var(--color-white);
+}
+::selection { background: var(--color-ink); color: var(--color-white); }
 
 /* Раскладка */
 .container {
   max-width: var(--page-max);
   margin-inline: auto;
-  padding-inline: clamp(20px, 4vw, 56px);
+  padding-inline: var(--gutter);
 }
-
 .section { padding-block: var(--section-gap); }
+.section--flush-top { padding-top: 0; }
+/* Тёмная полоса во всю ширину — чёрный фон, белый текст; чипы/кнопки инвертирует класс on-dark */
+.section--dark { background: var(--color-ink); color: var(--color-white); }
+.section--dark ::selection { background: var(--color-white); color: var(--color-ink); }
 
-/* Акцентный текст — сплошной синий, без градиента */
-.accent-text {
-  color: var(--color-azure-bright);
+/* Заголовок секции с меткой слева — швейцарская двухколонка */
+.section-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+  gap: var(--sp-24);
+  align-items: start;
+  margin-bottom: var(--sp-40);
+}
+.section-label {
+  font-size: var(--text-caption);
+  font-weight: var(--w-medium);
+  padding-top: 0.5em;
+}
+/* Без метки — заголовок прижат к левому краю контента */
+.section-head--plain { grid-template-columns: 1fr; }
+.section-title {
+  font-size: var(--text-heading);
+  max-width: var(--measure-head);
 }
 
-/* Белая секция во всю ширину — «включённый свет», текст тёмный */
-.section--light {
-  background: #ffffff;
-  color: var(--color-ink);
-}
-.section--light .accent-text { color: var(--color-azure); }
-
-/* Акцентная плашка — мощный анимированный сине-голубой градиент */
-.gradient-panel {
+/* Тёмная плашка */
+.dark-panel {
   position: relative;
   overflow: hidden;
-  border-radius: var(--r-hero);
+  background: var(--color-ink);
   color: var(--color-white);
-  background: linear-gradient(
-    115deg,
-    #0a5cff 0%,
-    #0a84ff 24%,
-    #3b3bff 48%,
-    #00c2ff 72%,
-    #0a84ff 100%
-  );
-  background-size: 300% 300%;
-  animation: panel-flow 14s ease-in-out infinite;
+  border-radius: var(--r-panel);
 }
-.gradient-panel::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(80% 90% at 85% 10%, rgba(90, 200, 250, 0.55), transparent 60%),
-    radial-gradient(70% 80% at 10% 95%, rgba(59, 59, 255, 0.5), transparent 60%);
-  pointer-events: none;
-}
-.gradient-panel > * { position: relative; }
+.dark-panel mark { background: var(--color-white); color: var(--color-ink); }
+.dark-panel ::selection { background: var(--color-white); color: var(--color-ink); }
 
-@keyframes panel-flow {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-/* Кнопки — простые пилюли, без движения и обводок */
+/* Кнопки — пилюли. Первичная инвертируется на тёмном */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--sp-8);
-  padding: 16px 28px;
+  padding: 14px 24px;
   border-radius: var(--r-pill);
-  font-weight: var(--w-semibold);
+  font-weight: var(--w-medium);
   font-size: var(--text-body);
+  line-height: 1.2;
   cursor: pointer;
   border: none;
-  transition: background-color 0.18s ease-out, opacity 0.18s ease-out;
+  white-space: nowrap;
+  transition: background-color 0.2s var(--ease-out), color 0.2s var(--ease-out);
 }
-
-.btn--primary {
-  color: var(--color-white);
-  background: linear-gradient(115deg, #0a5cff 0%, #0a84ff 35%, #3b3bff 70%, #00c2ff 100%);
-  background-size: 220% 220%;
-  background-position: 0% 50%;
-  transition: background-position 0.4s ease-out, opacity 0.18s ease-out;
-}
-.btn--primary:hover { background-position: 100% 50%; }
-
-/* На градиентной плашке градиентная кнопка сольётся с фоном — оставляем белую */
-.gradient-panel .btn--primary {
-  background: var(--color-white);
-  color: var(--color-void);
-}
-.gradient-panel .btn--primary:hover { opacity: 0.88; }
+.btn--primary { background: var(--color-ink); color: var(--color-white); }
+.btn--primary:hover { background: #2a2a2e; }
+.dark-panel .btn--primary,
+.on-dark .btn--primary { background: var(--color-white); color: var(--color-ink); }
+.dark-panel .btn--primary:hover,
+.on-dark .btn--primary:hover { background: var(--color-tile); }
 
 .btn--ghost {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-white);
+  background: transparent;
+  color: inherit;
+  box-shadow: inset 0 0 0 1.5px var(--color-line-ink);
 }
-.btn--ghost:hover { background: rgba(255, 255, 255, 0.16); }
+.btn--ghost:hover { background: rgba(10, 10, 11, 0.05); }
+.dark-panel .btn--ghost,
+.on-dark .btn--ghost { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.4); }
+.dark-panel .btn--ghost:hover,
+.on-dark .btn--ghost:hover { background: rgba(255, 255, 255, 0.1); }
 
-.btn--dark {
-  background: var(--color-void);
-  color: var(--color-white);
-}
-.btn--dark:hover { opacity: 0.88; }
+/* Лого — акцентная часть на hover загорается тем же янтарём, что и искры в CTA/hero */
+.logo-accent { transition: color 0.15s var(--ease-out); }
+.logo:hover .logo-accent { color: var(--color-orange); }
 
-/* Чип / бейдж */
+/* Чип — пилюля с обводкой, без заливки */
 .chip {
   display: inline-flex;
   align-items: center;
   padding: 6px 12px;
-  border-radius: var(--r-badge);
+  border-radius: var(--r-pill);
   font-size: var(--text-caption);
   font-weight: var(--w-medium);
-  color: var(--color-white);
-  background: var(--surface-graphite);
+  line-height: 1.2;
+  box-shadow: inset 0 0 0 1px var(--color-line-ink);
 }
+.dark-panel .chip,
+.on-dark .chip { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35); }
+
+/* Текстовая ссылка со стрелкой — швейцарский приём */
+.arrow-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-8);
+  font-size: var(--text-caption);
+  font-weight: var(--w-medium);
+  padding-bottom: 6px;
+  border-bottom: 1px solid currentColor;
+}
+.arrow-link svg { width: 14px; height: 14px; transition: transform 0.25s var(--ease-out-expo); }
+.arrow-link:hover svg { transform: translateX(4px); }
 
 /* Поле формы */
 .field {
   width: 100%;
-  background: var(--surface-graphite);
-  color: var(--color-white);
-  border: 1px solid transparent;
-  border-radius: var(--r-input);
-  padding: 14px 16px;
+  background: var(--color-white);
+  color: var(--color-ink);
+  border: 1.5px solid transparent;
+  border-radius: var(--r-pill);
+  padding: 14px 20px;
   outline: none;
+  transition: border-color 0.2s var(--ease-out);
 }
-.field::placeholder { color: var(--color-smoke); }
-.field:focus {
-  border-color: var(--color-cyan);
-}
+.field::placeholder { color: var(--color-grey-text); }
+.field:focus { border-color: var(--color-ink); }
 
-/* §8 Reveal при скролле */
+/* Reveal при скролле */
 [data-reveal] {
   opacity: 0;
-  transform: translateY(28px);
+  transform: translateY(16px);
   transition:
-    opacity 0.7s var(--ease-out-expo),
-    transform 0.7s var(--ease-out-expo);
+    opacity 0.6s var(--ease-out-expo),
+    transform 0.6s var(--ease-out-expo);
   transition-delay: var(--reveal-delay, 0s);
 }
-[data-reveal].is-revealed {
-  opacity: 1;
-  transform: none;
+[data-reveal].is-revealed { opacity: 1; transform: none; }
+
+@media (max-width: 760px) {
+  .section-head { grid-template-columns: 1fr; gap: var(--sp-12); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  [data-reveal] {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
-  .gradient-panel { animation: none; }
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-  }
+  [data-reveal] { opacity: 1; transform: none; transition: none; }
 }

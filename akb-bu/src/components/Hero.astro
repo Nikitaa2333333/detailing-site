@@ -1,124 +1,159 @@
 ---
 import content from '../data/content.json';
 const { hero } = content;
-const [before, after] = hero.title.split(hero.accentWord);
+/* Раскадровка: кадры одной сцены с разным состоянием света.
+   Кадры включаются по мере прокрутки (scroll-driven), в браузерах без поддержки — по таймеру. */
+const frames = hero.frames ?? [hero.media];
 ---
 
-<section class="hero">
-  <div class="hero-media" data-parallax>
-    <video
-      class="hero-video"
-      autoplay
-      muted
-      loop
-      playsinline
-      preload="metadata"
-      poster="/video/poster.svg"
-    >
-      <source src="/video/hero.mp4" type="video/mp4" />
-    </video>
-  </div>
-  <div class="hero-overlay"></div>
-
-  <div class="container hero-content" data-reveal-group>
-    <h1 class="hero-title" data-reveal>
-      {before}<span class="accent-text hero-accent">{hero.accentWord}</span>{after}
-    </h1>
-    <p class="hero-lead" data-reveal>{hero.lead}</p>
-    <div class="hero-cta" data-reveal>
-      <a class="btn btn--primary" href="#contacts">{hero.ctaPrimary}</a>
-      <a class="btn btn--ghost" href="#catalog">{hero.ctaSecondary}</a>
+<!-- Первый экран «липкий»: пока пользователь прокручивает --hero-travel, кадр стоит на месте,
+     а свет включается ступенями. Фото 16:9 на всю ширину, кроп только по высоте (пол). -->
+<section class="hero on-dark">
+  <div class="hero-sticky">
+    <div class="hero-media">
+      {frames.map((src, i) => {
+        /* Размеры под реальный экран: 1440 — ноутбуки 1×, 1920 — 1280 CSS-px при DPR 1.5,
+           2048 — предел исходника (выше не растягиваем). AVIF 4:4:4 — без «песка» на зерне
+           и цветных кромках, WebP — фолбэк */
+        const base = src.replace(/\.webp$/, '');
+        const avif = [1440, 1920, 2048].map((w) => `${base}-${w}.avif ${w}w`).join(', ');
+        const webp = [`${base}-1440.webp 1440w`, `${base}-1920.webp 1920w`, `${src} 2048w`].join(', ');
+        return (
+          <picture>
+            <source type="image/avif" srcset={avif} sizes="100vw" />
+            <img
+              class={`hero-frame${i === 0 ? ' hero-frame--first' : ''}`}
+              src={src}
+              srcset={webp}
+              sizes="100vw"
+              alt=""
+              fetchpriority={i === 0 ? 'high' : 'auto'}
+              decoding="async"
+              style={`--i:${i}`}
+            />
+          </picture>
+        );
+      })}
     </div>
-    <dl class="hero-stats" data-reveal>
-      {hero.stats.map((s) => (
-        <div class="stat">
-          <dt class="stat-value accent-text">
-            {s.prefix}<span data-count={s.value}>0</span>{s.suffix}
-          </dt>
-          <dd class="stat-label">{s.label}</dd>
-        </div>
-      ))}
-    </dl>
+
+    <div class="container hero-content">
+      <div class="hero-main">
+        <h1 class="hero-title">{hero.title}</h1>
+        <a class="btn btn--primary" href="#services">{hero.cta}</a>
+      </div>
+      <p class="hero-text">{hero.text}</p>
+    </div>
   </div>
 </section>
 
 <style>
   .hero {
+    /* Сколько прокрутки занимает включение света. 100svh — сам экран, остальное — «путь» */
+    --hero-travel: 140svh;
+    --frame-count: 3;
     position: relative;
-    min-height: 100svh;
-    display: flex;
-    align-items: flex-end;
-    overflow: hidden;
+    height: calc(100svh + var(--hero-travel));
+    background: #050505;
+    color: var(--color-white);
   }
+  .hero-sticky {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+    /* Изолируем от остальной страницы: перерисовки не выходят за пределы блока */
+    contain: layout paint;
+  }
+
+  /* ---- Фото: 16:9 на всю ширину; при экране ниже 16:9 кроп по высоте, срезаем пол ------ */
   .hero-media {
     position: absolute;
-    inset: -12% 0 0;
-    will-change: transform;
+    inset: 0;
   }
-  .hero-video {
+  .hero-frame {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    /* пока видео не положено в public/video — под ним холодная «ночь» */
-    background:
-      radial-gradient(90% 70% at 75% 15%, rgba(10, 132, 255, 0.16), transparent 60%),
-      radial-gradient(70% 60% at 15% 85%, rgba(59, 59, 255, 0.1), transparent 65%),
-      var(--color-coal);
+    object-position: center 22%;
+    opacity: 0;
+    /* Каждый кадр — свой слой на GPU: смена прозрачности идёт без перерисовки растра */
+    will-change: opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
-  /* §3.3 оверлей: затемнение сверху, переход в сплошной фон снизу */
-  .hero-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      180deg,
-      rgba(10, 10, 11, 0.55) 0%,
-      rgba(10, 10, 11, 0.15) 32%,
-      rgba(10, 10, 11, 0.6) 72%,
-      #0a0a0b 100%
-    );
+  .hero-frame--first { opacity: 1; }
+  @keyframes hero-frame-in {
+    to { opacity: 1; }
   }
+
+  /* Фолбэк: браузер без scroll-driven animations — кадры по таймеру */
+  .hero-frame:not(.hero-frame--first) {
+    animation: hero-frame-in 1.2s var(--ease-out) forwards;
+    animation-delay: calc(0.3s + var(--i) * 1.1s);
+  }
+  /* Скролл-таймлайн: кадр i проявляется на своём отрезке пути прокрутки */
+  @supports (animation-timeline: scroll()) {
+    .hero-frame:not(.hero-frame--first) {
+      animation: hero-frame-in linear both;
+      animation-delay: 0s;
+    }
+    /* Таймлайн — ОТДЕЛЬНЫМ правилом. Минификатор прод-сборки сворачивает animation-timeline
+       в шорткат `animation: … scroll(root)`, который Chrome не парсит: в проде кадры
+       включались по таймеру, а не по скроллу. В отдельном блоке склеивать не с чем */
+    .hero-media .hero-frame:not(.hero-frame--first) {
+      animation-timeline: scroll(root);
+      /* отрезки: кадр 1 → 5%…45% пути, кадр 2 → 50%…90% пути */
+      animation-range:
+        calc(var(--hero-travel) * (0.05 + (var(--i) - 1) * 0.45))
+        calc(var(--hero-travel) * (0.45 + (var(--i) - 1) * 0.45));
+    }
+  }
+
+  /* ---- Текст — поверх тёмного верха кадра ---------------------------------- */
   .hero-content {
     position: relative;
     width: 100%;
-    padding-block: clamp(120px, 16vh, 180px) clamp(48px, 8vh, 96px);
     display: grid;
-    gap: var(--sp-28);
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: var(--sp-40);
+    align-items: start;
+    padding-top: calc(var(--header-h) + var(--sp-24));
+  }
+  .hero-main,
+  .hero-text {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: hero-text-in 1.1s var(--ease-out-expo) forwards;
+  }
+  .hero-main { animation-delay: 0.2s; }
+  .hero-text { animation-delay: 0.4s; }
+  @keyframes hero-text-in {
+    to { opacity: 1; transform: none; }
+  }
+  .hero-main {
+    display: grid;
+    gap: var(--sp-24);
     justify-items: start;
   }
   .hero-title {
     font-size: var(--text-display);
-    line-height: 0.92;
-    letter-spacing: -0.02em;
-    max-width: 14ch;
+    max-width: 20ch;
   }
-  .hero-lead {
+  .hero-text {
     font-size: var(--text-body-lg);
-    font-weight: var(--w-medium);
-    max-width: 52ch;
+    max-width: 40ch;
+    padding-top: 0.4em;
   }
-  .hero-cta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-16);
+
+  @media (max-width: 860px) {
+    .hero-content { grid-template-columns: 1fr; gap: var(--sp-20); }
+    .hero-text { padding-top: 0; }
+    .hero-frame { object-position: 62% 40%; }
   }
-  .hero-stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: clamp(28px, 5vw, 72px);
-    margin: var(--sp-24) 0 0;
-    padding-top: var(--sp-28);
-    border-top: 1px solid var(--color-line-soft);
-    width: 100%;
-  }
-  .stat { margin: 0; }
-  .stat-value {
-    font-size: var(--text-stat);
-    font-weight: var(--w-black);
-    line-height: 1;
-  }
-  .stat-label {
-    margin: var(--sp-8) 0 0;
-    font-size: var(--text-caption);
-    font-weight: var(--w-medium);
+  @media (prefers-reduced-motion: reduce) {
+    .hero { height: 100svh; }
+    .hero-frame, .hero-main, .hero-text { animation: none; opacity: 1; transform: none; }
   }
 </style>

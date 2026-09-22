@@ -3,215 +3,130 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
 import content from '../data/content.json';
+import { categories, rub, plural } from '../lib/catalog.js';
 
-const { whyUsed, catalog, newAkb, testing, buyback, roadside, reviews, cta, contacts, brand } = content;
-const fmt = new Intl.NumberFormat('ru-RU');
+const { services, numbers, works, calc, contacts, brand, hero } = content;
 ---
 
 <Layout>
   <Header />
   <Hero />
 
-  <!-- Почему Б/У выгодно — белая секция во всю ширину -->
-  <section class="section section--light" id="why">
+  <!-- Услуги — тёмная полоса; плашка с фото занимает 2×2, по наведению показывает список услуг -->
+  <section class="section section--dark on-dark" id="services">
     <div class="container">
-      <h2 class="section-title" data-reveal>{whyUsed.title}</h2>
-      <div class="why-grid" data-reveal-group>
-        {whyUsed.items.map((item) => (
-          <article class="why-card" data-reveal>
-            <span class="why-num accent-text">{item.num}</span>
-            <h3 class="why-title">{item.title}</h3>
-            <p class="why-text">{item.text}</p>
-          </article>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- Каталог -->
-  <section class="section" id="catalog">
-    <div class="container">
-      <h2 class="section-title" data-reveal>{catalog.title}</h2>
-
-      <div class="cat-grid" data-reveal-group>
-        {catalog.categories.map((c) => (
-          <a class="cat-card" href="#contacts" data-reveal>
-            <h3 class="cat-title">{c.title}</h3>
-            <p class="cat-desc">{c.desc}</p>
-            <p class="cat-price">от <span class="accent-text">{fmt.format(c.priceFrom)} ₽</span></p>
-          </a>
-        ))}
+      <div class="section-head section-head--plain" data-reveal>
+        <h2 class="section-title">{services.title}</h2>
       </div>
 
-      <div class="product-grid" data-reveal-group>
-        {catalog.products.map((p) => (
-          <article class="product-card glow" data-reveal>
-            <div class="product-media">
-              <img class="product-img" src={p.img} alt={`Б/У аккумулятор ${p.name}`} loading="lazy" />
-            </div>
-            <div class="product-body">
-              <h3 class="product-name">{p.name}</h3>
-              <div class="product-chips">
-                <span class="chip">{p.capacity}</span>
-                <span class="chip">{p.condition}</span>
-                <span class="chip">гарантия {p.warranty}</span>
+      <div class="tiles" data-reveal-group>
+        {categories.map((c) => (
+          <article
+            class={`tile${c.media ? ' tile--media' : ''}${c.wide ? ' tile--wide' : ''}`}
+            id={`cat-${c.id}`}
+            data-tile
+            data-reveal
+          >
+            {c.media && <img class="tile-bg" src={c.media} alt="" loading="lazy" />}
+            <div class="tile-front">
+              <div class="tile-top">
+                <span class="chip">{c.tag}</span>
+                <span class="tile-count">{c.count} {plural(c.count)}</span>
               </div>
-              <p class="product-price">
-                <span class="accent-text price-now">{fmt.format(p.price)} ₽</span>
-                <s class="price-old">{fmt.format(p.priceNew)} ₽ новый</s>
-              </p>
-              <p class="product-meta">{p.country}</p>
+              <div class="tile-headline">
+                <h3 class="tile-title">{c.title}</h3>
+                <p class="tile-price">от {rub(c.from)}</p>
+              </div>
+            </div>
+            <div class="tile-back">
+              <p class="tile-back-title">{c.title}</p>
+              <ul class="tile-list">
+                {c.items.map((s) => (
+                  <li>
+                    <span class="tile-item-name">{s.title}</span>
+                    <span class="tile-item-price">от {rub(s.from)}</span>
+                  </li>
+                ))}
+              </ul>
+              <a class="tile-more" href="#contacts">
+                {services.more}
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>
             </div>
           </article>
         ))}
-      </div>
 
-      <p class="catalog-note" data-reveal>{catalog.note}</p>
-      <div class="brand-row" data-reveal-group>
-        {catalog.brands.map((b) => <span class="chip" data-reveal>{b}</span>)}
-      </div>
-
-      <!-- Есть и новые аккумуляторы -->
-      <div class="dark-panel new-akb" data-reveal>
-        <div class="new-akb-grid">
-          <div>
-            <h2 class="new-akb-title">{newAkb.title}</h2>
-            <p class="panel-lead">{newAkb.lead}</p>
+        <a class="tile tile--cta" href="#contacts" data-reveal>
+          <div class="tile-front">
+            <h3 class="tile-title">{services.cta.title}</h3>
+            <p class="tile-cta-text">{services.cta.text}</p>
+            <span class="btn btn--primary">{services.cta.button}</span>
           </div>
-          <div class="new-akb-side">
-            <ul class="buyback-points">
-              {newAkb.points.map((point) => <li>{point}</li>)}
-            </ul>
-            <a class="btn btn--primary" href="#contacts">{newAkb.cta}</a>
-          </div>
-        </div>
+        </a>
       </div>
     </div>
   </section>
 
-  <!-- Как мы проверяем — светлая вставка -->
-  <section class="section" id="testing">
+  <!-- Цифры — одна строка, крупно -->
+  <section class="section">
     <div class="container">
-      <div class="gradient-panel testing-panel" data-reveal>
-        <h2 class="section-title">
-          {testing.title}
-          <svg class="title-bolt" viewBox="0 0 24 24" aria-hidden="true">
-            <path class="title-bolt__splash" d="M13.295 10.769l2.552-5.787-7.979 7.28 3.254.225-3.353 6.362 8.485-7.388-2.959-.692z" />
-            <path d="M13.295 10.769l2.552-5.787-7.979 7.28 3.254.225-3.353 6.362 8.485-7.388-2.959-.692z" />
-          </svg>
-        </h2>
-        <div class="steps-grid" data-reveal-group>
-          {testing.steps.map((s) => (
-            <article class="step-card" data-reveal>
-              <span class="step-num">{s.num}</span>
-              <h3 class="step-title">{s.title}</h3>
-              <p class="step-text">{s.text}</p>
-            </article>
-          ))}
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Выкуп старых АКБ -->
-  <section class="section" id="buyback">
-    <div class="container">
-      <div class="dark-panel" data-reveal>
-        <div class="buyback-grid">
-          <div>
-            <h2 class="section-title">{buyback.title}</h2>
-            <p class="panel-lead">{buyback.lead}</p>
+      <dl class="numbers" data-reveal-group>
+        {numbers.map((n) => (
+          <div class="number" data-reveal>
+            <dt class="number-value">{n.value}</dt>
+            <dd class="number-label">{n.label}</dd>
           </div>
-          <div class="buyback-side" data-reveal-group>
-            <ul class="buyback-points">
-              {buyback.points.map((point) => <li data-reveal>{point}</li>)}
-            </ul>
-            <a class="btn btn--primary" href="#contacts" data-reveal>{buyback.cta}</a>
-          </div>
-        </div>
-      </div>
+        ))}
+      </dl>
     </div>
   </section>
 
-  <!-- Помощь на дороге — фото во весь экран, минимум текста поверх -->
-  <section class="roadside-full" id="roadside">
-    <div class="container roadside-inner">
-      <div class="roadside-head" data-reveal>
-        <h2 class="section-title">{roadside.title}</h2>
-        <p class="panel-lead">{roadside.lead}</p>
-      </div>
-      <div class="roadside-cta" data-reveal>
-        <a class="btn btn--primary" href={`tel:${contacts.phoneHref}`}>{roadside.cta}: {contacts.phone}</a>
-        <span class="roadside-note">{roadside.note}</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- Карточки помощи — под фото, на чёрном -->
-  <section class="section roadside-details">
+  <!-- Работы — крупные фото. Пока плейсхолдеры под рендеры -->
+  <section class="section" id="works">
     <div class="container">
-      <div class="roadside-grid" data-reveal-group>
-        {roadside.items.map((s) => (
-          <article class="roadside-card" data-reveal>
-            <span class="roadside-num accent-text">{s.num}</span>
-            <h3 class="roadside-title">{s.title}</h3>
-            <p class="roadside-text">{s.text}</p>
-          </article>
+      <div class="section-head" data-reveal>
+        <p class="section-label">{works.label}</p>
+        <h2 class="section-title">{works.title}</h2>
+      </div>
+      <div class="works" data-reveal-group>
+        {works.items.map((w, i) => (
+          <figure class={`work${w.wide ? ' work--wide' : ''}`} data-reveal>
+            <div class={`work-media${i === 0 ? ' work-media--dark' : ''}`}>
+              {i === 0 && <img src={hero.media} alt="" loading="lazy" />}
+            </div>
+            <figcaption class="work-caption">
+              <span>{w.caption}</span>
+              <span class="work-car">{w.car}</span>
+            </figcaption>
+          </figure>
         ))}
       </div>
     </div>
   </section>
 
-  <!-- Отзывы — белая секция во всю ширину -->
-  <section class="section section--light" id="reviews">
-    <div class="container">
-      <h2 class="section-title" data-reveal>{reviews.title}</h2>
-      <div class="reviews-grid" data-reveal-group>
-        {reviews.items.map((r) => (
-          <article class="review-card" data-reveal>
-            <p class="review-text">{r.text}</p>
-            <p class="review-author">
-              <strong>{r.name}</strong>
-              <span class="review-car accent-text">{r.car}</span>
-            </p>
-          </article>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- Заявка и контакты -->
+  <!-- Расчёт стоимости — тёмная плашка со световой текстурой -->
   <section class="section" id="contacts">
     <div class="container">
-      <div class="gradient-panel cta-panel" data-reveal>
-        <div class="cta-grid">
-          <div>
-            <h2 class="section-title">{cta.title}</h2>
-            <p class="panel-lead">{cta.lead}</p>
-            <form class="cta-form" data-reveal-group>
-              <input class="field" type="text" name="name" placeholder="Как вас зовут" data-reveal />
-              <input class="field" type="tel" name="phone" placeholder="+7 (___) ___-__-__" required data-reveal />
-              <input class="field" type="text" name="car" placeholder="Марка и модель авто" data-reveal />
-              <button class="btn btn--primary" type="submit" data-reveal>{cta.button}</button>
-            </form>
-          </div>
-          <div class="contact-list">
-            <div class="contact-item">
-              <span class="contact-label">Телефон</span>
-              <a class="contact-value" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+      <div class="dark-panel calc" data-reveal>
+        <img class="calc-bg" src={hero.media} alt="" loading="lazy" />
+        <div class="calc-inner">
+          <p class="section-label">{calc.label}</p>
+          <h2 class="calc-title">{calc.title}</h2>
+          <form class="calc-form">
+            <div class="calc-row">
+              <input class="field" type="tel" name="phone" placeholder="+7 (___) ___-__-__" required />
+              <button class="btn btn--primary" type="submit">{calc.button}</button>
             </div>
-            <div class="contact-item">
-              <span class="contact-label">WhatsApp</span>
-              <a class="contact-value" href={`https://wa.me/${contacts.whatsappHref}`}>{contacts.whatsapp}</a>
-            </div>
-            <div class="contact-item">
-              <span class="contact-label">Адрес</span>
-              <span class="contact-value">{contacts.address}</span>
-            </div>
-            <div class="contact-item">
-              <span class="contact-label">Режим работы</span>
-              <span class="contact-value">{contacts.hours}</span>
-            </div>
+            <label class="consent">
+              <input type="checkbox" name="consent" required />
+              <span>{calc.consent}</span>
+            </label>
+          </form>
+          <div class="calc-contacts">
+            <a href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+            <a href={`https://wa.me/${contacts.whatsappHref}`}>WhatsApp</a>
+            <a href={`https://t.me/${contacts.telegram}`}>Telegram</a>
+            <span>{contacts.hours}</span>
           </div>
         </div>
       </div>
@@ -220,359 +135,300 @@ const fmt = new Intl.NumberFormat('ru-RU');
 
   <footer class="footer">
     <div class="container footer-inner">
-      <a class="logo" href="/">АКБ<span class="accent-text">СЕРВИС</span></a>
-      <p class="footer-tagline">{brand.tagline} · {content.meta.city}</p>
-      <p class="footer-legal">© 2026 {brand.name}. Б/У аккумуляторы с проверкой и гарантией.</p>
+      <a class="logo" href="/">{brand.logo}<span class="logo-accent">{brand.logoAccent}</span></a>
+      <span class="footer-legal">© 2026 {brand.name}</span>
     </div>
   </footer>
 </Layout>
 
 <style>
-  .section-title {
-    font-size: var(--text-heading-lg);
-    margin: var(--sp-16) 0 var(--sp-40);
-    max-width: 20ch;
+  /* Плашки услуг: 3 колонки, квадраты. Плашка с фото — в ширину на две колонки: итого ровно 3 ряда по 3 */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-12);
   }
-
-  /* §3.1 свечение за карточкой — синее */
-  .glow {
+  .tile {
     position: relative;
+    overflow: hidden;
+    aspect-ratio: 1;
+    border-radius: var(--r-tile);
+    background: var(--color-tile-dark);
+    color: var(--color-white);
+    /* переход из меню: якорь не должен уезжать под фиксированную шапку */
+    scroll-margin-top: calc(var(--header-h) + var(--sp-24));
   }
-  .glow::before {
-    content: '';
+  .tile--wide { grid-column: span 2; aspect-ratio: auto; }
+  .tile-bg {
     position: absolute;
     inset: 0;
-    border-radius: inherit;
-    background: radial-gradient(60% 60% at 30% 20%, rgba(10, 132, 255, 0.2), transparent 70%);
-    filter: blur(90px);
-    transition: opacity 0.2s ease-out;
-    z-index: -1;
-  }
-  .glow:hover::before {
-    background: radial-gradient(60% 60% at 30% 20%, rgba(10, 132, 255, 0.32), transparent 70%);
-  }
-
-  /* Почему Б/У — карточки на белой плашке */
-  .why-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: var(--sp-20);
-  }
-  .why-card {
-    background: #f2f2f4;
-    border-radius: var(--r-compact);
-    padding: var(--sp-28);
-  }
-  .why-num {
-    font-size: var(--text-heading-sm);
-    font-weight: var(--w-black);
-  }
-  .why-title {
-    font-size: var(--text-heading-sm);
-    margin: var(--sp-16) 0 var(--sp-12);
-  }
-  .why-text { font-weight: var(--w-regular); }
-
-  /* Каталог */
-  .cat-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: var(--sp-16);
-    margin-bottom: var(--sp-40);
-  }
-  .cat-card {
-    display: block;
-    border-radius: var(--r-compact);
-    padding: var(--sp-24);
-    background: var(--surface-charcoal);
-    transition: transform 0.35s var(--ease-spring);
-  }
-  .cat-card:hover { transform: translateY(-6px); }
-  .cat-title { font-size: 1.25rem; }
-  .cat-desc { margin: var(--sp-8) 0 var(--sp-16); }
-  .cat-price { font-weight: var(--w-bold); font-size: var(--text-body-lg); }
-
-  .product-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: var(--sp-20);
-  }
-  .product-card {
-    background: var(--surface-charcoal);
-    border-radius: var(--r-card);
-    overflow: hidden;
-    transition: transform 0.35s var(--ease-spring);
-  }
-  .product-card:hover { transform: translateY(-6px); }
-  /* Подложка под фото — тот же чёрный, что и фон картинок: бесшовно */
-  .product-media {
-    background: var(--color-void);
-    padding: var(--sp-16);
-  }
-  .product-img {
     width: 100%;
-    height: 180px;
-    object-fit: contain;
-    transition: transform 0.35s var(--ease-spring);
-  }
-  .product-card:hover .product-img { transform: scale(1.04); }
-  .product-body { padding: var(--sp-24); }
-  .product-name { font-size: 1.2rem; }
-  .product-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-8);
-    margin: var(--sp-16) 0;
-  }
-  .product-price {
-    display: flex;
-    align-items: baseline;
-    gap: var(--sp-12);
-  }
-  .price-now {
-    font-size: 1.75rem;
-    font-weight: var(--w-black);
-  }
-  .price-old {
-    color: var(--color-smoke);
-    font-size: var(--text-caption);
-  }
-  .product-meta {
-    margin-top: var(--sp-8);
-    font-size: var(--text-caption);
-    color: var(--color-ash);
-  }
-  .catalog-note {
-    margin: var(--sp-32) 0 var(--sp-16);
-    font-weight: var(--w-medium);
-  }
-  .brand-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-8);
+    height: 100%;
+    object-fit: cover;
   }
 
-  /* Акцентная градиентная плашка «Как мы проверяем» */
-  .testing-panel {
-    padding: clamp(28px, 5vw, 64px);
+  .tile-front {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--sp-20);
   }
-  /* Молния в заголовке — ровно в кегль строки */
-  .title-bolt {
-    width: 1em;
-    height: 1em;
-    vertical-align: -0.08em;
-    margin-left: 0.12em;
-    overflow: visible;
-    fill: var(--color-white);
-    transform: scale(1.35);
-    transform-origin: center;
+  .tile-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--sp-8);
   }
-  .title-bolt__splash {
-    animation: bolt-splash 1.5s cubic-bezier(0.165, 0.84, 0.44, 1) infinite both;
-    transform-origin: 12px 12px;
+  .tile-count { font-size: var(--text-caption); font-weight: var(--w-medium); }
+  .tile-headline { display: grid; gap: var(--sp-8); }
+  .tile-title {
+    font-size: var(--text-tile);
+    max-width: 10ch;
   }
-  @keyframes bolt-splash {
-    0% { transform: scale(1); opacity: 0.9; }
-    70%, 100% { transform: scale(2.3); opacity: 0; }
-  }
-  .steps-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: var(--sp-16);
-  }
-  .step-card {
-    background: rgba(255, 255, 255, 0.14);
-    border-radius: var(--r-compact);
-    padding: var(--sp-24);
-  }
-  .step-num {
-    font-size: var(--text-heading-sm);
-    font-weight: var(--w-black);
-    color: var(--color-white);
-  }
-  .step-title { font-size: 1.15rem; margin: var(--sp-12) 0 var(--sp-8); }
-  .step-text { font-size: 0.9375rem; }
-
-  /* Тёмные панели */
-  .dark-panel {
-    position: relative;
-    background: var(--surface-coal);
-    border-radius: var(--r-hero);
-    padding: clamp(28px, 5vw, 64px);
-  }
-  .panel-lead {
+  /* Цена «от» — витринный ярлык, а не наборный текст: отсюда вес и табличные цифры */
+  .tile-price {
     font-size: var(--text-body-lg);
     font-weight: var(--w-medium);
-    max-width: 46ch;
+    font-variant-numeric: tabular-nums;
   }
-  .buyback-grid {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: var(--sp-48);
-    align-items: center;
-  }
-  .buyback-points {
-    list-style: none;
-    margin: 0 0 var(--sp-28);
-    padding: 0;
-    display: grid;
-    gap: var(--sp-16);
-  }
-  .buyback-points li {
-    padding-left: var(--sp-24);
-    position: relative;
-    font-weight: var(--w-medium);
-  }
-  .buyback-points li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.6em;
-    width: 12px;
-    height: 1px;
-    background: var(--color-azure-bright);
-  }
+  .tile--media .tile-title,
+  .tile--media .tile-price { text-shadow: 0 1px 24px rgba(0, 0, 0, 0.4); }
 
-  /* Есть и новые аккумуляторы */
-  .new-akb { margin-top: var(--sp-48); }
-  .new-akb-title {
-    font-size: var(--text-heading);
+  /* Оборот плашки — тёмная панель своего оттенка, чтобы не сливалась с полосой. Без трансформов:
+     просто кроссфейд, чтобы кромка второго слоя не просвечивала на скруглённых углах */
+  .tile-back {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--sp-20);
+    background: var(--color-tile-back);
+    color: var(--color-white);
+    opacity: 0;
+    transition: opacity 0.2s var(--ease-out);
+  }
+  /* На обороте лицо плашки скрыто — название категории повторяем меткой.
+     Список идёт сразу под ней, ссылка прижата к низу */
+  .tile-back { justify-content: flex-start; }
+  .tile-back-title {
+    font-size: var(--text-caption);
+    font-weight: var(--w-medium);
     margin-bottom: var(--sp-20);
   }
-  .new-akb-grid {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: var(--sp-48);
-    align-items: center;
-  }
-  @media (max-width: 860px) {
-    .new-akb-grid { grid-template-columns: 1fr; gap: var(--sp-32); }
-  }
-
-  /* Помощь на дороге — фото на весь экран, без плашки */
-  .roadside-full {
-    min-height: 100svh;
-    display: flex;
-    align-items: flex-end;
-    padding-block: var(--section-gap);
-    color: var(--color-white);
-    /* слои: затемнение для текста → фото → синий градиент (fallback, пока фото нет) */
-    background:
-      linear-gradient(180deg, rgba(10, 10, 11, 0.55) 0%, rgba(10, 10, 11, 0.15) 35%, rgba(10, 10, 11, 0.72) 100%),
-      url('/img/roadside.jpg') center / cover no-repeat,
-      linear-gradient(115deg, #0a5cff 0%, #0a84ff 35%, #3b3bff 70%, #00c2ff 100%);
-  }
-  .roadside-inner { width: 100%; }
-  .roadside-head { max-width: 60ch; }
-  .roadside-head .section-title { max-width: none; }
-  .roadside-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: var(--sp-16);
-    margin-top: var(--sp-40);
-  }
-  .roadside-card {
-    background: rgba(20, 20, 24, 0.55);
-    backdrop-filter: blur(10px);
-    border-radius: var(--r-compact);
-    padding: var(--sp-24);
-  }
-  .roadside-num {
-    font-size: var(--text-heading-sm);
-    font-weight: var(--w-black);
-  }
-  .roadside-title { font-size: 1.15rem; margin: var(--sp-12) 0 var(--sp-8); }
-  .roadside-text { font-size: 0.9375rem; }
-  .roadside-cta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--sp-24);
-    margin-top: var(--sp-40);
-  }
-  .roadside-note { font-weight: var(--w-medium); }
-
-  /* Отзывы — карточки на белой плашке */
-  .reviews-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--sp-20);
-  }
-  .review-card {
-    background: #f2f2f4;
-    border-radius: var(--r-card);
-    padding: var(--sp-28);
-    display: grid;
-    gap: var(--sp-20);
-    align-content: space-between;
-  }
-  .review-author {
-    display: grid;
-    gap: 2px;
-  }
-  .review-car { font-size: var(--text-caption); font-weight: var(--w-semibold); }
-
-  /* Заявка — градиентная плашка */
-  .cta-panel {
-    padding: clamp(28px, 5vw, 64px);
-  }
-  .cta-panel :global(.field) {
-    background: rgba(255, 255, 255, 0.94);
-    color: var(--color-ink);
-  }
-  .cta-panel :global(.field::placeholder) { color: #55555e; }
-  .cta-grid {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: var(--sp-48);
-  }
-  .cta-form {
-    margin-top: var(--sp-28);
+  .tile-back .tile-more { margin-top: auto; padding-top: var(--sp-20); }
+  /* Раскрытие: наведение, фокус внутри (клавиатура) и клик из меню — .is-open */
+  .tile:hover .tile-back,
+  .tile:focus-within .tile-back,
+  .tile.is-open .tile-back { opacity: 1; }
+  .tile-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     display: grid;
     gap: var(--sp-12);
-    max-width: 420px;
+    align-content: start;
   }
-  .contact-list {
-    display: grid;
-    gap: var(--sp-20);
-    align-content: center;
+  /* Строка мини-прайса: название слева, цена справа. Разделительных линий нет */
+  .tile-list li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-16);
   }
-  .contact-item {
-    display: grid;
-    gap: 2px;
-    padding-bottom: var(--sp-16);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+  .tile-item-name { line-height: 1.2; }
+  .tile-item-price {
+    flex: none;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
-  .contact-label {
+  .tile--wide .tile-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-12) var(--sp-48);
+  }
+  .tile--wide .tile-list li { font-size: var(--text-body-lg); }
+  .tile-more {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-8);
     font-size: var(--text-caption);
+    font-weight: var(--w-medium);
+  }
+  .tile-more svg { width: 14px; height: 14px; }
+
+  /* Призыв — последняя плашка, тёмная, с янтарным свечением «искр» из hero в углу.
+     В ширину на две колонки: 6 категорий + широкий «Уход» + она = ровно 3 ряда по 3 */
+  .tile--cta {
+    position: relative;
+    overflow: hidden;
+    grid-column: span 2;
+    aspect-ratio: auto;
+    background: var(--color-tile-dark);
     color: var(--color-white);
-    font-weight: var(--w-semibold);
   }
-  .contact-value {
-    font-size: var(--text-body-lg);
-    font-weight: var(--w-semibold);
+  .tile--cta::before {
+    content: '';
+    position: absolute;
+    inset: -30%;
+    background: radial-gradient(circle at 75% 15%, var(--color-orange) 0%, var(--color-ember) 32%, transparent 65%);
+    opacity: 0.55;
+    filter: blur(60px);
+    pointer-events: none;
   }
+  .tile--cta .tile-front { position: relative; z-index: 1; justify-content: flex-end; gap: var(--sp-16); align-items: flex-start; }
+  .tile--cta .tile-title { max-width: 14ch; }
+  .tile-cta-text { max-width: 30ch; color: var(--color-grey-text-dark); }
+  .tile--cta .btn--primary { background: var(--color-white); color: var(--color-ink); }
+  .tile--cta .btn--primary:hover { background: var(--color-tile); }
+
+  /* Цифры */
+  .numbers {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--sp-24);
+    margin: 0;
+  }
+  .number { margin: 0; }
+  .number-value {
+    font-size: var(--text-stat);
+    font-weight: var(--w-semibold);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .number-label {
+    margin: var(--sp-8) 0 0;
+    font-size: var(--text-caption);
+    font-weight: var(--w-medium);
+  }
+
+  /* Работы */
+  .works {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-12);
+  }
+  .work { margin: 0; }
+  .work--wide { grid-column: span 2; }
+  .work-media {
+    aspect-ratio: 4 / 3;
+    border-radius: var(--r-tile);
+    background: var(--color-tile);
+    overflow: hidden;
+  }
+  .work--wide .work-media { aspect-ratio: 8 / 3; }
+  .work-media--dark { background: var(--color-ink); }
+  .work-media img { width: 100%; height: 100%; object-fit: cover; }
+  .work-caption {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--sp-16);
+    padding-top: var(--sp-12);
+    font-size: var(--text-caption);
+    font-weight: var(--w-medium);
+  }
+  .work-car { white-space: nowrap; }
+
+  /* Расчёт */
+  .calc { padding: clamp(28px, 5vw, 72px); }
+  .calc-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: right top;
+  }
+  .calc-inner {
+    position: relative;
+    display: grid;
+    gap: var(--sp-24);
+    justify-items: start;
+    max-width: 640px;
+  }
+  .calc-title {
+    font-size: var(--text-heading);
+    max-width: 22ch;
+  }
+  .calc-form { display: grid; gap: var(--sp-16); width: 100%; }
+  .calc-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--sp-8);
+  }
+  .consent {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-12);
+    font-size: var(--text-caption);
+    cursor: pointer;
+    max-width: 48ch;
+  }
+  .consent input {
+    appearance: none;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin: 1px 0 0;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+  }
+  .consent input::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-white);
+    transform: scale(0);
+    transition: transform 0.15s var(--ease-out);
+  }
+  .consent input:checked::before { transform: scale(1); }
+  .calc-contacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-8) var(--sp-24);
+    font-size: var(--text-caption);
+    font-weight: var(--w-medium);
+    padding-top: var(--sp-16);
+  }
+  .calc-contacts a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
   /* Футер */
-  .footer {
-    background: var(--surface-void);
-    border-top: 1px solid var(--color-line-soft);
-    padding-block: var(--sp-40);
-  }
+  .footer { padding-block: var(--sp-32); }
   .footer-inner {
-    display: grid;
-    gap: var(--sp-8);
-    justify-items: start;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--sp-16);
+    border-top: 1px solid var(--color-line-ink);
+    padding-top: var(--sp-24);
+    font-size: var(--text-caption);
   }
-  .logo {
-    font-weight: var(--w-black);
-    font-size: 1.15rem;
-    letter-spacing: 0.02em;
-  }
-  .footer-tagline { font-weight: var(--w-medium); }
-  .footer-legal { font-size: var(--text-caption); color: var(--color-ash); }
+  .logo { font-weight: var(--w-bold); letter-spacing: 0.02em; }
+  .logo-accent { font-weight: var(--w-regular); }
 
+  @media (max-width: 1100px) {
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    /* Две колонки: широкий «Уход» и призыв занимают ряд целиком, остальные — парами */
+    .tile--wide .tile-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-32) var(--sp-24); }
+  }
   @media (max-width: 860px) {
-    .buyback-grid, .cta-grid { grid-template-columns: 1fr; gap: var(--sp-32); }
+    .works { grid-template-columns: 1fr; }
+    .work--wide { grid-column: auto; }
+    .work--wide .work-media { aspect-ratio: 4 / 3; }
+    .calc-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .tiles { grid-template-columns: 1fr; }
+    .tile, .tile--wide, .tile--cta { grid-column: auto; aspect-ratio: 5 / 4; }
+    /* Узкая колонка: мини-прайс в обороте — одна колонка и базовый кегль */
+    .tile--wide .tile-list { grid-template-columns: 1fr; }
+    .tile--wide .tile-list li { font-size: var(--text-body); }
   }
 </style>

@@ -1,12 +1,17 @@
+Правила проекта — в [../CLAUDE.md](../CLAUDE.md). Здесь только специфика Astro.
+
 ## Development
 
-When starting the dev server, use background mode:
+Дев-сервер — только в фоне и с явным хостом и портом (без этого порт наружу не отдаётся):
 
 ```
-astro dev --background
+npx astro dev --background --host 127.0.0.1 --port 4321
 ```
 
 Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
+
+HMR scoped-стилей `.astro`-компонентов на этом пути (в имени папки пробел) не работает —
+после правки компонента сервер перезапускать: `astro dev stop` → старт.
 
 ## Documentation
 

@@ -1,115 +1,299 @@
 ---
 import content from '../data/content.json';
-const { contacts } = content;
-const nav = [
-  { href: '#catalog', label: 'Каталог' },
-  { href: '#testing', label: 'Проверка' },
-  { href: '#buyback', label: 'Выкуп' },
-  { href: '#contacts', label: 'Контакты' },
-];
+import { categories, rub, plural } from '../lib/catalog.js';
+const { contacts, brand, nav, services } = content;
 ---
 
-<div class="header-wrap" id="header-wrap">
-  <header class="header-main">
-    <a class="logo" href="/">АКБ<span class="accent-text">СЕРВИС</span></a>
+<!-- Шапка без подложки: на hero видна всегда, после hero пропадает, при скролле вверх возвращается.
+     Цвет — через переключение класса (белый над тёмным, чёрный над светлым).
+     «Услуги» раскрывают карту прайса: наведение открывает, клик фиксирует (замечание к ТЗ —
+     на референсе строка не фиксируется и уводит курсор мимо нужного пункта). -->
+<header class="header on-dark" id="header">
+  <div class="container header-inner">
+    <a class="logo" href="/">{brand.logo}<span class="logo-accent">{brand.logoAccent}</span></a>
     <nav class="nav">
-      {nav.map((item) => <a href={item.href}>{item.label}</a>)}
+      <button class="nav-link nav-toggle" type="button" id="services-toggle" aria-expanded="false" aria-controls="services-menu">
+        {services.menuTitle}
+        <svg class="nav-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6.5 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      {nav.map((item) => <a class="nav-link" href={item.href}>{item.label}</a>)}
     </nav>
-    <a class="btn btn--primary header-cta" href="#contacts">Оставить заявку</a>
-  </header>
-  <span class="pill-contact pill-address">{contacts.address}</span>
-  <a class="pill-contact pill-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
-</div>
+    <a class="header-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+    <a class="btn btn--primary header-cta" href="#contacts">Связаться</a>
+  </div>
+
+  <div class="mega" id="services-menu">
+    <div class="mega-grid">
+      {categories.map((c) => (
+        <div class="mega-col">
+          <a class="mega-head" href={`#cat-${c.id}`} data-tile={c.id}>
+            <span class="mega-title">{c.title}</span>
+            <span class="mega-count">{c.count} {plural(c.count)}</span>
+          </a>
+          <ul class="mega-list">
+            {c.items.map((i) => (
+              <li>
+                <a href={`#cat-${c.id}`} data-tile={c.id}>
+                  <span>{i.title}</span>
+                  <span class="mega-price">от {rub(i.from)}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+    <p class="mega-note">{services.menuNote}</p>
+  </div>
+</header>
 
 <script>
-  const wrap = document.getElementById('header-wrap');
+  const header = document.getElementById('header');
+  const hero = document.querySelector('.hero');
+  const toggle = document.getElementById('services-toggle');
+  const mega = document.getElementById('services-menu');
+
+  /* ——— Карта услуг ——— */
+  let pinned = false; // зафиксировано кликом: наведение больше не закрывает
+  const setMenu = (open) => {
+    if (!open) pinned = false;
+    header?.classList.toggle('is-menu-open', open);
+    toggle?.setAttribute('aria-expanded', String(open));
+  };
+  const isOpen = () => header?.classList.contains('is-menu-open');
+
+  toggle?.addEventListener('click', () => {
+    if (isOpen() && pinned) return setMenu(false);
+    pinned = true;
+    setMenu(true);
+  });
+  // На тачскрине hover эмулируется кликом — там работает только фиксация
+  const canHover = window.matchMedia('(hover: hover)').matches;
+  if (canHover) {
+    toggle?.addEventListener('pointerenter', () => setMenu(true));
+    header?.addEventListener('pointerleave', () => {
+      if (!pinned) setMenu(false);
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isOpen()) {
+      setMenu(false);
+      toggle?.focus();
+    }
+  });
+  document.addEventListener('click', (e) => {
+    if (isOpen() && !header?.contains(e.target)) setMenu(false);
+  });
+
+  /* Переход из меню: прокрутка к плашке категории и её раскрытие */
+  const openTile = (id) => {
+    document.querySelectorAll('[data-tile].is-open').forEach((t) => t.classList.remove('is-open'));
+    document.getElementById(`cat-${id}`)?.classList.add('is-open');
+  };
+  mega?.querySelectorAll('a[data-tile]').forEach((link) => {
+    link.addEventListener('click', () => {
+      setMenu(false);
+      openTile(link.dataset.tile);
+    });
+  });
+  // Наведение на другую плашку снимает фиксацию — иначе раскрытыми окажутся две
+  document.addEventListener('pointerover', (e) => {
+    const tile = e.target?.closest?.('[data-tile]');
+    document.querySelectorAll('[data-tile].is-open').forEach((t) => {
+      if (t !== tile) t.classList.remove('is-open');
+    });
+  });
+
+  /* ——— Поведение самой шапки ——— */
+  let hidden = false;
+  let lastY = window.scrollY;
   let ticking = false;
+  const HIDE_DELTA = 8; // мелкие дёргания скролла не переключают состояние
+  const setHidden = (value) => {
+    if (value === hidden) return; // состояние не изменилось — DOM не трогаем
+    hidden = value;
+    header?.classList.toggle('is-hidden', hidden);
+    if (hidden) setMenu(false); // уезжающая шапка не должна тянуть за собой меню
+  };
+  // Что лежит под нижней кромкой шапки: тёмная поверхность → белый текст, иначе чёрный
+  const DARK = '.hero, .section--dark, .dark-panel, .mega';
+  let onLight = false;
+  const updateTone = () => {
+    if (!header) return;
+    const probe = document.elementFromPoint(window.innerWidth / 2, header.offsetHeight + 1);
+    const light = !!probe && !probe.closest(DARK);
+    if (light === onLight) return;
+    onLight = light;
+    header.classList.toggle('is-on-light', light);
+    header.classList.toggle('on-dark', !light);
+  };
+  const update = () => {
+    ticking = false;
+    const y = window.scrollY;
+    const threshold = hero ? hero.offsetHeight - 80 : 40;
+    const delta = y - lastY;
+    if (y <= threshold) {
+      setHidden(false); // на первом экране шапка видна всегда
+    } else if (Math.abs(delta) >= HIDE_DELTA) {
+      setHidden(delta > 0); // ниже hero: вниз — прячем, вверх — показываем
+    }
+    if (Math.abs(delta) >= HIDE_DELTA) lastY = y;
+    updateTone();
+  };
   window.addEventListener(
     'scroll',
     () => {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(() => {
-        wrap?.classList.toggle('is-scrolled', window.scrollY > 120);
-        ticking = false;
-      });
+      requestAnimationFrame(update);
     },
     { passive: true }
   );
+  update();
 </script>
 
 <style>
-  .header-wrap {
+  .header {
     position: fixed;
-    top: 16px;
-    left: 50%;
-    translate: -50% 0;
+    top: 0;
+    left: 0;
+    right: 0;
     z-index: 100;
-    display: flex;
-    align-items: stretch;
-    gap: var(--sp-12);
-    width: min(calc(100% - 40px), 1320px);
+    color: var(--color-white);
+    transition: color 0.2s var(--ease-out), opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out);
   }
-  .header-main {
-    flex: 1;
+  /* Над светлой секцией — чёрный текст, подложки по-прежнему нет */
+  .header.is-on-light { color: var(--color-ink); }
+  /* Свёрнутое состояние — тихое растворение с лёгким сдвигом */
+  .header.is-hidden { opacity: 0; transform: translateY(-12px); pointer-events: none; }
+  .header-inner {
+    height: var(--header-h);
     display: flex;
     align-items: center;
     gap: var(--sp-32);
-    padding: 10px 12px 10px 28px;
-    border-radius: var(--r-pill);
-    background: rgba(28, 28, 32, 0.86);
-    backdrop-filter: blur(14px);
-    transition:
-      opacity 0.45s var(--ease-out-expo),
-      transform 0.45s var(--ease-out-expo);
-  }
-  .is-scrolled .header-main {
-    opacity: 0;
-    transform: translateY(-140%);
-    pointer-events: none;
   }
   .logo {
-    font-weight: var(--w-black);
-    font-size: 1.15rem;
+    font-weight: var(--w-bold);
+    font-size: 1.05rem;
     letter-spacing: 0.02em;
   }
-  .nav {
-    display: flex;
-    gap: var(--sp-24);
-    margin-left: auto;
-  }
-  .nav a {
-    font-size: 0.9375rem;
+  .logo-accent { font-weight: var(--w-regular); }
+
+  .nav { display: flex; align-items: center; gap: var(--sp-24); }
+  .nav-link {
+    font-size: var(--text-caption);
     font-weight: var(--w-medium);
-    transition: color 0.18s ease-out;
+    padding-block: 4px;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s var(--ease-out);
   }
-  .nav a:hover { color: var(--color-azure-bright); }
-  .header-cta {
-    padding: 12px 22px;
-    font-size: 0.9375rem;
-    white-space: nowrap;
-  }
-
-  /* Плашки контактов — остаются при скролле */
-  .pill-contact {
-    display: flex;
+  .nav-link:hover { border-color: currentColor; }
+  .nav-toggle {
+    display: inline-flex;
     align-items: center;
-    padding: 0 22px;
-    border-radius: var(--r-pill);
-    background: rgba(28, 28, 32, 0.86);
-    backdrop-filter: blur(14px);
-    white-space: nowrap;
-    font-size: 0.9375rem;
+    gap: var(--sp-8);
+    background: none;
+    border: none;
+    border-bottom: 1px solid transparent;
+    padding-inline: 0;
+    color: inherit;
+    cursor: pointer;
   }
-  .pill-address { font-weight: var(--w-medium); }
-  .pill-phone { font-weight: var(--w-bold); }
+  .nav-chevron {
+    width: 12px;
+    height: 12px;
+    transition: transform 0.2s var(--ease-out);
+  }
+  .header.is-menu-open .nav-toggle { border-color: currentColor; }
+  .header.is-menu-open .nav-chevron { transform: rotate(180deg); }
 
-  @media (max-width: 1280px) {
-    .pill-address { display: none; }
+  /* Карта услуг — тёмная панель шириной с контент, под шапкой */
+  .mega {
+    position: absolute;
+    top: var(--header-h);
+    left: 50%;
+    width: min(100% - var(--gutter) * 2, var(--page-max) - var(--gutter) * 2);
+    padding: var(--sp-32) var(--sp-40) var(--sp-24);
+    border-radius: var(--r-panel);
+    background: var(--color-tile-dark);
+    color: var(--color-white);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -8px);
+    transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out), visibility 0.2s;
+  }
+  .header.is-menu-open .mega {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+  }
+  .mega-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-32) var(--sp-48);
+  }
+  .mega-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-16);
+    padding-bottom: var(--sp-12);
+  }
+  .mega-title {
+    font-size: var(--text-body-lg);
+    font-weight: var(--w-semibold);
+    letter-spacing: -0.02em;
+  }
+  .mega-head:hover .mega-title { text-decoration: underline; text-underline-offset: 4px; }
+  .mega-count {
+    flex: none;
+    font-size: var(--text-caption);
+    font-weight: var(--w-medium);
+  }
+  .mega-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--sp-8);
+    font-size: var(--text-caption);
+  }
+  .mega-list a {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-16);
+  }
+  .mega-list a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .mega-price {
+    flex: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .mega-note {
+    margin-top: var(--sp-32);
+    padding-top: var(--sp-16);
+    border-top: 1px solid var(--color-line-white);
+    font-size: var(--text-caption);
+  }
+
+  .header-phone {
+    margin-left: auto;
+    font-size: var(--text-caption);
+    font-weight: var(--w-medium);
+    white-space: nowrap;
+  }
+  .header-cta {
+    padding: 10px 18px;
+    font-size: var(--text-caption);
+  }
+
+  @media (max-width: 1240px) {
+    .mega-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 900px) {
-    .nav { display: none; }
-    .pill-phone { display: none; }
-    .header-main { gap: var(--sp-16); justify-content: space-between; }
+    .nav, .mega { display: none; }
+  }
+  @media (max-width: 600px) {
+    .header-phone { display: none; }
   }
 </style>

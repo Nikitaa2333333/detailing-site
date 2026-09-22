@@ -1,2 +1,13 @@
-# Ignore local video files at root
+# Видео и картинки-черновики в корне
 /*.mp4
+/Gemini_Generated_Image*.png
+
+# Исходные документы заказчика — источник для импорта, в репозиторий не кладём
+/*.xlsx
+/*.docx
+
+# Служебное
+.playwright-mcp/
+node_modules/
+dist/
+.DS_Store
