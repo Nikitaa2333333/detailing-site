@@ -137,6 +137,7 @@ const { contacts, brand, nav, services } = content;
     const y = window.scrollY;
     const threshold = hero ? hero.offsetHeight - 80 : 40;
     const delta = y - lastY;
+    header?.classList.toggle('is-solid', y > threshold);
     if (y <= threshold) {
       setHidden(false); // на первом экране шапка видна всегда
     } else if (Math.abs(delta) >= HIDE_DELTA) {
@@ -167,8 +168,12 @@ const { contacts, brand, nav, services } = content;
     color: var(--color-white);
     transition: color 0.2s var(--ease-out), opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out);
   }
-  /* Над светлой секцией — чёрный текст, подложки по-прежнему нет */
+  /* Над светлой секцией — чёрный текст */
   .header.is-on-light { color: var(--color-ink); }
+  /* Ниже первого экрана шапка возвращается поверх контента — без подложки её текст
+     сливался с текстом плашек. Подложка в тон поверхности под шапкой */
+  .header.is-solid { background: var(--color-ink); }
+  .header.is-solid.is-on-light { background: var(--color-page); }
   /* Свёрнутое состояние — тихое растворение с лёгким сдвигом */
   .header.is-hidden { opacity: 0; transform: translateY(-12px); pointer-events: none; }
   .header-inner {

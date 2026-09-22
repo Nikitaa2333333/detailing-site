@@ -119,7 +119,6 @@
         "tag": "Уход",
         "title": "Мойка и уход",
         "media": "/img/tiles/uhod.webp",
-        "wide": true,
         "sheets": [
           {
             "sheet": "Экстерьер (кузов)",
@@ -145,7 +144,8 @@
             "sheet": "Мототехника",
             "title": "Мототехника"
           }
-        ]
+        ],
+        "wide": true
       },
       {
         "id": "himchistka",

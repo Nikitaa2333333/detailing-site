@@ -1,6 +1,7 @@
 ---
 /* Плашки категорий услуг. Лицо — название и цена «от», оборот по наведению —
-   мини-прайс со ссылками на услуги. Последняя плашка — призыв с янтарным свечением.
+   мини-прайс со ссылками на услуги. Одна категория (wide в content.json) — крупная 2×2.
+   Призыв «Не знаете, с чего начать?» — отдельным блоком под сеткой, без плашки.
    Данные считаются из прайса в lib/catalog.js, руками цены не проставляем. */
 import { categories, rub, plural } from '../lib/catalog.js';
 import { asset } from '../lib/paths.js';
@@ -43,16 +44,17 @@ const { cta, more, href = '#contacts' } = Astro.props;
     </article>
   ))}
 
-  {cta && (
-    <a class="tile tile--cta" href={href}>
-      <div class="tile-front">
-        <h3 class="tile-title">{cta.title}</h3>
-        <p class="tile-cta-text">{cta.text}</p>
-        <span class="btn btn--primary">{cta.button}</span>
-      </div>
-    </a>
-  )}
 </div>
+
+{cta && (
+  <div class="tiles-cta">
+    <div class="tiles-cta-text">
+      <h3 class="tiles-cta-title">{cta.title}</h3>
+      <p>{cta.text}</p>
+    </div>
+    <a class="btn btn--primary" href={href}>{cta.button}</a>
+  </div>
+)}
 
 <script>
   /* Тап по плашке на тач-экране: открыть оборот / закрыть. Ссылки внутри открытого
@@ -74,23 +76,27 @@ const { cta, more, href = '#contacts' } = Astro.props;
 </script>
 
 <style>
-  /* Плашки услуг: 3 колонки, квадраты. Плашка с фото — в ширину на две колонки: итого ровно 3 ряда по 3 */
+  /* Плашки услуг: 3 колонки, квадраты. Крупная плашка — 2×2 в левом верхнем углу,
+     остальные пять обтекают её: 4 + 5 клеток = ровно 3 ряда по 3, без дыр */
   .tiles {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-flow: dense;
     gap: var(--sp-12);
   }
   .tile {
     position: relative;
     overflow: hidden;
-    aspect-ratio: 1;
+    /* Пропорция — переменной: её же держит раскрытый на таче оборот как минимальную */
+    --tile-ratio: 1;
+    aspect-ratio: var(--tile-ratio);
     border-radius: var(--r-tile);
     background: var(--color-tile-dark);
     color: var(--color-white);
     /* переход из меню: якорь не должен уезжать под фиксированную шапку */
     scroll-margin-top: calc(var(--header-h) + var(--sp-24));
   }
-  .tile--wide { grid-column: span 2; aspect-ratio: auto; }
+  .tile--wide { grid-column: 1 / span 2; grid-row: 1 / span 2; aspect-ratio: auto; }
   .tile-bg {
     position: absolute;
     inset: 0;
@@ -151,9 +157,11 @@ const { cta, more, href = '#contacts' } = Astro.props;
     font-weight: var(--w-semibold);
     letter-spacing: -0.02em;
     line-height: 1.1;
-    margin-bottom: var(--sp-20);
+    margin-bottom: var(--sp-16);
   }
+  /* Кнопка прижата к низу, но от последней строки прайса всегда отбита */
   .tile-back .tile-more { margin-top: auto; }
+  .tile-back .tile-list { margin-bottom: var(--sp-24); }
   /* Раскрытие: наведение (только там, где есть курсор — на тач-экране «липкий» hover
      путает), фокус внутри (клавиатура), клик из меню и тап — .is-open */
   @media (hover: hover) {
@@ -173,7 +181,7 @@ const { cta, more, href = '#contacts' } = Astro.props;
     margin: 0;
     padding: 0;
     display: grid;
-    gap: var(--sp-4);
+    gap: 2px;
     align-content: start;
   }
   /* Строка мини-прайса: название слева, цена справа. Разделительных линий нет —
@@ -185,7 +193,7 @@ const { cta, more, href = '#contacts' } = Astro.props;
     justify-content: space-between;
     gap: var(--sp-16);
     margin-inline: calc(var(--sp-8) * -1);
-    padding: 6px var(--sp-8);
+    padding: 5px var(--sp-8);
     border-radius: var(--r-row);
     transition: background-color var(--t-hover-out) var(--ease-out);
   }
@@ -202,6 +210,24 @@ const { cta, more, href = '#contacts' } = Astro.props;
     gap: var(--sp-12) var(--sp-48);
   }
   .tile--wide .tile-list li { font-size: var(--text-body-lg); }
+  /* Крупная плашка: строк мало, места много — список и кнопка вместе внизу,
+     заголовок наверху. Иначе между списком и кнопкой зияет пустота */
+  .tile--wide .tile-list { margin-top: auto; }
+  .tile--wide .tile-back .tile-more { margin-top: 0; }
+  /* …а фото на обороте не пропадает: сверху просвечивает, к низу уходит в плотный фон
+     под прайсом. Лицо плашки при этом прячем, чтобы его подписи не просвечивали */
+  .tile--wide.tile--media .tile-back {
+    background: linear-gradient(to top,
+      var(--color-tile-back) 0%,
+      var(--color-tile-back) 40%,
+      color-mix(in srgb, var(--color-tile-back) 25%, transparent) 100%);
+  }
+  .tile--wide.tile--media .tile-back-title { text-shadow: 0 1px 24px rgba(0, 0, 0, 0.4); }
+  @media (hover: hover) {
+    .tile--wide:hover .tile-front { opacity: 0; }
+  }
+  .tile--wide:focus-within .tile-front,
+  .tile--wide.is-open .tile-front { opacity: 0; }
   /* Переход к заявке — кнопка в ободке, а не текстовая ссылка: на обороте плашки
      это единственное целевое действие, оно должно читаться кнопкой. Заливка остаётся
      за первичной кнопкой в плашке-призыве — здесь вторая ступень иерархии */
@@ -210,54 +236,49 @@ const { cta, more, href = '#contacts' } = Astro.props;
     font-size: var(--text-body);
   }
 
-  /* Призыв — не плашка: текст и кнопка прямо на полосе, без подложки и свечения.
-     На ПК занимает оставшиеся две клетки сетки и прижат к её низу */
-  .tile--cta {
-    grid-column: span 2;
-    aspect-ratio: auto;
-    background: none;
-    border-radius: 0;
-    overflow: visible;
+  /* Призыв — не плашка и не клетка сетки: текст и кнопка отдельной строкой под плашками */
+  .tiles-cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--sp-24) var(--sp-48);
+    margin-top: var(--sp-64);
   }
-  .tile--cta .tile-front {
-    position: relative;
-    height: 100%;
-    justify-content: flex-end;
-    align-items: flex-start;
-    gap: var(--sp-16);
-    padding: 0;
-  }
-  .tile--cta .tile-title { max-width: 14ch; }
-  .tile-cta-text { max-width: 30ch; }
+  .tiles-cta-text { display: grid; gap: var(--sp-12); }
+  .tiles-cta-title { font-size: var(--text-tile); }
+  .tiles-cta-text p { max-width: var(--measure-lead); font-size: var(--text-body-lg); }
 
+  /* Тач-экраны (телефон, планшет): курсора нет, оборот открывается тапом. Открытая плашка
+     вырастает под весь список — оборот встаёт в поток и держит пропорцию закрытой как
+     минимум (overflow у него visible, длинный список тянет вниз). Соседи по ряду не
+     растягиваются за ней; крупная 2×2 по-прежнему занимает свои два ряда */
+  @media (hover: none) {
+    .tiles { align-items: start; }
+    .tile--wide { align-self: stretch; }
+    .tile.is-open,
+    .tile.is-open:not(.tile--wide):last-child { aspect-ratio: auto; }
+    .tile.is-open .tile-back { position: relative; inset: auto; aspect-ratio: var(--tile-ratio); }
+    .tile.is-open .tile-front { opacity: 0; }
+  }
+
+  /* Две колонки: крупная — во всю ширину 2:1, остальные пять парами,
+     последняя растягивается на ряд — дыры нет */
   @media (max-width: 1100px) {
     .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    /* Две колонки: широкий «Уход» и призыв занимают ряд целиком, остальные — парами */
-    .tile--wide .tile-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tile--wide { grid-column: 1 / -1; grid-row: auto; --tile-ratio: 2 / 1; aspect-ratio: var(--tile-ratio); }
+    .tile:not(.tile--wide):last-child { grid-column: 1 / -1; --tile-ratio: 2 / 1; }
   }
-  /* Телефон: плашки во всю ширину экрана — выходим за боковые поля контейнера.
-     Все плашки одного вида: лицо 5:4, по тапу оборот встаёт в поток и плашка
-     вырастает под весь список — ничего не обрезается */
+  /* Телефон: одна колонка в полях контейнера. Все плашки одного вида: лицо 5:4,
+     по тапу оборот встаёт в поток и плашка вырастает под весь список — ничего не обрезается */
   @media (max-width: 560px) {
-    .tiles {
-      grid-template-columns: 1fr;
-      gap: var(--sp-8);
-      margin-inline: calc(var(--gutter) * -1);
-    }
-    .tile, .tile--wide { grid-column: auto; aspect-ratio: 5 / 4; }
-    .tile.is-open { aspect-ratio: auto; }
-    /* Оборот держит 5:4 как минимум (у него overflow visible — длинный список растягивает
-       его вниз), поэтому короткие списки не делают плашку ниже закрытой */
-    .tile.is-open .tile-back { position: relative; inset: auto; aspect-ratio: 5 / 4; }
-    .tile.is-open .tile-front { opacity: 0; }
-    .tile-back { padding: var(--sp-24) var(--gutter); }
-    .tile-front { padding: var(--sp-20) var(--gutter); }
-    .tile-more { margin-top: var(--sp-24); }
+    .tiles { grid-template-columns: 1fr; gap: var(--sp-12); }
+    .tile, .tile--wide, .tile:not(.tile--wide):last-child { grid-column: auto; grid-row: auto; --tile-ratio: 5 / 4; }
     /* Узкая колонка: мини-прайс в обороте — одна колонка и базовый кегль */
     .tile--wide .tile-list { grid-template-columns: 1fr; }
     .tile--wide .tile-list li { font-size: var(--text-body); }
     .tile-list a { padding-block: 8px; }
-    /* Призыв возвращается в поля контейнера — это текст, а не плашка */
-    .tile--cta { grid-column: auto; aspect-ratio: auto; padding: var(--sp-32) var(--gutter) 0; }
+    .tiles-cta { margin-top: var(--sp-48); }
+    .tiles-cta-text p { font-size: var(--text-body); }
   }
 </style>
