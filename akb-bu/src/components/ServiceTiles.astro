@@ -1,6 +1,6 @@
 ---
 /* Плашки категорий услуг. Лицо — название и цена «от», оборот по наведению —
-   мини-прайс со ссылками на услуги. Одна категория (wide в content.json) — крупная 2×2.
+   мини-прайс со ссылками на услуги. Три категории (wide в content.json) — в ширину на две колонки.
    Призыв «Не знаете, с чего начать?» — отдельным блоком под сеткой, без плашки.
    Данные считаются из прайса в lib/catalog.js, руками цены не проставляем. */
 import { categories, rub, plural } from '../lib/catalog.js';
@@ -76,12 +76,12 @@ const { cta, more, href = '#contacts' } = Astro.props;
 </script>
 
 <style>
-  /* Плашки услуг: 3 колонки, квадраты. Крупная плашка — 2×2 в левом верхнем углу,
-     остальные пять обтекают её: 4 + 5 клеток = ровно 3 ряда по 3, без дыр */
+  /* Плашки услуг: 3 колонки, высота у всех одна — квадрат узкой плашки. Три широкие
+     (на две колонки) и три узкие ёлочкой: Ш+У / У+Ш / Ш+У = ровно 3 ряда, без дыр.
+     В высоту плашки не растягиваем — только в ширину */
   .tiles {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-auto-flow: dense;
     gap: var(--sp-12);
   }
   .tile {
@@ -96,7 +96,7 @@ const { cta, more, href = '#contacts' } = Astro.props;
     /* переход из меню: якорь не должен уезжать под фиксированную шапку */
     scroll-margin-top: calc(var(--header-h) + var(--sp-24));
   }
-  .tile--wide { grid-column: 1 / span 2; grid-row: 1 / span 2; aspect-ratio: auto; }
+  .tile--wide { grid-column: span 2; aspect-ratio: auto; }
   .tile-bg {
     position: absolute;
     inset: 0;
@@ -210,24 +210,6 @@ const { cta, more, href = '#contacts' } = Astro.props;
     gap: var(--sp-12) var(--sp-48);
   }
   .tile--wide .tile-list li { font-size: var(--text-body-lg); }
-  /* Крупная плашка: строк мало, места много — список и кнопка вместе внизу,
-     заголовок наверху. Иначе между списком и кнопкой зияет пустота */
-  .tile--wide .tile-list { margin-top: auto; }
-  .tile--wide .tile-back .tile-more { margin-top: 0; }
-  /* …а фото на обороте не пропадает: сверху просвечивает, к низу уходит в плотный фон
-     под прайсом. Лицо плашки при этом прячем, чтобы его подписи не просвечивали */
-  .tile--wide.tile--media .tile-back {
-    background: linear-gradient(to top,
-      var(--color-tile-back) 0%,
-      var(--color-tile-back) 40%,
-      color-mix(in srgb, var(--color-tile-back) 25%, transparent) 100%);
-  }
-  .tile--wide.tile--media .tile-back-title { text-shadow: 0 1px 24px rgba(0, 0, 0, 0.4); }
-  @media (hover: hover) {
-    .tile--wide:hover .tile-front { opacity: 0; }
-  }
-  .tile--wide:focus-within .tile-front,
-  .tile--wide.is-open .tile-front { opacity: 0; }
   /* Переход к заявке — кнопка в ободке, а не текстовая ссылка: на обороте плашки
      это единственное целевое действие, оно должно читаться кнопкой. Заливка остаётся
      за первичной кнопкой в плашке-призыве — здесь вторая ступень иерархии */
@@ -255,25 +237,23 @@ const { cta, more, href = '#contacts' } = Astro.props;
      растягиваются за ней; крупная 2×2 по-прежнему занимает свои два ряда */
   @media (hover: none) {
     .tiles { align-items: start; }
-    .tile--wide { align-self: stretch; }
-    .tile.is-open,
-    .tile.is-open:not(.tile--wide):last-child { aspect-ratio: auto; }
+    .tile.is-open { aspect-ratio: auto; }
     .tile.is-open .tile-back { position: relative; inset: auto; aspect-ratio: var(--tile-ratio); }
     .tile.is-open .tile-front { opacity: 0; }
   }
 
-  /* Две колонки: крупная — во всю ширину 2:1, остальные пять парами,
-     последняя растягивается на ряд — дыры нет */
+  /* Две колонки: все шесть — одинаковые квадраты, три ряда по две, без дыр */
   @media (max-width: 1100px) {
     .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .tile--wide { grid-column: 1 / -1; grid-row: auto; --tile-ratio: 2 / 1; aspect-ratio: var(--tile-ratio); }
-    .tile:not(.tile--wide):last-child { grid-column: 1 / -1; --tile-ratio: 2 / 1; }
+    .tile--wide { grid-column: auto; aspect-ratio: var(--tile-ratio); }
+    .tile--wide .tile-list { grid-template-columns: 1fr; gap: 2px; }
+    .tile--wide .tile-list li { font-size: var(--text-body); }
   }
   /* Телефон: одна колонка в полях контейнера. Все плашки одного вида: лицо 5:4,
      по тапу оборот встаёт в поток и плашка вырастает под весь список — ничего не обрезается */
   @media (max-width: 560px) {
     .tiles { grid-template-columns: 1fr; gap: var(--sp-12); }
-    .tile, .tile--wide, .tile:not(.tile--wide):last-child { grid-column: auto; grid-row: auto; --tile-ratio: 5 / 4; }
+    .tile, .tile--wide { grid-column: auto; --tile-ratio: 5 / 4; }
     /* Узкая колонка: мини-прайс в обороте — одна колонка и базовый кегль */
     .tile--wide .tile-list { grid-template-columns: 1fr; }
     .tile--wide .tile-list li { font-size: var(--text-body); }
