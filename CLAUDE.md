@@ -61,13 +61,14 @@ cd akb-bu && python scripts/import-prices.py   # xlsx в родительско�
 Человек не должен теряться в 162 позициях. Формы: имя + телефон с маской, чекбокс согласия,
 в заявку уходят URL страницы, марка/модель/класс, UTM.
 
-**5. Деплой.** Тестовый контур поднят: репозиторий
-[Nikitaa2333333/detailing-site](https://github.com/Nikitaa2333333/detailing-site), сборка и
-выкладка на Pages по push в `main`, витрина — https://nikitaa2333333.github.io/detailing-site/.
-Хостинг и домен не выбраны, **переезд стоит двух переменных** `SITE_URL` и `BASE_PATH` в
-[.github/workflows/deploy.yml](.github/workflows/deploy.yml): пути к файлам и внутренние
+**5. Деплой.** Боевой контур: домен **ds-sever.ru**, хостинг Reg.ru (тот же аккаунт, что у
+noblefarm.ru и park-sever.ru). Push в `main` → GitHub Actions собирает и льёт `dist` по SCP
+в каталог домена. Подробности, доступы и порядок действий — в
+[DEPLOYMENT.md](DEPLOYMENT.md). Адрес сайта и префикс пути живут в `SITE_URL`/`BASE_PATH`
+в [.github/workflows/deploy.yml](.github/workflows/deploy.yml): пути к файлам и внутренние
 ссылки идут через [akb-bu/src/lib/paths.js](akb-bu/src/lib/paths.js), абсолютных `/img/…`
-и `href="/…"` в компонентах быть не должно.
+и `href="/…"` в компонентах быть не должно. Пока идёт дизайн, сайт закрыт от поисковиков
+переменной `SITE_NOINDEX` (мета-тег + `robots.txt`) — снять перед сдачей.
 
 **6. SEO и скорость.** Уникальные title/description, canonical, schema.org
 (LocalBusiness / Service / BreadcrumbList / FAQPage), sitemap.xml, robots.txt, редиректы.

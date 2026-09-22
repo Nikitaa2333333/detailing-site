@@ -1,49 +1,56 @@
-# Тестовая витрина на GitHub Pages. Хостинг ещё не выбран: адрес сайта и префикс пути
-# живут здесь, в двух переменных. Переезд на свой домен — правка SITE_URL/BASE_PATH
-# (или другой job деплоя), исходники при этом не меняются.
-name: Deploy to GitHub Pages
+# Боевой контур: сборка и выкладка на хостинг Reg.ru по SSH/SCP при каждом push в main.
+# Аккаунт хостинга общий с noblefarm.ru, park-sever.ru, fgsever.ru — тот же сервер,
+# тот же ключ, различается только каталог домена.
+#
+# Адрес сайта и префикс пути живут в двух переменных ниже: переезд на другой домен или
+# в подпапку — правка SITE_URL/BASE_PATH, исходники при этом не меняются.
+# SITE_NOINDEX=1 закрывает сайт от поисковиков (robots.txt + мета-тег) на время разработки;
+# снять — поставить пустое значение и запушить.
+name: Deploy to Reg.ru
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 concurrency:
-  group: pages
+  group: deploy
   cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     env:
-      SITE_URL: https://nikitaa2333333.github.io
-      BASE_PATH: /detailing-site/
+      SITE_URL: https://ds-sever.ru
+      BASE_PATH: /
+      SITE_NOINDEX: '1'
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: akb-bu/package-lock.json
+
       - run: npm ci
         working-directory: akb-bu
+
       - run: npm run build
         working-directory: akb-bu
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: akb-bu/dist
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      # rm: true чистит каталог домена перед заливкой — в нём не должно лежать ничего,
+      # чего нет в репозитории (файлы подтверждения Вебмастера кладём в akb-bu/public).
+      # .htaccess указан отдельной строкой: glob dist/* точечные файлы не забирает.
+      - name: Deploy to hosting via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: server66.hosting.reg.ru
+          username: ${{ secrets.HOSTING_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          source: "akb-bu/dist/*,akb-bu/dist/.htaccess"
+          target: "/var/www/${{ secrets.HOSTING_USER }}/data/www/ds-sever.ru"
+          strip_components: 2
+          overwrite: true
+          rm: true
