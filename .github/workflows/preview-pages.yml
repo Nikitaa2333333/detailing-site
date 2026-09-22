@@ -1,0 +1,49 @@
+# Превью на GitHub Pages: рабочие ветки claude/** собираются и выкладываются в ветку gh-pages,
+# сайт открывается по адресу https://nikitaa2333333.github.io/detailing-site/.
+# Боевой контур (dssever.ru) — отдельно, в deploy.yml, только из main.
+#
+# Разово в настройках репозитория: Settings → Pages → Source: Deploy from a branch,
+# ветка gh-pages, папка / (root). Превью закрыто от поисковиков (SITE_NOINDEX).
+name: Preview on GitHub Pages
+
+on:
+  push:
+    branches: ['claude/**']
+  workflow_dispatch:
+
+concurrency:
+  group: preview-pages
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    env:
+      SITE_URL: https://nikitaa2333333.github.io
+      BASE_PATH: /detailing-site/
+      SITE_NOINDEX: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: akb-bu/package-lock.json
+
+      - run: npm ci
+        working-directory: akb-bu
+
+      - run: npm run build
+        working-directory: akb-bu
+
+      # Кладёт dist в ветку gh-pages с .nojekyll — иначе Pages не отдаёт папку _astro
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: akb-bu/dist
+          publish_branch: gh-pages
+          force_orphan: true

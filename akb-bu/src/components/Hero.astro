@@ -149,10 +149,34 @@ const frames = hero.frames ?? [hero.media];
     padding-top: 0.4em;
   }
 
+  /* Телефон и планшет в портрете: кадр целиком, 16:9 на всю ширину без кропа,
+     текст — под ним. Липкость и смена кадров по скроллу остаются те же */
   @media (max-width: 860px) {
-    .hero-content { grid-template-columns: 1fr; gap: var(--sp-20); }
-    .hero-text { padding-top: 0; }
-    .hero-frame { object-position: 62% 40%; }
+    .hero-sticky {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-top: var(--header-h);
+    }
+    .hero-media {
+      position: relative;
+      inset: auto;
+      flex: none;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      /* Кадр растворяется в канве сверху и снизу — без резкой кромки фото */
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 78%, transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 78%, transparent 100%);
+    }
+    .hero-frame { object-position: center; }
+    .hero-content {
+      grid-template-columns: 1fr;
+      gap: var(--sp-16);
+      padding-top: var(--sp-24);
+      padding-bottom: var(--sp-24);
+    }
+    .hero-main { gap: var(--sp-20); }
+    .hero-text { padding-top: 0; font-size: var(--text-body); }
   }
   @media (prefers-reduced-motion: reduce) {
     .hero { height: 100svh; }
