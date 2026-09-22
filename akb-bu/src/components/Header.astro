@@ -98,8 +98,11 @@ const { contacts, brand, nav, services } = content;
       if (link.dataset.tile) openTile(link.dataset.tile);
     });
   });
-  // Наведение на другую плашку снимает фиксацию — иначе раскрытыми окажутся две
+  // Наведение на другую плашку снимает фиксацию — иначе раскрытыми окажутся две.
+  // Только там, где есть курсор: на тач-экране браузер шлёт pointerover и после тапа,
+  // и при сдвиге вёрстки — он закрывал только что открытую плашку
   document.addEventListener('pointerover', (e) => {
+    if (!matchMedia('(hover: hover)').matches) return;
     const tile = e.target?.closest?.('[data-tile]');
     document.querySelectorAll('[data-tile].is-open').forEach((t) => {
       if (t !== tile) t.classList.remove('is-open');

@@ -57,7 +57,7 @@ const { cta, more, href = '#contacts' } = Astro.props;
 <script>
   /* Тап по плашке на тач-экране: открыть оборот / закрыть. Ссылки внутри открытого
      оборота работают как обычно; открытой может быть только одна плашка */
-  const tiles = document.querySelectorAll('[data-tile]');
+  const tiles = document.querySelectorAll('.tile[data-tile]');
   tiles.forEach((tile) => {
     tile.addEventListener('click', (e) => {
       if (!matchMedia('(hover: none)').matches) return; // с курсором хватает наведения
@@ -246,7 +246,9 @@ const { cta, more, href = '#contacts' } = Astro.props;
     }
     .tile, .tile--wide { grid-column: auto; aspect-ratio: 5 / 4; }
     .tile.is-open { aspect-ratio: auto; }
-    .tile.is-open .tile-back { position: relative; inset: auto; }
+    /* Оборот держит 5:4 как минимум (у него overflow visible — длинный список растягивает
+       его вниз), поэтому короткие списки не делают плашку ниже закрытой */
+    .tile.is-open .tile-back { position: relative; inset: auto; aspect-ratio: 5 / 4; }
     .tile.is-open .tile-front { opacity: 0; }
     .tile-back { padding: var(--sp-24) var(--gutter); }
     .tile-front { padding: var(--sp-20) var(--gutter); }
@@ -256,6 +258,6 @@ const { cta, more, href = '#contacts' } = Astro.props;
     .tile--wide .tile-list li { font-size: var(--text-body); }
     .tile-list a { padding-block: 8px; }
     /* Призыв возвращается в поля контейнера — это текст, а не плашка */
-    .tile--cta { grid-column: auto; padding: var(--sp-40) var(--gutter) 0; }
+    .tile--cta { grid-column: auto; aspect-ratio: auto; padding: var(--sp-32) var(--gutter) 0; }
   }
 </style>
