@@ -1,10 +1,10 @@
 ---
 /* Футер — чёрная полоса во всю ширину, последний экран сайта.
-   Три задачи: перелинковка (услуги + информационные страницы), доверие (адреса,
+   Три задачи: перелинковка (услуги + информационные страницы), доверие (адрес,
    часы, соцсети) и последняя точка входа в заявку — телефон и кнопка.
 
    Данные — из content.json (footer, contacts) и каталога: список категорий
-   считается из прайса, руками сюда не вписывается. Телефоны и адреса вымышленные. */
+   считается из прайса, руками сюда не вписывается. Телефон и адрес вымышленные. */
 import content from '../data/content.json';
 import { categories } from '../lib/catalog.js';
 import { url } from '../lib/paths.js';
@@ -47,24 +47,11 @@ const { brand, year = new Date().getFullYear() } = Astro.props;
       <div class="footer-col footer-contacts">
         <h3 class="footer-col-title">Контакты</h3>
         <a class="footer-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+        <p class="footer-address">{contacts.address}</p>
         <p class="footer-hours">{contacts.hours}</p>
         <a class="footer-mail" href={`mailto:${contacts.email}`}>{contacts.email}</a>
         <a class="btn btn--primary footer-cta" href="#contacts">Оставить заявку</a>
       </div>
-    </div>
-
-    <div class="footer-branches">
-      <h3 class="footer-col-title">{footer.branchesTitle}</h3>
-      <ul class="branches">
-        {footer.branches.map((b) => (
-          <li class="branch">
-            <h4 class="branch-name">{b.name}</h4>
-            <p class="branch-address">{b.address}</p>
-            <p class="branch-hours">{b.hours}</p>
-            <a class="branch-phone" href={`tel:${b.phoneHref}`}>{b.phone}</a>
-          </li>
-        ))}
-      </ul>
     </div>
 
     <div class="footer-bottom">
@@ -160,46 +147,20 @@ const { brand, year = new Date().getFullYear() } = Astro.props;
     letter-spacing: -0.02em;
     white-space: nowrap;
   }
-  .footer-hours, .footer-mail { font-size: var(--text-body); }
-  /* Почта и телефон филиала — подсветка-плашка на наведении, как везде на сайте.
+  .footer-address, .footer-hours, .footer-mail { font-size: var(--text-body); }
+  /* Почта — подсветка-плашка на наведении, как везде на сайте.
      Подчёркиваний в проекте нет */
-  .footer-mail, .branch-phone {
+  .footer-mail {
     padding: 2px var(--sp-8);
     margin-inline: calc(var(--sp-8) * -1);
     border-radius: var(--r-row);
     transition: background-color var(--t-hover-out) var(--ease-out);
   }
-  .footer-mail:hover, .branch-phone:hover {
+  .footer-mail:hover {
     background: var(--color-row-hover-dark);
     transition-duration: var(--t-hover-in);
   }
   .footer-cta { margin-top: var(--sp-16); }
-
-  /* Филиалы — отдельная полоса под колонками */
-  .footer-branches {
-    margin-top: var(--sp-64);
-    padding-top: var(--sp-32);
-    border-top: 1px solid var(--color-line-white);
-  }
-  .branches {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--sp-32) var(--sp-48);
-  }
-  .branch { display: grid; gap: var(--sp-4); }
-  .branch-name {
-    font-size: var(--text-body-lg);
-    margin-bottom: var(--sp-4);
-  }
-  .branch-address, .branch-hours { font-size: var(--text-body); }
-  .branch-phone {
-    margin-top: var(--sp-4);
-    font-weight: var(--w-medium);
-    white-space: nowrap;
-  }
 
   .footer-bottom {
     margin-top: var(--sp-48);
@@ -231,11 +192,9 @@ const { brand, year = new Date().getFullYear() } = Astro.props;
   @media (max-width: 1100px) {
     .footer-top { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-40); }
     .footer-brand { grid-column: 1 / -1; }
-    .branches { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 700px) {
     .footer-top { grid-template-columns: 1fr; }
-    .branches { grid-template-columns: 1fr; }
     .footer-bottom { grid-template-columns: 1fr; }
     .footer-legal { justify-content: flex-start; }
   }
