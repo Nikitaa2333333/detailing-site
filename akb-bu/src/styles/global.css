@@ -15,6 +15,19 @@
   --color-grey-text-dark: #a9a9b0; /* ТОЛЬКО описания услуг в обороте плашки (по запросу заказчика) */
   --color-line-ink: rgba(10, 10, 11, 0.12);
   --color-line-white: rgba(255, 255, 255, 0.14);
+  --color-ink-hover: #2a2a2e;   /* наведение на чёрную кнопку */
+  --color-void: #050505;        /* канва под hero-кадрами, темнее чёрных полос */
+
+  /* Полупрозрачные слои на тёмном фоне: подложки контролов и волосяные обводки.
+     Четыре ступени на весь сайт — новых значений rgba(255,255,255,…) не заводим */
+  --veil-fill: rgba(255, 255, 255, 0.14);        /* подложка чипа, поля, кружка */
+  --veil-fill-hover: rgba(255, 255, 255, 0.3);   /* её наведение */
+  --veil-fill-soft: rgba(255, 255, 255, 0.1);    /* наведение на кнопку-обводку */
+  --veil-line: rgba(255, 255, 255, 0.4);         /* обводка кнопки и чипа */
+  --veil-line-strong: rgba(255, 255, 255, 0.6);  /* обводка чекбокса — должна читаться */
+  /* Подсветка строки списка под курсором — плашка вместо подчёркивания */
+  --color-row-hover-dark: rgba(255, 255, 255, 0.12);
+  --color-row-hover-light: rgba(10, 10, 11, 0.06);
 
   /* Янтарь из hero — единственный цветной акцент (плашка-призыв). Взят из световой балки на фото */
   --color-amber: #ffb35c;       /* светлый край балки */
@@ -33,6 +46,7 @@
   --text-caption: 0.8125rem;
   --text-body: 1rem;
   --text-body-lg: 1.125rem;
+  --text-subhead: clamp(1.25rem, 1.6vw, 1.5rem);         /* заголовок внутри карточки, над списком */
   --text-tile: clamp(1.5rem, 2.2vw, 2.125rem);          /* название услуги в плашке */
   --text-heading: clamp(1.75rem, 3vw, 2.75rem);          /* заголовок секции */
   --text-display: clamp(2.25rem, 4.2vw, 4.5rem);         /* h1 — две строки над фото */
@@ -55,6 +69,7 @@
   --measure-head: 24ch;
 
   /* Радиусы */
+  --r-row: 8px;                 /* подсветка строки списка */
   --r-input: 12px;
   --r-tile: 20px;
   --r-panel: 24px;
@@ -63,6 +78,10 @@
   /* Движение */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  /* Отклик на наведение: подсветка загорается мгновенно и гаснет плавно.
+     Плавный ВХОД на курсорных состояниях читается как тормоз — не заводить */
+  --t-hover-in: 0s;
+  --t-hover-out: 0.16s;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -172,10 +191,11 @@ mark {
   cursor: pointer;
   border: none;
   white-space: nowrap;
-  transition: background-color 0.2s var(--ease-out), color 0.2s var(--ease-out);
+  transition: background-color var(--t-hover-out) var(--ease-out), color var(--t-hover-out) var(--ease-out);
 }
+.btn:hover { transition-duration: var(--t-hover-in); }
 .btn--primary { background: var(--color-ink); color: var(--color-white); }
-.btn--primary:hover { background: #2a2a2e; }
+.btn--primary:hover { background: var(--color-ink-hover); }
 .dark-panel .btn--primary,
 .on-dark .btn--primary { background: var(--color-white); color: var(--color-ink); }
 .dark-panel .btn--primary:hover,
@@ -188,13 +208,9 @@ mark {
 }
 .btn--ghost:hover { background: rgba(10, 10, 11, 0.05); }
 .dark-panel .btn--ghost,
-.on-dark .btn--ghost { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.4); }
+.on-dark .btn--ghost { box-shadow: inset 0 0 0 1.5px var(--veil-line); }
 .dark-panel .btn--ghost:hover,
-.on-dark .btn--ghost:hover { background: rgba(255, 255, 255, 0.1); }
-
-/* Лого — акцентная часть на hover загорается тем же янтарём, что и искры в CTA/hero */
-.logo-accent { transition: color 0.15s var(--ease-out); }
-.logo:hover .logo-accent { color: var(--color-orange); }
+.on-dark .btn--ghost:hover { background: var(--veil-fill-soft); }
 
 /* Чип — пилюля с обводкой, без заливки */
 .chip {
@@ -208,20 +224,7 @@ mark {
   box-shadow: inset 0 0 0 1px var(--color-line-ink);
 }
 .dark-panel .chip,
-.on-dark .chip { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35); }
-
-/* Текстовая ссылка со стрелкой — швейцарский приём */
-.arrow-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-8);
-  font-size: var(--text-caption);
-  font-weight: var(--w-medium);
-  padding-bottom: 6px;
-  border-bottom: 1px solid currentColor;
-}
-.arrow-link svg { width: 14px; height: 14px; transition: transform 0.25s var(--ease-out-expo); }
-.arrow-link:hover svg { transform: translateX(4px); }
+.on-dark .chip { box-shadow: inset 0 0 0 1px var(--veil-line); }
 
 /* Поле формы */
 .field {

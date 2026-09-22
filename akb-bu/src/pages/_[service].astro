@@ -1,0 +1,233 @@
+---
+/* Шаблон страницы услуги — самая важная страница проекта: на неё идёт трафик
+   из поиска и рекламы, здесь показываются цены.
+
+   Все 39 адресов строятся из services.json, цены — из prices.json. Страница
+   только раскладывает блоки и раздаёт данные; вёрстка живёт в компонентах.
+
+   Порядок блоков — из ТЗ: первый экран → цифры → крошки и описание →
+   виджет класса → прайс → смежные услуги → форма.
+
+   Чего здесь ещё нет (следующий заход): этапы работ, галерея, отзывы, FAQ. */
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import ServiceHero from '../components/ServiceHero.astro';
+import Section from '../components/Section.astro';
+import Numbers from '../components/Numbers.astro';
+import CarClass from '../components/CarClass.astro';
+import PriceTable from '../components/PriceTable.astro';
+import CalcPanel from '../components/CalcPanel.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import content from '../data/content.json';
+import { allServices, categories, breadcrumbs, related, rub } from '../lib/services.js';
+import { url } from '../lib/paths.js';
+import { typo } from '../lib/typo.js';
+
+export function getStaticPaths() {
+  return allServices.map((service) => ({
+    params: { service: service.url.replace(/^\//, '') },
+    props: { service },
+  }));
+}
+
+const { service } = Astro.props;
+const { numbers, calc, contacts, brand, hero } = content;
+const category = categories.find((c) => c.id === service.category.id);
+const trail = breadcrumbs(service);
+const neighbours = related(service);
+
+/* Микроразметка: Service — сама услуга, BreadcrumbList — путь до неё */
+const origin = (Astro.site ?? new URL(Astro.url.origin)).href.replace(/\/$/, '');
+const schema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: service.title,
+    description: service.seo.description,
+    provider: { '@type': 'AutoRepair', name: brand.name, telephone: contacts.phone },
+    areaServed: 'Москва',
+    ...(service.price.from != null && {
+      offers: {
+        '@type': 'Offer',
+        price: service.price.from,
+        priceCurrency: 'RUB',
+        availability: 'https://schema.org/InStock',
+      },
+    }),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: trail.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.title,
+      item: origin + url(item.url),
+    })),
+  },
+];
+---
+
+<Layout
+  title={service.seo.title}
+  description={service.seo.description}
+  image={category.media}
+  noindex={service.hidden === true}
+  schema={schema}
+>
+  <Header />
+
+  <ServiceHero
+    title={service.title}
+    offer={service.offer}
+    media={category.media}
+    from={service.price.from}
+  />
+
+  <!-- Цифры о компании — сквозной блок, по ТЗ идёт под первым экраном -->
+  <Section>
+    <Numbers items={numbers} />
+  </Section>
+
+  <!-- Крошки и описание. Для брендовых страниц плёнки путь из четырёх уровней -->
+  <Section flushTop>
+    <nav class="crumbs" aria-label="Хлебные крошки">
+      <ol class="crumbs-list">
+        {trail.map((item, i) => (
+          <li class="crumb">
+            {i < trail.length - 1
+              ? <a href={url(item.url)}>{item.title}</a>
+              : <span aria-current="page">{item.title}</span>}
+          </li>
+        ))}
+      </ol>
+    </nav>
+
+    <div class="intro">
+      <h2 class="intro-title">{typo(service.title)}</h2>
+      <p class="intro-text">{typo(category.lead)}</p>
+    </div>
+  </Section>
+
+  <!-- Ядро страницы: виджет класса подсвечивает столбец в прайсе под ним -->
+  <Section id="price-section" flushTop>
+    {service.price.hasTable ? (
+      <div class="pricing">
+        <CarClass target="price" />
+        <PriceTable blocks={service.price.blocks} id="price" />
+        <div class="pricing-after">
+          <a class="btn btn--primary" href="#contacts">Записаться на приём</a>
+          <p class="pricing-note">
+            Цены указаны по классам автомобиля. Точная стоимость — после осмотра.
+          </p>
+        </div>
+      </div>
+    ) : (
+      <div class="individual dark-panel">
+        <h2 class="individual-title">Стоимость рассчитывается индивидуально</h2>
+        {(service.price.note ?? [
+          'Цена зависит от марки, модели и состояния автомобиля.',
+          'Для расчёта достаточно связаться с нами и назвать марку и модель. При необходимости окончательную стоимость определим после осмотра.',
+        ]).map((line) => <p class="individual-text">{typo(line)}</p>)}
+        <a class="btn btn--primary" href="#contacts">Получить расчёт</a>
+      </div>
+    )}
+  </Section>
+
+  <!-- Перелинковка: в референсе её нет, по ТЗ добавляем -->
+  {neighbours.length > 0 && (
+    <Section title="Смежные услуги">
+      <ul class="related">
+        {neighbours.map((item) => (
+          <li class="related-item">
+            <a class="related-link" href={url(item.url)}>
+              <h3 class="related-title">{typo(item.title)}</h3>
+              {item.offer && <p class="related-text">{typo(item.offer)}</p>}
+              {item.price.from != null && <p class="related-price">от {rub(item.price.from)}</p>}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </Section>
+  )}
+
+  <Section id="contacts">
+    <CalcPanel
+      label={calc.label}
+      title={`Рассчитать стоимость: ${service.title.toLowerCase()}`}
+      button={calc.button}
+      consent={calc.consent}
+      contacts={contacts}
+      media={hero.media}
+    />
+  </Section>
+
+  <SiteFooter brand={brand} />
+</Layout>
+
+<style>
+  /* Крошки — служебная строка, маркеров нет: разделитель ставит ::before */
+  .crumbs-list {
+    list-style: none;
+    margin: 0 0 var(--sp-32);
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-8) var(--sp-12);
+    font-size: var(--text-caption);
+  }
+  .crumb + .crumb::before { content: '/'; margin-right: var(--sp-12); }
+  .crumbs a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+  .intro { display: grid; gap: var(--sp-16); }
+  .intro-title { font-size: var(--text-heading); max-width: var(--measure-head); }
+  .intro-text { font-size: var(--text-body-lg); max-width: var(--measure-lead); }
+
+  .pricing { display: grid; gap: var(--sp-32); }
+  .pricing-after {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-16) var(--sp-24);
+  }
+  .pricing-note { font-size: var(--text-caption); max-width: var(--measure-text); }
+
+  /* Услуги без прайса: вместо таблицы — честный текст, а не выдуманная цифра */
+  .individual {
+    padding: var(--sp-40);
+    display: grid;
+    gap: var(--sp-16);
+    justify-items: start;
+  }
+  .individual-title { font-size: var(--text-heading); max-width: var(--measure-head); }
+  .individual-text { max-width: var(--measure-text); }
+  .individual .btn { margin-top: var(--sp-16); }
+
+  /* Карточки смежных услуг — без линий между пунктами, разделяет фон плашки */
+  .related {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-24);
+  }
+  .related-link {
+    display: grid;
+    gap: var(--sp-8);
+    height: 100%;
+    align-content: start;
+    padding: var(--sp-24);
+    border-radius: var(--r-tile);
+    background: var(--color-tile);
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .related-link:hover { background: var(--color-tile-hover); transition-duration: var(--t-hover-in); }
+  .related-title { font-size: var(--text-body-lg); }
+  .related-price { font-weight: var(--w-medium); font-variant-numeric: tabular-nums; }
+
+  @media (max-width: 900px) {
+    .related { grid-template-columns: 1fr; }
+    .individual { padding: var(--sp-24); }
+  }
+</style>

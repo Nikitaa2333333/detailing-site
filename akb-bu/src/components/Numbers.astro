@@ -1,0 +1,40 @@
+---
+/* Цифры о компании — сквозной блок: по ТЗ выводится и на главной, и на страницах услуг.
+   Значения правятся в одном месте, в content.json. */
+const { items } = Astro.props;
+---
+
+<dl class="numbers" data-reveal-group>
+  {items.map((n) => (
+    <div class="number" data-reveal>
+      <dt class="number-value">{n.value}</dt>
+      <dd class="number-label">{n.label}</dd>
+    </div>
+  ))}
+</dl>
+
+<style>
+  .numbers {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--sp-24);
+    margin: 0;
+  }
+  .number { margin: 0; }
+  .number-value {
+    font-size: var(--text-stat);
+    font-weight: var(--w-semibold);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .number-label {
+    margin: var(--sp-8) 0 0;
+    font-size: var(--text-caption);
+    font-weight: var(--w-medium);
+  }
+
+  @media (max-width: 1100px) {
+    .numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-32) var(--sp-24); }
+  }
+</style>

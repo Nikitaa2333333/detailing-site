@@ -1,9 +1,31 @@
 ---
+/* Одна точка на весь сайт: title, description, canonical, Open Graph, индексация
+   и микроразметка. Страницы передают SEO-props, вёрстка мета-тегов больше нигде
+   не дублируется — по ТЗ это требование ко всем 39 страницам услуг.
+
+   schema — массив объектов JSON-LD (Service, BreadcrumbList, FAQPage, LocalBusiness).
+   Печатается на сервере: поисковик видит разметку в готовом HTML. */
 import '@fontsource-variable/onest';
 import '../styles/global.css';
 import content from '../data/content.json';
+import { asset } from '../lib/paths.js';
 
-const { title = content.meta.title, description = content.meta.description } = Astro.props;
+const {
+  title = content.meta.title,
+  description = content.meta.description,
+  image = '/img/hero-3.webp',
+  noindex = false,
+  schema = [],
+} = Astro.props;
+
+/* Канонический адрес — от боевого домена из SITE_URL, а не от текущего хоста:
+   на превью-сборках canonical должен указывать на основной сайт */
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).href;
+
+/* Пока сайт в работе, закрыт весь контур: SITE_NOINDEX в workflow деплоя ставит мета-тег
+   на каждой странице и Disallow в robots.txt. Снимается одной переменной, а не обходом страниц. */
+const hidden = noindex || Boolean(process.env.SITE_NOINDEX);
+const ogImage = new URL(asset(image), Astro.site ?? Astro.url.origin).href;
 ---
 
 <!doctype html>
@@ -11,8 +33,22 @@ const { title = content.meta.title, description = content.meta.description } = A
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content={description} />
     <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {hidden && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={content.brand.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    {schema.map((item) => (
+      <script type="application/ld+json" set:html={JSON.stringify(item)} />
+    ))}
   </head>
   <body>
     <slot />

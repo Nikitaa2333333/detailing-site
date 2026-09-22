@@ -1,0 +1,175 @@
+---
+/* Заявка на расчёт — тёмная панель на фоне фотографии. По ТЗ такая форма стоит
+   на каждой странице: заголовок и текст кнопки задаются снаружи.
+   Клик по строке прайса подставляет услугу в заявку — чип над полем телефона. */
+import { asset } from '../lib/paths.js';
+
+const { label, title, button, consent, contacts, media } = Astro.props;
+---
+
+<div class="dark-panel calc" data-reveal>
+  {media && <img class="calc-bg" src={asset(media)} alt="" loading="lazy" />}
+  <div class="calc-inner">
+    {label && <p class="section-label">{label}</p>}
+    <h2 class="calc-title">{title}</h2>
+    <form class="calc-form">
+      <!-- Услуга, выбранная кликом по строке прайса. Скрыта, пока не выбрана —
+           заказчик просил, чтобы в заявке было видно, по какой услуге консультация -->
+      <p class="calc-service" id="calc-service" hidden>
+        <span class="calc-service-label">Услуга</span>
+        <span class="calc-service-name" id="calc-service-name"></span>
+        <button class="calc-service-drop" type="button" id="calc-service-drop" aria-label="Убрать услугу">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4.5 4.5 7 7m0-7-7 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </p>
+      <input type="hidden" name="service" id="calc-service-input" />
+      <div class="calc-row">
+        <input class="field" type="tel" name="phone" placeholder="+7 (___) ___-__-__" required />
+        <button class="btn btn--primary" type="submit">{button}</button>
+      </div>
+      <label class="consent">
+        <input type="checkbox" name="consent" required />
+        <span>{consent}</span>
+      </label>
+    </form>
+    {contacts && (
+      <div class="calc-contacts">
+        <a href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+        <a href={`https://wa.me/${contacts.whatsappHref}`}>WhatsApp</a>
+        <a href={`https://t.me/${contacts.telegram}`}>Telegram</a>
+        <span>{contacts.hours}</span>
+      </div>
+    )}
+  </div>
+</div>
+
+<script>
+  /* Клик по строке прайса — в плашке или в меню — подставляет услугу в форму заявки.
+     Страниц услуг пока нет; когда появятся, эти же строки станут ссылками на них. */
+  const chip = document.getElementById('calc-service');
+  const chipName = document.getElementById('calc-service-name');
+  const field = document.getElementById('calc-service-input');
+
+  const setService = (name) => {
+    if (!chip || !chipName || !field) return;
+    chipName.textContent = name ?? '';
+    field.value = name ?? '';
+    chip.hidden = !name;
+  };
+
+  document.addEventListener('click', (e) => {
+    const link = e.target?.closest?.('[data-service]');
+    if (link) setService(link.dataset.service);
+  });
+  document.getElementById('calc-service-drop')?.addEventListener('click', () => setService(null));
+</script>
+
+<style>
+  .calc { padding: clamp(28px, 5vw, 72px); }
+  .calc-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: right top;
+  }
+  .calc-inner {
+    position: relative;
+    display: grid;
+    gap: var(--sp-24);
+    justify-items: start;
+    max-width: 640px;
+  }
+  .calc-title {
+    font-size: var(--text-heading);
+    max-width: 22ch;
+  }
+  .calc-form { display: grid; gap: var(--sp-16); width: 100%; }
+  /* Выбранная услуга — чип с крестиком, ровно на ширину содержимого */
+  .calc-service {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-12);
+    justify-self: start;
+    padding: 8px 8px 8px var(--sp-16);
+    border-radius: var(--r-pill);
+    background: var(--veil-fill);
+    font-size: var(--text-caption);
+  }
+  .calc-service[hidden] { display: none; }
+  .calc-service-label { font-size: 0.75rem; }
+  .calc-service-name { font-weight: var(--w-medium); }
+  .calc-service-drop {
+    display: grid;
+    place-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--veil-fill);
+    color: inherit;
+    cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .calc-service-drop:hover {
+    background: var(--veil-fill-hover);
+    transition-duration: var(--t-hover-in);
+  }
+  .calc-service-drop svg { width: 12px; height: 12px; }
+  .calc-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--sp-8);
+  }
+  .consent {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-12);
+    font-size: var(--text-caption);
+    cursor: pointer;
+    max-width: 48ch;
+  }
+  .consent input {
+    appearance: none;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin: 1px 0 0;
+    border-radius: 50%;
+    border: 1.5px solid var(--veil-line-strong);
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+  }
+  .consent input::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-white);
+    transform: scale(0);
+    transition: transform 0.15s var(--ease-out);
+  }
+  .consent input:checked::before { transform: scale(1); }
+  .calc-contacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-8) var(--sp-24);
+    font-size: var(--text-caption);
+    font-weight: var(--w-medium);
+    padding-top: var(--sp-16);
+  }
+  .calc-contacts a {
+    padding: 2px var(--sp-8);
+    margin-inline: calc(var(--sp-8) * -1);
+    border-radius: var(--r-row);
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .calc-contacts a:hover { background: var(--veil-fill); transition-duration: var(--t-hover-in); }
+
+  @media (max-width: 860px) {
+    .calc-row { grid-template-columns: 1fr; }
+  }
+</style>

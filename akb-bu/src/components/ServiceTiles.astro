@@ -1,0 +1,221 @@
+---
+/* Плашки категорий услуг. Лицо — название и цена «от», оборот по наведению —
+   мини-прайс со ссылками на услуги. Последняя плашка — призыв с янтарным свечением.
+   Данные считаются из прайса в lib/catalog.js, руками цены не проставляем. */
+import { categories, rub, plural } from '../lib/catalog.js';
+import { asset } from '../lib/paths.js';
+
+const { cta, more, href = '#contacts' } = Astro.props;
+---
+
+<div class="tiles">
+  {categories.map((c) => (
+    <article
+      class:list={['tile', c.media && 'tile--media', c.wide && 'tile--wide']}
+      id={`cat-${c.id}`}
+      data-tile
+    >
+      {c.media && <img class="tile-bg" src={asset(c.media)} alt="" loading="lazy" />}
+      <div class="tile-front">
+        <div class="tile-top">
+          <span class="chip">{c.tag}</span>
+          <span class="tile-count">{c.count} {plural(c.count)}</span>
+        </div>
+        <div class="tile-headline">
+          <h3 class="tile-title">{c.title}</h3>
+          <p class="tile-price">от {rub(c.from)}</p>
+        </div>
+      </div>
+      <div class="tile-back">
+        <p class="tile-back-title">{c.title}</p>
+        <ul class="tile-list">
+          {c.items.map((s) => (
+            <li>
+              <a href={href} data-service={s.title} data-service-id={s.id}>
+                <span class="tile-item-name">{s.title}</span>
+                <span class="tile-item-price">от {rub(s.from)}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <a class="btn btn--ghost tile-more" href={href}>{more}</a>
+      </div>
+    </article>
+  ))}
+
+  {cta && (
+    <a class="tile tile--cta" href={href}>
+      <div class="tile-front">
+        <h3 class="tile-title">{cta.title}</h3>
+        <p class="tile-cta-text">{cta.text}</p>
+        <span class="btn btn--primary">{cta.button}</span>
+      </div>
+    </a>
+  )}
+</div>
+
+<style>
+  /* Плашки услуг: 3 колонки, квадраты. Плашка с фото — в ширину на две колонки: итого ровно 3 ряда по 3 */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-12);
+  }
+  .tile {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 1;
+    border-radius: var(--r-tile);
+    background: var(--color-tile-dark);
+    color: var(--color-white);
+    /* переход из меню: якорь не должен уезжать под фиксированную шапку */
+    scroll-margin-top: calc(var(--header-h) + var(--sp-24));
+  }
+  .tile--wide { grid-column: span 2; aspect-ratio: auto; }
+  .tile-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .tile-front {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--sp-20);
+  }
+  .tile-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--sp-8);
+  }
+  .tile-count { font-size: var(--text-caption); font-weight: var(--w-medium); }
+  .tile-headline { display: grid; gap: var(--sp-8); }
+  .tile-title {
+    font-size: var(--text-tile);
+    max-width: 10ch;
+  }
+  /* Цена «от» — витринный ярлык, а не наборный текст: отсюда вес и табличные цифры */
+  .tile-price {
+    font-size: var(--text-body-lg);
+    font-weight: var(--w-medium);
+    font-variant-numeric: tabular-nums;
+  }
+  .tile--media .tile-title,
+  .tile--media .tile-price { text-shadow: 0 1px 24px rgba(0, 0, 0, 0.4); }
+
+  /* Оборот плашки — тёмная панель своего оттенка, чтобы не сливалась с полосой. Без трансформов:
+     просто кроссфейд, чтобы кромка второго слоя не просвечивала на скруглённых углах */
+  .tile-back {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: var(--sp-20);
+    background: var(--color-tile-back);
+    color: var(--color-white);
+    opacity: 0;
+    transition: opacity 0.2s var(--ease-out);
+  }
+  /* На обороте лицо плашки скрыто — название категории повторяем меткой.
+     Список идёт сразу под ней, ссылка прижата к низу */
+  /* Заголовок оборота — самый крупный элемент карточки: он держит,
+     о какой категории список, и читается раньше строк прайса */
+  .tile-back-title {
+    font-size: var(--text-subhead);
+    font-weight: var(--w-semibold);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: var(--sp-20);
+  }
+  .tile-back .tile-more { margin-top: auto; }
+  /* Раскрытие: наведение, фокус внутри (клавиатура) и клик из меню — .is-open */
+  .tile:hover .tile-back,
+  .tile:focus-within .tile-back,
+  .tile.is-open .tile-back { opacity: 1; }
+  .tile-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--sp-4);
+    align-content: start;
+  }
+  /* Строка мини-прайса: название слева, цена справа. Разделительных линий нет —
+     под курсором строка целиком берётся плашкой, она же показывает, что это ссылка.
+     Отрицательные поля: подсветка шире текста, но левый край остаётся на сетке плашки */
+  .tile-list a {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-16);
+    margin-inline: calc(var(--sp-8) * -1);
+    padding: 6px var(--sp-8);
+    border-radius: var(--r-row);
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .tile-list a:hover,
+  .tile-list a:focus-visible { background: var(--color-row-hover-dark); transition-duration: var(--t-hover-in); }
+  .tile-item-name { line-height: 1.2; font-weight: var(--w-semibold); }
+  .tile-item-price {
+    flex: none;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .tile--wide .tile-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-12) var(--sp-48);
+  }
+  .tile--wide .tile-list li { font-size: var(--text-body-lg); }
+  /* Переход к заявке — кнопка в ободке, а не текстовая ссылка: на обороте плашки
+     это единственное целевое действие, оно должно читаться кнопкой. Заливка остаётся
+     за первичной кнопкой в плашке-призыве — здесь вторая ступень иерархии */
+  .tile-more {
+    align-self: start;
+    font-size: var(--text-body);
+  }
+
+  /* Призыв — последняя плашка, тёмная, с янтарным свечением «искр» из hero в углу.
+     В ширину на две колонки: 6 категорий + широкий «Уход» + она = ровно 3 ряда по 3 */
+  .tile--cta {
+    position: relative;
+    overflow: hidden;
+    grid-column: span 2;
+    aspect-ratio: auto;
+    background: var(--color-tile-dark);
+    color: var(--color-white);
+  }
+  .tile--cta::before {
+    content: '';
+    position: absolute;
+    inset: -30%;
+    background: radial-gradient(circle at 75% 15%, var(--color-orange) 0%, var(--color-ember) 32%, transparent 65%);
+    opacity: 0.55;
+    filter: blur(60px);
+    pointer-events: none;
+  }
+  .tile--cta .tile-front { position: relative; z-index: 1; justify-content: flex-end; gap: var(--sp-16); align-items: flex-start; }
+  .tile--cta .tile-title { max-width: 14ch; }
+  .tile-cta-text { max-width: 30ch; color: var(--color-grey-text-dark); }
+  .tile--cta .btn--primary { background: var(--color-white); color: var(--color-ink); }
+  .tile--cta .btn--primary:hover { background: var(--color-tile); }
+
+  @media (max-width: 1100px) {
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    /* Две колонки: широкий «Уход» и призыв занимают ряд целиком, остальные — парами */
+    .tile--wide .tile-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 560px) {
+    .tiles { grid-template-columns: 1fr; }
+    .tile, .tile--wide, .tile--cta { grid-column: auto; aspect-ratio: 5 / 4; }
+    /* Узкая колонка: мини-прайс в обороте — одна колонка и базовый кегль */
+    .tile--wide .tile-list { grid-template-columns: 1fr; }
+    .tile--wide .tile-list li { font-size: var(--text-body); }
+  }
+</style>

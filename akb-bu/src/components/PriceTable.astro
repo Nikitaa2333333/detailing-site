@@ -1,0 +1,201 @@
+---
+/* Прайс-лист услуги: по одной таблице на раздел прайса.
+
+   Правила из ТЗ и замечаний заказчика:
+   — всё на белом фоне, заливки классов нет; подсвечивается только выбранный
+     столбец (виджет класса ставит data-active на корневой элемент);
+   — шапка столбцов закреплена при прокрутке, на смартфоне таблица прокручивается вбок;
+   — форматы цены («434 000», «от 13 400», пустая ячейка) приходят готовыми из lib/services.js;
+   — примечания строки — в подсказке у названия, сноски раздела — под таблицей.
+
+   Таблица печатается в HTML на сервере: поисковик видит цены без выполнения скриптов. */
+import { globalFootnotes } from '../lib/services.js';
+import { typo } from '../lib/typo.js';
+
+const { blocks, id = 'price' } = Astro.props;
+const multi = blocks.length > 1;
+/* Сноски прайса показываем только те, чьи маркеры реально встречаются в таблице */
+const body = JSON.stringify(blocks);
+const footnotes = globalFootnotes.filter((f) => body.includes(f.marker));
+---
+
+<div class="price" id={id} data-price>
+  {blocks.map((block) => (
+    <section class="price-block">
+      {multi && <h3 class="price-block-title">{block.title}</h3>}
+
+      <div class="price-scroll">
+        <table class="price-table">
+          <thead>
+            <tr>
+              <th class="cell-name" scope="col">Услуга</th>
+              {block.classLabels.map((label, i) => (
+                <th class="cell-price" scope="col" data-col={i + 1}>{label}</th>
+              ))}
+            </tr>
+          </thead>
+          {block.groups.map((group) => (
+            <tbody>
+              {group.title && (
+                <tr class="price-group">
+                  <th scope="colgroup" colspan={block.classLabels.length + 1}>{group.title}</th>
+                </tr>
+              )}
+              {group.rows.map((row) => (
+                <tr>
+                  <th class="cell-name" scope="row">
+                    <span class="row-name">{typo(row.name)}</span>
+                    {row.notes.length > 0 && (
+                      <span class="row-hint" title={row.notes.join(' ')} aria-label={row.notes.join(' ')}>i</span>
+                    )}
+                    {row.note && <span class="row-note">{typo(row.note)}</span>}
+                  </th>
+                  {row.cells.map((cell, i) => (
+                    <td class="cell-price" data-col={i + 1}>
+                      {cell ? cell.text : <span class="cell-empty" aria-label="цена по запросу">—</span>}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          ))}
+        </table>
+      </div>
+
+      {block.notes.length > 0 && (
+        <ul class="price-notes">
+          {block.notes.map((note) => <li>{typo(note)}</li>)}
+        </ul>
+      )}
+    </section>
+  ))}
+
+  {footnotes.length > 0 && (
+    <ul class="price-notes price-notes--global">
+      {footnotes.map((f) => <li>{f.marker} {typo(f.text)}</li>)}
+    </ul>
+  )}
+</div>
+
+<style>
+  /* Белое поле прайса на сером фоне страницы — по замечанию заказчика заливок классов нет */
+  .price { display: grid; gap: var(--sp-32); }
+  .price-block {
+    background: var(--color-white);
+    border-radius: var(--r-panel);
+    padding: var(--sp-8) var(--sp-8) var(--sp-24);
+  }
+  .price-block-title {
+    font-size: var(--text-body-lg);
+    padding: var(--sp-20) var(--sp-16) var(--sp-8);
+  }
+
+  /* Боковая прокрутка включается только на узком экране — и только там.
+     `overflow-x: auto` делает элемент скролл-контейнером по обеим осям, и липкая
+     шапка столбцов начинает липнуть к нему, а не к странице: на десктопе, где
+     таблица и так помещается, прокрутку не заводим */
+  .price-scroll { overscroll-behavior-x: contain; }
+  .price-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    /* Колонки классов одинаковой ширины, названию услуги — остаток */
+    table-layout: auto;
+  }
+
+  /* Шапка столбцов липнет под шапкой сайта: класс виден при длинной таблице */
+  .price-table thead th {
+    position: sticky;
+    top: var(--header-h);
+    z-index: 1;
+    background: var(--color-white);
+    font-size: var(--text-caption);
+    font-weight: var(--w-semibold);
+    padding: var(--sp-12) var(--sp-16);
+    border-bottom: 1px solid var(--color-line-ink);
+    white-space: nowrap;
+  }
+
+  /* Линии — только как структура таблицы: строки прайса без них не читаются */
+  .price-table td,
+  .price-table tbody th {
+    padding: var(--sp-12) var(--sp-16);
+    border-bottom: 1px solid var(--color-line-ink);
+    vertical-align: top;
+    font-weight: var(--w-regular);
+  }
+  .price-table tbody tr:last-child td,
+  .price-table tbody tr:last-child th { border-bottom: none; }
+
+  .cell-name { min-width: 26ch; }
+  .row-name { display: inline; }
+  .row-note {
+    display: block;
+    margin-top: var(--sp-4);
+    font-size: var(--text-caption);
+  }
+  /* Подсказка с примечанием прайса — маленький кружок, не иконка-картинка */
+  .row-hint {
+    display: inline-grid;
+    place-content: center;
+    width: 16px;
+    height: 16px;
+    margin-left: var(--sp-8);
+    border-radius: var(--r-pill);
+    background: var(--color-tile);
+    font-size: 0.6875rem;
+    font-weight: var(--w-semibold);
+    font-style: italic;
+    cursor: help;
+    vertical-align: 1px;
+  }
+
+  .cell-price {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    width: 1%;
+  }
+  .cell-empty { opacity: 1; }
+
+  /* Заголовок группы внутри таблицы — «Новое авто», «Авто с пробегом» */
+  .price-group th {
+    padding: var(--sp-24) var(--sp-16) var(--sp-8);
+    font-size: var(--text-caption);
+    font-weight: var(--w-semibold);
+    border-bottom: 1px solid var(--color-line-ink);
+  }
+
+  /* Подсветка класса из виджета: столбец берётся плашкой, цифры плотнее.
+     Остальные столбцы остаются белыми — прямое требование заказчика */
+  .price[data-active="1"] [data-col="1"],
+  .price[data-active="2"] [data-col="2"],
+  .price[data-active="3"] [data-col="3"],
+  .price[data-active="4"] [data-col="4"],
+  .price[data-active="5"] [data-col="5"] {
+    background: var(--color-tile);
+    font-weight: var(--w-semibold);
+  }
+
+  .price-notes {
+    list-style: none;
+    margin: var(--sp-20) 0 0;
+    padding-inline: var(--sp-16);
+    display: grid;
+    gap: var(--sp-8);
+    font-size: var(--text-caption);
+    max-width: var(--measure-text);
+  }
+  .price-notes--global { padding-inline: 0; }
+
+  @media (max-width: 900px) {
+    /* Здесь липкая шапка уже не работает (см. выше) — зато таблица не ломает страницу */
+    .price-scroll { overflow-x: auto; }
+    .price-table thead th { position: static; }
+  }
+  @media (max-width: 760px) {
+    .cell-name { min-width: 20ch; }
+    .price-table thead th,
+    .price-table td,
+    .price-table tbody th { padding: var(--sp-12); }
+  }
+</style>

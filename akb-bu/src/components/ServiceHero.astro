@@ -1,0 +1,83 @@
+---
+/* Первый экран страницы услуги: фотография на всю ширину, H1, оффер одной строкой,
+   кнопка. По ТЗ это единый шаблон для всех 39 страниц — отличаются только данные.
+
+   В отличие от главной, здесь не раскадровка, а один кадр: страница должна
+   быстро показать заголовок и цену «от», а не играть светом. */
+import { asset } from '../lib/paths.js';
+import { rub } from '../lib/services.js';
+import { typo } from '../lib/typo.js';
+
+const { title, offer, media, from, cta = 'Заказать услугу' } = Astro.props;
+---
+
+<section class="shero on-dark">
+  <img class="shero-bg" src={asset(media)} alt="" fetchpriority="high" decoding="async" />
+  <div class="container shero-inner">
+    <h1 class="shero-title">{typo(title)}</h1>
+    {offer && <p class="shero-offer">{typo(offer)}</p>}
+    <div class="shero-actions">
+      <a class="btn btn--primary" href="#contacts">{cta}</a>
+      {from != null && <p class="shero-from">от {rub(from)}</p>}
+    </div>
+  </div>
+</section>
+
+<style>
+  .shero {
+    position: relative;
+    display: grid;
+    align-items: end;
+    min-height: 62svh;
+    background: var(--color-void);
+    color: var(--color-white);
+    padding-top: calc(var(--header-h) + var(--sp-48));
+    padding-bottom: var(--sp-48);
+    overflow: hidden;
+  }
+  .shero-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 40%;
+  }
+  /* Затемнение снизу: заголовок читается на любом кадре, текст остаётся чисто белым */
+  .shero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(5, 5, 5, 0.55) 0%, rgba(5, 5, 5, 0.25) 45%, rgba(5, 5, 5, 0.8) 100%);
+  }
+  .shero-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: var(--sp-24);
+    justify-items: start;
+  }
+  .shero-title {
+    font-size: var(--text-display);
+    max-width: var(--measure-head);
+  }
+  .shero-offer {
+    font-size: var(--text-body-lg);
+    max-width: var(--measure-lead);
+  }
+  .shero-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-24);
+    flex-wrap: wrap;
+  }
+  .shero-from {
+    font-size: var(--text-body-lg);
+    font-weight: var(--w-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 760px) {
+    .shero { min-height: 70svh; }
+  }
+</style>

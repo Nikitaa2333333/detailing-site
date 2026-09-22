@@ -1,0 +1,242 @@
+---
+/* Футер — чёрная полоса во всю ширину, последний экран сайта.
+   Три задачи: перелинковка (услуги + информационные страницы), доверие (адреса,
+   часы, соцсети) и последняя точка входа в заявку — телефон и кнопка.
+
+   Данные — из content.json (footer, contacts) и каталога: список категорий
+   считается из прайса, руками сюда не вписывается. Телефоны и адреса вымышленные. */
+import content from '../data/content.json';
+import { categories } from '../lib/catalog.js';
+import { url } from '../lib/paths.js';
+
+const { footer, contacts, services } = content;
+const { brand, year = new Date().getFullYear() } = Astro.props;
+---
+
+<footer class="footer on-dark">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a class="logo" href={url('/')}>{brand.logo}<span class="logo-accent">{brand.logoAccent}</span></a>
+        <p class="footer-about">{footer.about}</p>
+        <ul class="socials">
+          {footer.socials.map((s) => (
+            <li><a class="chip social" href={s.href} target="_blank" rel="noopener">{s.label}</a></li>
+          ))}
+        </ul>
+      </div>
+
+      <nav class="footer-col">
+        <h3 class="footer-col-title">{services.menuTitle}</h3>
+        <ul class="footer-links">
+          {categories.map((c) => (
+            <li><a href={`#cat-${c.id}`}>{c.title}</a></li>
+          ))}
+        </ul>
+      </nav>
+
+      <nav class="footer-col">
+        <h3 class="footer-col-title">{footer.company.title}</h3>
+        <ul class="footer-links">
+          {footer.company.links.map((l) => (
+            <li><a href={url(l.href)}>{l.label}</a></li>
+          ))}
+        </ul>
+      </nav>
+
+      <div class="footer-col footer-contacts">
+        <h3 class="footer-col-title">Контакты</h3>
+        <a class="footer-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+        <p class="footer-hours">{contacts.hours}</p>
+        <a class="footer-mail" href={`mailto:${contacts.email}`}>{contacts.email}</a>
+        <a class="btn btn--primary footer-cta" href="#contacts">Оставить заявку</a>
+      </div>
+    </div>
+
+    <div class="footer-branches">
+      <h3 class="footer-col-title">{footer.branchesTitle}</h3>
+      <ul class="branches">
+        {footer.branches.map((b) => (
+          <li class="branch">
+            <h4 class="branch-name">{b.name}</h4>
+            <p class="branch-address">{b.address}</p>
+            <p class="branch-hours">{b.hours}</p>
+            <a class="branch-phone" href={`tel:${b.phoneHref}`}>{b.phone}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="footer-bottom">
+      <p class="footer-disclaimer">{footer.disclaimer}</p>
+      <div class="footer-legal">
+        <span>© {year} {brand.name}</span>
+        <ul class="legal-links">
+          {footer.legal.map((l) => (
+            <li><a href={url(l.href)}>{l.label}</a></li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: var(--color-ink);
+    color: var(--color-white);
+    padding-block: var(--section-gap);
+    /* Отбивка от тёмной секции выше: без неё две чёрные полосы сливаются */
+    border-top: 1px solid var(--color-line-white);
+  }
+  .footer ::selection { background: var(--color-white); color: var(--color-ink); }
+
+  /* Бренд шире колонок ссылок: в нём лежит абзац о компании */
+  .footer-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
+    gap: var(--sp-48);
+  }
+  .logo {
+    display: inline-block;
+    font-weight: var(--w-bold);
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+  }
+  .footer-about {
+    margin-top: var(--sp-20);
+    max-width: 44ch;
+    font-size: var(--text-body);
+  }
+
+  .socials {
+    list-style: none;
+    margin: var(--sp-28) 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-8);
+  }
+  .social { transition: background-color var(--t-hover-out) var(--ease-out); }
+  .social:hover { background: var(--veil-fill-soft); transition-duration: var(--t-hover-in); }
+
+  /* Заголовок колонки — служебный интерфейс, жирность здесь разрешена.
+     Капса нет: отличаем кеглем и весом, а не прописными */
+  .footer-col-title {
+    font-size: var(--text-caption);
+    font-weight: var(--w-semibold);
+    margin-bottom: var(--sp-20);
+  }
+
+  /* Ссылки без линий-разделителей; наведение — подсветка-плашка, как в шапке.
+     Отрицательные поля: плашка шире текста, колонка остаётся на своём месте */
+  .footer-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 2px;
+  }
+  .footer-links a,
+  .legal-links a {
+    display: inline-block;
+    padding: 4px 10px;
+    margin-inline: -10px;
+    border-radius: var(--r-row);
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .footer-links a:hover,
+  .footer-links a:focus-visible,
+  .legal-links a:hover,
+  .legal-links a:focus-visible {
+    background: var(--color-row-hover-dark);
+    transition-duration: var(--t-hover-in);
+  }
+
+  .footer-contacts { display: grid; justify-items: start; gap: var(--sp-8); }
+  .footer-phone {
+    font-size: var(--text-body-lg);
+    font-weight: var(--w-semibold);
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  .footer-hours, .footer-mail { font-size: var(--text-body); }
+  /* Почта и телефон филиала — подсветка-плашка на наведении, как везде на сайте.
+     Подчёркиваний в проекте нет */
+  .footer-mail, .branch-phone {
+    padding: 2px var(--sp-8);
+    margin-inline: calc(var(--sp-8) * -1);
+    border-radius: var(--r-row);
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .footer-mail:hover, .branch-phone:hover {
+    background: var(--color-row-hover-dark);
+    transition-duration: var(--t-hover-in);
+  }
+  .footer-cta { margin-top: var(--sp-16); }
+
+  /* Филиалы — отдельная полоса под колонками */
+  .footer-branches {
+    margin-top: var(--sp-64);
+    padding-top: var(--sp-32);
+    border-top: 1px solid var(--color-line-white);
+  }
+  .branches {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-32) var(--sp-48);
+  }
+  .branch { display: grid; gap: var(--sp-4); }
+  .branch-name {
+    font-size: var(--text-body-lg);
+    margin-bottom: var(--sp-4);
+  }
+  .branch-address, .branch-hours { font-size: var(--text-body); }
+  .branch-phone {
+    margin-top: var(--sp-4);
+    font-weight: var(--w-medium);
+    white-space: nowrap;
+  }
+
+  .footer-bottom {
+    margin-top: var(--sp-48);
+    padding-top: var(--sp-24);
+    border-top: 1px solid var(--color-line-white);
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 2fr);
+    gap: var(--sp-24) var(--sp-48);
+    align-items: start;
+    font-size: var(--text-caption);
+  }
+  .footer-disclaimer { max-width: 60ch; }
+  .footer-legal {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: var(--sp-12) var(--sp-24);
+  }
+  .legal-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-4) var(--sp-16);
+  }
+
+  @media (max-width: 1100px) {
+    .footer-top { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-40); }
+    .footer-brand { grid-column: 1 / -1; }
+    .branches { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 700px) {
+    .footer-top { grid-template-columns: 1fr; }
+    .branches { grid-template-columns: 1fr; }
+    .footer-bottom { grid-template-columns: 1fr; }
+    .footer-legal { justify-content: flex-start; }
+  }
+</style>

@@ -1,0 +1,42 @@
+---
+/* Секция страницы: полоса + контейнер + швейцарская шапка «метка слева, заголовок справа».
+   Все страницы собираются из неё — ритм между секциями задаёт --section-gap в global.css,
+   в самих секциях отступов сверху и снизу не ставим.
+
+   <Section label="Работы" title="…">   — с меткой
+   <Section title="…">                  — заголовок по левому краю
+   <Section>                            — без шапки, только контент
+   dark      — чёрная полоса во всю ширину, белый текст
+   flushTop  — прижать к предыдущей секции (убрать верхний отступ)
+   reveal    — появление шапки при прокрутке; false — секция стоит на месте сразу */
+const {
+  id,
+  label,
+  title,
+  dark = false,
+  flushTop = false,
+  reveal = true,
+  class: klass = '',
+} = Astro.props;
+---
+
+<section
+  id={id}
+  class:list={[
+    'section',
+    dark && 'section--dark',
+    dark && 'on-dark',
+    flushTop && 'section--flush-top',
+    klass,
+  ]}
+>
+  <div class="container">
+    {title && (
+      <div class:list={['section-head', !label && 'section-head--plain']} data-reveal={reveal || undefined}>
+        {label && <p class="section-label">{label}</p>}
+        <h2 class="section-title">{title}</h2>
+      </div>
+    )}
+    <slot />
+  </div>
+</section>

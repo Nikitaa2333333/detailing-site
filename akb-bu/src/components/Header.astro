@@ -34,8 +34,8 @@ const { contacts, brand, nav, services } = content;
           <ul class="mega-list">
             {c.items.map((i) => (
               <li>
-                <a href={`#cat-${c.id}`} data-tile={c.id}>
-                  <span>{i.title}</span>
+                <a href="#contacts" data-service={i.title} data-service-id={i.id}>
+                  <span class="mega-name">{i.title}</span>
                   <span class="mega-price">от {rub(i.from)}</span>
                 </a>
               </li>
@@ -91,10 +91,11 @@ const { contacts, brand, nav, services } = content;
     document.querySelectorAll('[data-tile].is-open').forEach((t) => t.classList.remove('is-open'));
     document.getElementById(`cat-${id}`)?.classList.add('is-open');
   };
-  mega?.querySelectorAll('a[data-tile]').forEach((link) => {
+  // Любая ссылка в меню закрывает его; заголовок категории вдобавок раскрывает её плашку
+  mega?.querySelectorAll('a').forEach((link) => {
     link.addEventListener('click', () => {
       setMenu(false);
-      openTile(link.dataset.tile);
+      if (link.dataset.tile) openTile(link.dataset.tile);
     });
   });
   // Наведение на другую плашку снимает фиксацию — иначе раскрытыми окажутся две
@@ -178,25 +179,25 @@ const { contacts, brand, nav, services } = content;
     font-size: 1.05rem;
     letter-spacing: 0.02em;
   }
-  .logo-accent { font-weight: var(--w-regular); }
 
   .nav { display: flex; align-items: center; gap: var(--sp-24); }
+  /* Наведение — подсветка-плашка (тот же приём, что в строках прайса), не подчёркивание.
+     Отрицательные поля: плашка шире текста, но пункты остаются на своих местах */
   .nav-link {
     font-size: var(--text-caption);
     font-weight: var(--w-medium);
-    padding-block: 4px;
-    border-bottom: 1px solid transparent;
-    transition: border-color 0.2s var(--ease-out);
+    padding: 4px 10px;
+    margin-inline: -10px;
+    border-radius: var(--r-row);
+    transition: background-color var(--t-hover-out) var(--ease-out);
   }
-  .nav-link:hover { border-color: currentColor; }
+  .nav-link:hover { background: color-mix(in srgb, currentColor 12%, transparent); transition-duration: var(--t-hover-in); }
   .nav-toggle {
     display: inline-flex;
     align-items: center;
     gap: var(--sp-8);
     background: none;
     border: none;
-    border-bottom: 1px solid transparent;
-    padding-inline: 0;
     color: inherit;
     cursor: pointer;
   }
@@ -205,7 +206,7 @@ const { contacts, brand, nav, services } = content;
     height: 12px;
     transition: transform 0.2s var(--ease-out);
   }
-  .header.is-menu-open .nav-toggle { border-color: currentColor; }
+  .header.is-menu-open .nav-toggle { background: color-mix(in srgb, currentColor 12%, transparent); }
   .header.is-menu-open .nav-chevron { transform: rotate(180deg); }
 
   /* Карта услуг — тёмная панель шириной с контент, под шапкой */
@@ -238,14 +239,17 @@ const { contacts, brand, nav, services } = content;
     align-items: baseline;
     justify-content: space-between;
     gap: var(--sp-16);
-    padding-bottom: var(--sp-12);
+    margin-inline: calc(var(--sp-8) * -1);
+    padding: 4px var(--sp-8) var(--sp-12);
+    border-radius: var(--r-row);
+    transition: background-color var(--t-hover-out) var(--ease-out);
   }
+  .mega-head:hover { background: var(--color-row-hover-dark); transition-duration: var(--t-hover-in); }
   .mega-title {
     font-size: var(--text-body-lg);
     font-weight: var(--w-semibold);
     letter-spacing: -0.02em;
   }
-  .mega-head:hover .mega-title { text-decoration: underline; text-underline-offset: 4px; }
   .mega-count {
     flex: none;
     font-size: var(--text-caption);
@@ -256,16 +260,31 @@ const { contacts, brand, nav, services } = content;
     margin: 0;
     padding: 0;
     display: grid;
-    gap: var(--sp-8);
+    gap: 2px;
     font-size: var(--text-caption);
   }
+  /* Строка под курсором берётся плашкой — тот же приём, что в обороте плашки услуг */
   .mega-list a {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: var(--sp-16);
+    margin-inline: calc(var(--sp-8) * -1);
+    padding: 5px var(--sp-8);
+    border-radius: var(--r-row);
+    transition: background-color var(--t-hover-out) var(--ease-out);
   }
-  .mega-list a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .mega-list a:hover,
+  .mega-list a:focus-visible {
+    background: var(--color-row-hover-dark);
+    transition-duration: var(--t-hover-in);
+  }
+  /* Название услуги крупнее и плотнее цены: в служебном списке это рабочая иерархия */
+  .mega-name {
+    font-size: var(--text-body);
+    font-weight: var(--w-semibold);
+    line-height: 1.25;
+  }
   .mega-price {
     flex: none;
     font-variant-numeric: tabular-nums;

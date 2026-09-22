@@ -27,3 +27,43 @@ export function fixTypography(root = document.body) {
     if (fixed !== t.nodeValue) t.nodeValue = fixed;
   }
 }
+
+/* ——— Регистр текстов из прайса ————————————————————————————————————————————
+
+   В xlsx заголовки групп и часть названий набраны прописными («ЗАЩИТА ПЛЕНКОЙ
+   SUNTEK»), а капс на сайте запрещён. Правим на сборке, а не руками в данных:
+   прайс обновляется импортёром, ручные правки затрутся следующим прогоном.  */
+
+/** Бренды и аббревиатуры, которые пишутся так и никак иначе */
+const KEEP = {
+  KRYTEX: 'Krytex',
+  SUNTEK: 'SunTek',
+  WEMATEC: 'Wematec',
+  SPECTROLL: 'Spectroll',
+  SIO2: 'SiO2',
+  NANO: 'Nano',
+  TOPCOAT: 'TopCoat',
+};
+
+/** «ЗАЩИТА ПЛЕНКОЙ SUNTEK» → «Защита пленкой SunTek» */
+export function sentence(text) {
+  if (!text) return text;
+  const words = String(text).trim().split(/(\s+)/);
+  const fixed = words.map((word) => {
+    const core = word.replace(/[^\wА-Яа-яЁё]/g, '');
+    if (!core) return word;
+    const upper = core.toUpperCase();
+    if (KEEP[upper] && core === upper) return word.replace(core, KEEP[upper]);
+    // Короткое слово прописными — аббревиатура (ЛКП, ДВС, PPF, SRS), не трогаем
+    if (core.length <= 3) return word;
+    if (core === upper) return word.toLowerCase();
+    return word;
+  });
+  const out = fixed.join('');
+  return out.charAt(0).toUpperCase() + out.slice(1);
+}
+
+/** Капс снят, висячие предлоги убраны — то, что нужно почти всегда */
+export function clean(text) {
+  return typo(sentence(text));
+}

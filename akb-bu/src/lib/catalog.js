@@ -22,7 +22,8 @@ function sheetStats(sheetName) {
   if (!sheet) throw new Error(`Нет такого листа в прайсе: ${sheetName}`);
   const services = sheet.groups.flatMap((g) => g.services);
   const values = services.map((s) => servicePrice(s, sheet.classLabels)).filter((v) => v != null);
-  return { count: services.length, from: values.length ? Math.min(...values) : null };
+  // id листа стабилен при пересборке прайса — на него будут ссылаться страницы услуг
+  return { id: sheet.id, count: services.length, from: values.length ? Math.min(...values) : null };
 }
 
 /* «11900» -> «11 900 ₽», разряды и знак валюты неразрывными пробелами */

@@ -1,0 +1,55 @@
+---
+/* Работы — сетка крупных фото с подписью «что сделали / на какой машине».
+   Пока часть карточек — пустые плашки под будущие рендеры. */
+import { asset } from '../lib/paths.js';
+
+const { items, placeholder } = Astro.props;
+---
+
+<div class="works" data-reveal-group>
+  {items.map((w, i) => (
+    <figure class:list={['work', w.wide && 'work--wide']} data-reveal>
+      <div class:list={['work-media', i === 0 && 'work-media--dark']}>
+        {i === 0 && placeholder && <img src={asset(placeholder)} alt="" loading="lazy" />}
+      </div>
+      <figcaption class="work-caption">
+        <span>{w.caption}</span>
+        <span class="work-car">{w.car}</span>
+      </figcaption>
+    </figure>
+  ))}
+</div>
+
+<style>
+  .works {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-12);
+  }
+  .work { margin: 0; }
+  .work--wide { grid-column: span 2; }
+  .work-media {
+    aspect-ratio: 4 / 3;
+    border-radius: var(--r-tile);
+    background: var(--color-tile);
+    overflow: hidden;
+  }
+  .work--wide .work-media { aspect-ratio: 8 / 3; }
+  .work-media--dark { background: var(--color-ink); }
+  .work-media img { width: 100%; height: 100%; object-fit: cover; }
+  .work-caption {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--sp-16);
+    padding-top: var(--sp-12);
+    font-size: var(--text-caption);
+    font-weight: var(--w-medium);
+  }
+  .work-car { white-space: nowrap; }
+
+  @media (max-width: 860px) {
+    .works { grid-template-columns: 1fr; }
+    .work--wide { grid-column: auto; }
+    .work--wide .work-media { aspect-ratio: 4 / 3; }
+  }
+</style>
