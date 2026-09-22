@@ -1,0 +1,49 @@
+# Тестовая витрина на GitHub Pages. Хостинг ещё не выбран: адрес сайта и префикс пути
+# живут здесь, в двух переменных. Переезд на свой домен — правка SITE_URL/BASE_PATH
+# (или другой job деплоя), исходники при этом не меняются.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      SITE_URL: https://nikitaa2333333.github.io
+      BASE_PATH: /detailing-site/
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: akb-bu/package-lock.json
+      - run: npm ci
+        working-directory: akb-bu
+      - run: npm run build
+        working-directory: akb-bu
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: akb-bu/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

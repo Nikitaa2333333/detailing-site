@@ -1,6 +1,7 @@
 ---
 import content from '../data/content.json';
 import { categories, rub, plural } from '../lib/catalog.js';
+import { url } from '../lib/paths.js';
 const { contacts, brand, nav, services } = content;
 ---
 
@@ -10,7 +11,7 @@ const { contacts, brand, nav, services } = content;
      на референсе строка не фиксируется и уводит курсор мимо нужного пункта). -->
 <header class="header on-dark" id="header">
   <div class="container header-inner">
-    <a class="logo" href="/">{brand.logo}<span class="logo-accent">{brand.logoAccent}</span></a>
+    <a class="logo" href={url('/')}>{brand.logo}<span class="logo-accent">{brand.logoAccent}</span></a>
     <nav class="nav">
       <button class="nav-link nav-toggle" type="button" id="services-toggle" aria-expanded="false" aria-controls="services-menu">
         {services.menuTitle}

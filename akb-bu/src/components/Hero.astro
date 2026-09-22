@@ -1,5 +1,6 @@
 ---
 import content from '../data/content.json';
+import { asset, url } from '../lib/paths.js';
 const { hero } = content;
 /* Раскадровка: кадры одной сцены с разным состоянием света.
    Кадры включаются по мере прокрутки (scroll-driven), в браузерах без поддержки — по таймеру. */
@@ -15,15 +16,16 @@ const frames = hero.frames ?? [hero.media];
         /* Размеры под реальный экран: 1440 — ноутбуки 1×, 1920 — 1280 CSS-px при DPR 1.5,
            2048 — предел исходника (выше не растягиваем). AVIF 4:4:4 — без «песка» на зерне
            и цветных кромках, WebP — фолбэк */
-        const base = src.replace(/\.webp$/, '');
+        const file = asset(src);
+        const base = file.replace(/\.webp$/, '');
         const avif = [1440, 1920, 2048].map((w) => `${base}-${w}.avif ${w}w`).join(', ');
-        const webp = [`${base}-1440.webp 1440w`, `${base}-1920.webp 1920w`, `${src} 2048w`].join(', ');
+        const webp = [`${base}-1440.webp 1440w`, `${base}-1920.webp 1920w`, `${file} 2048w`].join(', ');
         return (
           <picture>
             <source type="image/avif" srcset={avif} sizes="100vw" />
             <img
               class={`hero-frame${i === 0 ? ' hero-frame--first' : ''}`}
-              src={src}
+              src={file}
               srcset={webp}
               sizes="100vw"
               alt=""

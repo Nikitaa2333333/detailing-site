@@ -4,6 +4,7 @@ import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
 import content from '../data/content.json';
 import { categories, rub, plural } from '../lib/catalog.js';
+import { asset, url } from '../lib/paths.js';
 
 const { services, numbers, works, calc, contacts, brand, hero } = content;
 ---
@@ -27,7 +28,7 @@ const { services, numbers, works, calc, contacts, brand, hero } = content;
             data-tile
             data-reveal
           >
-            {c.media && <img class="tile-bg" src={c.media} alt="" loading="lazy" />}
+            {c.media && <img class="tile-bg" src={asset(c.media)} alt="" loading="lazy" />}
             <div class="tile-front">
               <div class="tile-top">
                 <span class="chip">{c.tag}</span>
@@ -92,7 +93,7 @@ const { services, numbers, works, calc, contacts, brand, hero } = content;
         {works.items.map((w, i) => (
           <figure class={`work${w.wide ? ' work--wide' : ''}`} data-reveal>
             <div class={`work-media${i === 0 ? ' work-media--dark' : ''}`}>
-              {i === 0 && <img src={hero.media} alt="" loading="lazy" />}
+              {i === 0 && <img src={asset(hero.media)} alt="" loading="lazy" />}
             </div>
             <figcaption class="work-caption">
               <span>{w.caption}</span>
@@ -108,7 +109,7 @@ const { services, numbers, works, calc, contacts, brand, hero } = content;
   <section class="section" id="contacts">
     <div class="container">
       <div class="dark-panel calc" data-reveal>
-        <img class="calc-bg" src={hero.media} alt="" loading="lazy" />
+        <img class="calc-bg" src={asset(hero.media)} alt="" loading="lazy" />
         <div class="calc-inner">
           <p class="section-label">{calc.label}</p>
           <h2 class="calc-title">{calc.title}</h2>
@@ -135,7 +136,7 @@ const { services, numbers, works, calc, contacts, brand, hero } = content;
 
   <footer class="footer">
     <div class="container footer-inner">
-      <a class="logo" href="/">{brand.logo}<span class="logo-accent">{brand.logoAccent}</span></a>
+      <a class="logo" href={url('/')}>{brand.logo}<span class="logo-accent">{brand.logoAccent}</span></a>
       <span class="footer-legal">© 2026 {brand.name}</span>
     </div>
   </footer>
