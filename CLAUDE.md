@@ -61,9 +61,13 @@ cd akb-bu && python scripts/import-prices.py   # xlsx в родительско�
 Человек не должен теряться в 162 позициях. Формы: имя + телефон с маской, чекбокс согласия,
 в заявку уходят URL страницы, марка/модель/класс, UTM.
 
-**5. Деплой.** Первый контур — GitHub + GitHub Pages как тестовая ссылка. Хостинг и домен
-пока не выбраны, **переезд должен стоить одну переменную**: `site`/`base` в конфиге берутся
-из окружения, абсолютных ссылок на домен в вёрстке нет.
+**5. Деплой.** Тестовый контур поднят: репозиторий
+[Nikitaa2333333/detailing-site](https://github.com/Nikitaa2333333/detailing-site), сборка и
+выкладка на Pages по push в `main`, витрина — https://nikitaa2333333.github.io/detailing-site/.
+Хостинг и домен не выбраны, **переезд стоит двух переменных** `SITE_URL` и `BASE_PATH` в
+[.github/workflows/deploy.yml](.github/workflows/deploy.yml): пути к файлам и внутренние
+ссылки идут через [akb-bu/src/lib/paths.js](akb-bu/src/lib/paths.js), абсолютных `/img/…`
+и `href="/…"` в компонентах быть не должно.
 
 **6. SEO и скорость.** Уникальные title/description, canonical, schema.org
 (LocalBusiness / Service / BreadcrumbList / FAQPage), sitemap.xml, robots.txt, редиректы.
@@ -107,7 +111,8 @@ cd akb-bu && python scripts/import-prices.py   # xlsx в родительско�
 - [ ] Компонент формы — один, на все точки входа (модалка, блок в теле, перед футером),
       заголовок и текст кнопки — props. Отправка пока заглушка.
 - [ ] `track(event)` — единая обёртка над целями Метрики, чтобы не искать вызовы по вёрстке.
-- [ ] GitHub Actions: сборка и выкладка на Pages по push в `main`.
+- [x] GitHub Actions: сборка и выкладка на Pages по push в `main`.
+- [x] Пути через `paths.js` — сайт одинаково работает и в подпапке, и в корне домена.
 
 ## Скиллы
 
