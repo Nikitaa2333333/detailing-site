@@ -21,7 +21,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      SITE_URL: https://ds-sever.ru
+      SITE_URL: https://dssever.ru
       BASE_PATH: /
       SITE_NOINDEX: '1'
     steps:
@@ -50,7 +50,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           source: "akb-bu/dist/*,akb-bu/dist/.htaccess"
-          target: "/var/www/${{ secrets.HOSTING_USER }}/data/www/ds-sever.ru"
+          target: "/var/www/${{ secrets.HOSTING_USER }}/data/www/dssever.ru"
           strip_components: 2
           overwrite: true
           rm: true

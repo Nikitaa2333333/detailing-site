@@ -40,10 +40,10 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
-  RewriteRule ^(.*)$ https://ds-sever.ru/$1 [R=301,L]
+  RewriteRule ^(.*)$ https://dssever.ru/$1 [R=301,L]
 
   # Принудительный https включаем ТОЛЬКО после выпуска сертификата в панели Reg.ru:
   # без сертификата этот редирект уводит на неоткрывающийся адрес и сайт ложится целиком.
   # RewriteCond %{HTTPS} !=on
-  # RewriteRule ^(.*)$ https://ds-sever.ru/$1 [R=301,L]
+  # RewriteRule ^(.*)$ https://dssever.ru/$1 [R=301,L]
 </IfModule>

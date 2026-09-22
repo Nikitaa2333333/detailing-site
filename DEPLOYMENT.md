@@ -1,4 +1,4 @@
-# Деплой ds-sever.ru
+# Деплой dssever.ru
 
 Сайт собирается и выкладывается автоматически при каждом push в ветку `main`.
 Схема повторяет noblefarm.ru и park-sever.ru — тот же хостинг, тот же ключ,
@@ -14,7 +14,7 @@
 |---|---|
 | Сервер | `server66.hosting.reg.ru` (37.140.192.202) |
 | Пользователь | `u0124240` |
-| Каталог сайта | `/var/www/u0124240/data/www/ds-sever.ru` |
+| Каталог сайта | `/var/www/u0124240/data/www/dssever.ru` |
 | Протокол | SSH/SCP, порт 22 |
 | Ключ | `C:\Users\User\.ssh\noblefarm_key` (один на все сайты аккаунта) |
 
@@ -34,7 +34,7 @@ noblefarm.ru, park-sever.ru. Каталог домена чистится при
 
 | Переменная | Сейчас | Зачем |
 |---|---|---|
-| `SITE_URL` | `https://ds-sever.ru` | canonical, Open Graph, sitemap |
+| `SITE_URL` | `https://dssever.ru` | canonical, Open Graph, sitemap |
 | `BASE_PATH` | `/` | префикс пути; подпапка — только для витрин |
 | `SITE_NOINDEX` | `'1'` | закрывает сайт от поисковиков: мета-тег на всех страницах и `Disallow: /` в `robots.txt` |
 
@@ -43,11 +43,13 @@ noblefarm.ru, park-sever.ru. Каталог домена чистится при
 
 ## Что сделать руками в панели Reg.ru (один раз)
 
-1. **Привязать домен к хостингу.** Сейчас `ds-sever.ru` резолвится на заглушку
-   `194.58.112.174`, а хостинг — `37.140.192.202`. В панели: домен → «Разместить на хостинге»
-   (аккаунт `u0124240`), каталог `ds-sever.ru` уже создан.
-2. **Выпустить бесплатный SSL** (Let's Encrypt) для домена и `www`.
-3. **Включить принудительный https** — раскомментировать два правила в конце
+1. **DNS.** 22.09.2026 домен переведён на `ns1.hosting.reg.ru` / `ns2.hosting.reg.ru` —
+   A-записи проставляет хостинг сам, в зоне руками ничего не правим. Расхождение NS — до суток.
+2. **Привязать домен к хостингу.** Домен → «Разместить на хостинге», аккаунт `u0124240`,
+   каталог `dssever.ru` (уже создан, файлы сайта в нём лежат). Без этого шага Apache про
+   домен не знает и DNS ведёт в никуда.
+3. **Выпустить бесплатный SSL** (Let's Encrypt) для домена и `www`.
+4. **Включить принудительный https** — раскомментировать два правила в конце
    [akb-bu/public/.htaccess](akb-bu/public/.htaccess). До выпуска сертификата этого делать
    нельзя: редирект уведёт на неоткрывающийся адрес и сайт ляжет целиком.
 
@@ -71,6 +73,6 @@ git push origin main
 
 ```bash
 cd akb-bu
-SITE_URL=https://ds-sever.ru BASE_PATH=/ SITE_NOINDEX=1 npm run build
-scp -i ~/.ssh/noblefarm_key -r dist/. u0124240@server66.hosting.reg.ru:/var/www/u0124240/data/www/ds-sever.ru/
+SITE_URL=https://dssever.ru BASE_PATH=/ SITE_NOINDEX=1 npm run build
+scp -i ~/.ssh/noblefarm_key -r dist/. u0124240@server66.hosting.reg.ru:/var/www/u0124240/data/www/dssever.ru/
 ```

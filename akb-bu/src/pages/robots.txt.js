@@ -4,7 +4,7 @@
 const noindex = Boolean(process.env.SITE_NOINDEX);
 
 export const GET = () => {
-  const site = import.meta.env.SITE ?? 'https://ds-sever.ru';
+  const site = import.meta.env.SITE ?? 'https://dssever.ru';
 
   const body = noindex
     ? ['# Сайт в разработке — обход закрыт целиком.', 'User-agent: *', 'Disallow: /', ''].join('\n')
