@@ -163,6 +163,16 @@ def main(src_path):
         group = None
         svc = None
         seen_header = False
+        # slug обрезается, и похожие длинные названия («…плёнки Krytex PPF PRO - Автомобиль
+        # полностью» и «…PRO - Бампер») склеиваются в один id, а у «Антидождя» два одинаковых
+        # названия. Повтор в листе получает -2, -3 по порядку строк: первое вхождение
+        # сохраняет свой id, на который уже ссылаются services.json и service-texts.json
+        used_ids = {}
+
+        def unique_id(name):
+            base = slug(name)
+            used_ids[base] = used_ids.get(base, 0) + 1
+            return base if used_ids[base] == 1 else f"{base}-{used_ids[base]}"
 
         def push_group(name):
             nonlocal group
@@ -214,7 +224,7 @@ def main(src_path):
                 clean = DUR_RE.sub("", name).strip(" .|")
                 star = re.search(r"(\*+)\s*$", clean)
                 svc = {
-                    "id": slug(name),
+                    "id": unique_id(name),
                     "name": re.sub(r"\*+\s*$", "", clean).strip(),
                     "footnote": star.group(1) if star else "",
                     "duration": dur.group(1).strip() if dur else "",

@@ -1,0 +1,438 @@
+{
+  "_readme": "Вариации написания для марок и моделей из листа «Классификация машин». Ключи — марка и модель ровно как в prices.json (как в xlsx). name — как показывать на сайте (исправляет опечатки прайса), aliases — как люди это набирают. Классы здесь не задаются: класс всегда из prices.json. Регистр, ё/е, дефисы и пробелы, неправильная раскладка и «х5» кириллицей поиск разбирает сам — их сюда не писать.",
+
+  "brands": {
+    "ALFA-ROMEO": { "name": "Alfa Romeo", "aliases": ["альфа ромео", "альфа", "alfa"] },
+    "AUDI": { "name": "Audi", "aliases": ["ауди"] },
+    "BMW": { "name": "BMW", "aliases": ["бмв", "бэмвэ", "беха", "бэха", "бумер"] },
+    "CADILLAC": { "name": "Cadillac", "aliases": ["кадиллак", "кадилак", "кадик"] },
+    "CHEVROLET": { "name": "Chevrolet", "aliases": ["шевроле", "шевролет", "шеви", "chevy"] },
+    "CHRYSLER": { "name": "Chrysler", "aliases": ["крайслер"] },
+    "CITROEN": { "name": "Citroen", "aliases": ["ситроен", "ситроэн"] },
+    "DODGE": { "name": "Dodge", "aliases": ["додж"] },
+    "FIAT": { "name": "Fiat", "aliases": ["фиат"] },
+    "FORD": { "name": "Ford", "aliases": ["форд"] },
+    "HONDA": { "name": "Honda", "aliases": ["хонда"] },
+    "HYUNDAI": { "name": "Hyundai", "aliases": ["хендай", "хендэ", "хундай", "хюндай", "хёндай", "хундаи", "хендаи", "hundai", "hyndai"] },
+    "KIA": { "name": "Kia", "aliases": ["киа", "кия"] },
+    "LEXUS": { "name": "Lexus", "aliases": ["лексус"] },
+    "MAZDA": { "name": "Mazda", "aliases": ["мазда"] },
+    "MERCEDES": { "name": "Mercedes-Benz", "aliases": ["мерседес", "мерседес бенц", "мерс", "мерин", "бенц", "mercedes benz", "mb"] },
+    "MINI": { "name": "Mini", "aliases": ["мини"] },
+    "MITSUBISHI": { "name": "Mitsubishi", "aliases": ["митсубиси", "мицубиси", "митсубиши", "мицубиши", "митсубиcи", "mitsu"] },
+    "NISSAN": { "name": "Nissan", "aliases": ["ниссан", "нисан"] },
+    "OPEL": { "name": "Opel", "aliases": ["опель"] },
+    "PEUGEOT": { "name": "Peugeot", "aliases": ["пежо"] },
+    "RENAULT": { "name": "Renault", "aliases": ["рено"] },
+    "SAAB": { "name": "Saab", "aliases": ["сааб"] },
+    "SEAT": { "name": "SEAT", "aliases": ["сеат", "сиат"] },
+    "SKODA": { "name": "Skoda", "aliases": ["шкода"] },
+    "SUBARU": { "name": "Subaru", "aliases": ["субару"] },
+    "SUZUKI": { "name": "Suzuki", "aliases": ["сузуки"] },
+    "TOYOTA": { "name": "Toyota", "aliases": ["тойота", "тоёта", "тоета", "тайота"] },
+    "VOLKSWAGEN": { "name": "Volkswagen", "aliases": ["фольксваген", "фольц", "вольксваген", "фольксвагин", "vw", "фв"] },
+    "VOLVO": { "name": "Volvo", "aliases": ["вольво"] },
+    "Лада": { "name": "Lada (ВАЗ)", "aliases": ["lada", "ваз", "vaz", "жигули"] },
+    "Ваз": { "name": "Lada (ВАЗ)", "aliases": ["lada", "лада", "vaz", "жигули"] },
+    "ACURA": { "name": "Acura", "aliases": ["акура"] },
+    "INFINITI": { "name": "Infiniti", "aliases": ["инфинити", "infinity"] },
+    "JAGUAR": { "name": "Jaguar", "aliases": ["ягуар"] },
+    "PORSHE": { "name": "Porsche", "aliases": ["порше", "порш", "porshe"] },
+    "JEEP": { "name": "Jeep", "aliases": ["джип"] },
+    "LAND ROVER": { "name": "Land Rover", "aliases": ["ленд ровер", "лэнд ровер", "ленд", "landrover"] },
+    "BENTLEY": { "name": "Bentley", "aliases": ["бентли"] },
+    "HUMMER": { "name": "Hummer", "aliases": ["хаммер", "хамер"] },
+    "MASERATI": { "name": "Maserati", "aliases": ["мазерати"] },
+    "MAYBACH": { "name": "Maybach", "aliases": ["майбах"] },
+    "ROLLCE-ROYCE": { "name": "Rolls-Royce", "aliases": ["роллс ройс", "ролс ройс", "роллс", "rolls royce", "rolls", "rollce royce"] }
+  },
+
+  "models": {
+    "ALFA-ROMEO": {
+      "Brera": ["брера"],
+      "Giulietta": ["джульетта", "джульета"],
+      "Mito": ["мито"]
+    },
+    "AUDI": {
+      "А2": { "name": "A2", "aliases": [] },
+      "TT": ["тт"],
+      "Allroad": ["олроуд", "аллроуд", "a6 allroad", "allroad quattro"],
+      "Q3": ["ку3"],
+      "Q5": ["ку5"],
+      "Q7": ["ку7"]
+    },
+    "BMW": {
+      "1": { "name": "1 серии", "aliases": ["1 series", "единичка", "116", "118", "120", "125", "135"] },
+      "3": { "name": "3 серии", "aliases": ["3 series", "трешка", "318", "320", "323", "325", "328", "330", "335", "340", "m3", "e46", "e90", "f30", "g20"] },
+      "4": { "name": "4 серии", "aliases": ["4 series", "420", "428", "430", "435", "440", "m4"] },
+      "5": { "name": "5 серии", "aliases": ["5 series", "пятерка", "520", "523", "525", "528", "530", "535", "540", "545", "550", "m5", "e39", "e60", "f10", "g30"] },
+      "6": { "name": "6 серии", "aliases": ["6 series", "630", "640", "645", "650", "m6"] },
+      "7": { "name": "7 серии", "aliases": ["7 series", "семерка", "730", "740", "745", "750", "760", "e65", "f01", "g11"] },
+      "GT": { "name": "Gran Turismo (GT)", "aliases": ["гт", "gran turismo", "3 gt", "5 gt", "6 gt"] },
+      "X5": ["икс5", "x5m", "e53", "e70", "f15", "g05"],
+      "X6": ["икс6", "x6m"]
+    },
+    "CADILLAC": {
+      "Escalade": ["эскалейд", "ескалейд"],
+      "Escalade ESV": ["эскалейд есв", "escalade long"],
+      "SRX": ["срх"],
+      "CTS": ["цтс"]
+    },
+    "CHEVROLET": {
+      "Aveo": ["авео"],
+      "Cobalt": ["кобальт"],
+      "Cruze": ["круз"],
+      "Lacetti": ["лачетти", "лачети"],
+      "Lanos": ["ланос"],
+      "Spark": ["спарк"],
+      "Camaro": ["камаро"],
+      "Malibu": ["малибу"],
+      "Niva": ["нива", "шнива", "шевроле нива", "нива тревел", "niva travel"],
+      "Orlando": ["орландо"],
+      "Sebring": ["себринг"],
+      "Captiva": ["каптива"],
+      "Trailblazer": ["трейлблейзер", "trail blazer"],
+      "Tahoe": ["тахо", "тахое"]
+    },
+    "CHRYSLER": {
+      "Crossfire": ["кроссфаер", "кроссфайр"],
+      "PT Cruiser": ["пт крузер", "cruiser"],
+      "300": ["300c", "300с"],
+      "Sebring": ["себринг"],
+      "Town & Country": ["town and country", "таун кантри", "таун энд кантри"],
+      "Voyager": ["вояджер", "grand voyager", "гранд вояджер"]
+    },
+    "CITROEN": {
+      "С1": { "name": "C1", "aliases": [] },
+      "С2": { "name": "C2", "aliases": [] },
+      "DS3": ["дс3"],
+      "Berlingo": ["берлинго"],
+      "C4 Picasso": ["пикассо", "c4 пикассо"],
+      "C4 Aircross": ["аиркросс", "эйркросс", "c4 аиркросс"],
+      "C-crosser": { "name": "C-Crosser", "aliases": ["кроссер", "c crosser"] },
+      "Grand C4": { "name": "Grand C4 Picasso", "aliases": ["grand c4 picasso", "гранд пикассо", "гранд c4", "grand picasso"] },
+      "Jumpi Multispace": { "name": "Jumpy Multispace", "aliases": ["джампи", "jumpy", "jumpi"] }
+    },
+    "DODGE": {
+      "Caliber": ["калибр", "калибер"],
+      "Challanger": { "name": "Challenger", "aliases": ["челленджер", "челенджер", "challanger"] },
+      "Charger": ["чарджер"],
+      "Caravan": ["караван", "grand caravan", "гранд караван"],
+      "Journey": ["джорни"]
+    },
+    "FIAT": {
+      "500": ["чинквеченто"],
+      "Albeo": { "name": "Albea", "aliases": ["альбеа", "albeo"] },
+      "Barchetta": ["баркетта"],
+      "Bravo": ["браво"],
+      "Linea": ["линеа"],
+      "Punto": ["пунто"],
+      "Stilo": ["стило"],
+      "Freemonth": { "name": "Freemont", "aliases": ["фримонт", "freemonth"] },
+      "Panorama": ["панорама"],
+      "Sedici": ["седичи"]
+    },
+    "FORD": {
+      "Fiesta": ["фиеста"],
+      "Focus": ["фокус"],
+      "Fusion": ["фьюжн", "фьюжен", "фьюжин"],
+      "Ka": ["ка"],
+      "C-max": { "name": "C-Max", "aliases": ["си макс", "с макс", "grand c-max"] },
+      "Mondeo": ["мондео"],
+      "Kuga": ["куга"],
+      "Maverick": ["маверик"],
+      "Mustang": ["мустанг"],
+      "Explorer": ["эксплорер"],
+      "Galaxy": ["гэлакси", "галакси"],
+      "S-max": { "name": "S-Max", "aliases": ["эс макс"] }
+    },
+    "HONDA": {
+      "Civic": ["цивик", "сивик"],
+      "Jazz": ["джаз", "fit", "фит"],
+      "Accord": ["аккорд", "акорд"],
+      "Crosstour": ["кросстур"],
+      "CR-V": ["црв", "срв", "цр в", "эрви"],
+      "Legend": ["легенд"],
+      "Pilot": ["пилот"]
+    },
+    "HYUNDAI": {
+      "Accent": ["акцент"],
+      "Elantra": ["элантра"],
+      "Getz": ["гетц", "гец"],
+      "Solaris": ["солярис", "соларис"],
+      "Veloster": ["велостер"],
+      "Genesis": ["генезис", "дженезис"],
+      "I40": { "name": "i40", "aliases": ["ай40"] },
+      "NF": ["нф", "sonata nf"],
+      "Sonata": ["соната"],
+      "Santa Fe": ["санта фе", "сантафе", "санта"],
+      "IX35": { "name": "ix35", "aliases": ["ай икс 35", "tucson ix35"] },
+      "Equus": ["эквус"],
+      "IX": { "name": "ix55", "aliases": ["ix55", "ай икс 55"] },
+      "H-1": { "name": "H-1 (Grand Starex)", "aliases": ["h1", "аш1", "старекс", "grand starex", "гранд старекс", "starex"] }
+    },
+    "KIA": {
+      "Cerato": ["церато", "серато", "k3"],
+      "Ceed": { "name": "Cee'd", "aliases": ["сид", "сиид", "proceed", "просид"] },
+      "Picanto": ["пиканто"],
+      "Rio": ["рио"],
+      "Spectra": ["спектра"],
+      "Venga": ["венга"],
+      "Carens": ["каренс"],
+      "Magentis": ["маджентис", "мажентис"],
+      "Opirus": ["опирус"],
+      "Optima": ["оптима"],
+      "Soul": ["соул"],
+      "Sportage": ["спортейдж", "спортаж", "спортэйдж"],
+      "Mohave": ["мохав", "мохаве"],
+      "Sorento": ["соренто"],
+      "Quoris": ["кворис"]
+    },
+    "LEXUS": {
+      "CT": ["ст", "ct200h"],
+      "ES": ["ес", "es250", "es350"],
+      "GS": ["гс", "gs250", "gs350", "gs450h"],
+      "IS": ["ис", "is250", "is300"],
+      "LS": ["лс", "ls460", "ls600h"],
+      "GX": ["гх", "gx460", "gx470"],
+      "RX": ["рх", "rx270", "rx300", "rx330", "rx350", "rx450h"],
+      "LX 2008": { "name": "LX (с 2008 г.)", "aliases": ["lx", "лх", "lx570", "lx450d"] }
+    },
+    "MAZDA": {
+      "MX-5": ["миата", "miata"],
+      "RX-8": ["рх8"],
+      "CX-5": ["сх5", "цх5"],
+      "CX-7": ["сх7", "цх7"],
+      "CX-9": ["сх9", "цх9"],
+      "BT-50": ["бт50"]
+    },
+    "MERCEDES": {
+      "А": { "name": "A-класс", "aliases": ["a класс", "а класс", "a150", "a160", "a170", "a180", "a200", "a250"] },
+      "B": { "name": "B-класс", "aliases": ["b класс", "б класс", "b170", "b180", "b200"] },
+      "C": { "name": "C-класс", "aliases": ["c класс", "с класс", "цешка", "c180", "c200", "c220", "c240", "c250", "c280", "c300", "c350", "c63"] },
+      "E": { "name": "E-класс", "aliases": ["e класс", "е класс", "ешка", "e200", "e220", "e230", "e240", "e250", "e280", "e300", "e320", "e350", "e400", "e500", "e63", "w210", "w211", "w212", "w213"] },
+      "S": { "name": "S-класс", "aliases": ["s класс", "эс класс", "s350", "s400", "s420", "s450", "s500", "s550", "s560", "s600", "s63", "s65", "w220", "w221", "w222", "w223"] },
+      "G": { "name": "G-класс", "aliases": ["g класс", "гелик", "гелендваген", "гелендеваген", "гелентваген", "gelandewagen", "g500", "g55", "g63", "g350"] },
+      "GL": ["гл", "gl350", "gl450", "gl500", "gl550", "gl63"],
+      "M": { "name": "M-класс (ML)", "aliases": ["ml", "мл", "m класс", "ml320", "ml350", "ml400", "ml500", "ml63"] },
+      "R": { "name": "R-класс", "aliases": ["r класс", "r350", "r500"] },
+      "CLA": ["цла", "cla200", "cla250"],
+      "CLS": ["цлс", "клс", "cls350", "cls500", "cls63"],
+      "GLK": ["глк", "glk220", "glk300", "glk350"],
+      "SL": ["сл", "sl500", "sl63"],
+      "SLK": ["слк", "slk200", "slk350"],
+      "SLS": ["слс", "sls amg"],
+      "Smart": ["смарт", "fortwo", "forfour"],
+      "Vito": ["вито"],
+      "Viano": ["виано"]
+    },
+    "MINI": {
+      "Cooper": ["купер"],
+      "Countryman": ["кантримен", "кантримэн"],
+      "Paceman": ["пейсмен", "пейсмэн"]
+    },
+    "MITSUBISHI": {
+      "Carisma": ["каризма", "харизма"],
+      "Colt": ["кольт"],
+      "I-Miev": { "name": "i-MiEV", "aliases": ["мив", "imiev"] },
+      "Lancer": ["лансер", "лансер эво", "evolution", "эволюшн"],
+      "Galant": ["галант"],
+      "ASX": ["асх", "асикс"],
+      "Outlander": ["аутлендер", "аутлэндер", "оутлендер"],
+      "Pajero": ["паджеро", "pajero sport", "паджеро спорт"],
+      "L200": ["л200"]
+    },
+    "NISSAN": {
+      "Almera": ["альмера"],
+      "Micra": ["микра"],
+      "Note": ["ноут"],
+      "Tiida": ["тиида", "тида"],
+      "GTR": { "name": "GT-R", "aliases": ["гтр"] },
+      "Primera": ["примера"],
+      "Teana": ["теана"],
+      "Juke": ["жук", "джук"],
+      "Qashqai": ["кашкай", "кошкай"],
+      "X-trail": { "name": "X-Trail", "aliases": ["икстрейл", "икс трейл", "хтрейл", "х трейл"] },
+      "Murano": ["мурано"],
+      "Parthfinder": { "name": "Pathfinder", "aliases": ["патфайндер", "пасфайндер", "parthfinder"] },
+      "Navara": ["навара"],
+      "Patrol": ["патрол", "патруль"]
+    },
+    "OPEL": {
+      "Astra": ["астра"],
+      "Corsa": ["корса"],
+      "Insignia": ["инсигния"],
+      "Meriva": ["мерива"],
+      "Vectra": ["вектра"],
+      "Antara": ["антара"],
+      "Zafira": ["зафира"]
+    },
+    "PEUGEOT": {
+      "Partner": ["партнер"],
+      "Boxer": ["боксер"]
+    },
+    "RENAULT": {
+      "Clio": ["клио"],
+      "Logan": ["логан"],
+      "Megane": ["меган"],
+      "Sandero": ["сандеро", "sandero stepway", "степвей"],
+      "Symbol": ["симбол"],
+      "Fluence": ["флюенс"],
+      "Kangoo": ["кангу"],
+      "Latitude": ["латитьюд"],
+      "Laguna": ["лагуна"],
+      "Scenic": ["сценик", "grand scenic"],
+      "Duster": ["дастер"],
+      "Koleos": ["колеос"]
+    },
+    "SAAB": {
+      "9-3": ["93"],
+      "95": { "name": "9-5", "aliases": ["9 5"] }
+    },
+    "SEAT": {
+      "Ibiza": ["ибица"],
+      "Leon": ["леон"],
+      "Freetrack": { "name": "Altea Freetrack", "aliases": ["altea", "алтеа", "фритрек"] },
+      "Alhambrak": { "name": "Alhambra", "aliases": ["альхамбра", "alhambrak"] }
+    },
+    "SKODA": {
+      "Fabia": ["фабия"],
+      "Octavia до 2006г.в": { "name": "Octavia (до 2006 г.)", "aliases": ["октавия", "octavia", "octavia tour", "октавия тур"] },
+      "Octavia 2006г.в.+": { "name": "Octavia (с 2006 г.)", "aliases": ["октавия", "octavia", "octavia rs", "октавия рс"] },
+      "Roomster": ["румстер"],
+      "Superb": ["суперб"],
+      "Yeti": ["йети", "ети"]
+    },
+    "SUBARU": {
+      "Impreza": ["импреза", "wrx", "sti"],
+      "XV": ["хв", "иксви"],
+      "Legacy": ["легаси"],
+      "Forester": ["форестер"],
+      "Outback": ["аутбек", "аутбэк"],
+      "Tribeca": ["трибека"]
+    },
+    "SUZUKI": {
+      "Liana": ["лиана"],
+      "Splash": ["сплэш", "сплеш"],
+      "Swift": ["свифт"],
+      "Kizashi": ["кизаши"],
+      "Grand Vitara": ["гранд витара", "витара"]
+    },
+    "TOYOTA": {
+      "Auris": ["аурис"],
+      "Corolla": ["королла", "каролла", "корола"],
+      "Prius": ["приус"],
+      "Verso": ["версо"],
+      "Yaris": ["ярис"],
+      "Avensis": ["авенсис"],
+      "Camry": ["камри", "камрюха"],
+      "GT": { "name": "GT86", "aliases": ["gt86", "гт86"] },
+      "RAV-4": { "name": "RAV4", "aliases": ["рав4", "рафик"] },
+      "Venza": ["венза"],
+      "LC Prado": { "name": "Land Cruiser Prado", "aliases": ["прадо", "прадик", "prado", "lc prado", "ленд крузер прадо", "крузак прадо", "lc120", "lc150", "lc250"] },
+      "Highlander": ["хайлендер", "хайлэндер"],
+      "Alphard": ["альфард"],
+      "LC 200": { "name": "Land Cruiser 200", "aliases": ["крузак", "крузер", "ленд крузер", "ленд крузер 200", "land cruiser", "lc200", "лк200", "двухсотый"] },
+      "Hiace": ["хайс", "хайэйс"],
+      "Sequoia": ["секвойя", "секвоя"],
+      "Tundra": ["тундра"]
+    },
+    "VOLKSWAGEN": {
+      "Beattle": { "name": "Beetle", "aliases": ["битл", "жук", "beattle"] },
+      "Bora": ["бора"],
+      "Golf": ["гольф"],
+      "Lupo": ["лупо"],
+      "Polo": ["поло"],
+      "Sirocco": { "name": "Scirocco", "aliases": ["сирокко", "шерокко", "sirocco"] },
+      "Jetta": ["джетта", "джета"],
+      "Caddy": ["кадди", "кади"],
+      "CC": ["сс", "цц", "passat cc", "пассат сс"],
+      "Passat": ["пассат", "пасат"],
+      "Touran": ["туран"],
+      "Tiguan": ["тигуан"],
+      "Phaeton": ["фаэтон"],
+      "Sharan": ["шаран"],
+      "Toureg": { "name": "Touareg", "aliases": ["туарег", "туарек", "toureg"] },
+      "Amarok": ["амарок"],
+      "California": ["калифорния"],
+      "Multivan": ["мультивен", "мультиван", "t5", "t6"]
+    },
+    "VOLVO": {},
+    "Лада": {
+      "Веста": ["vesta"],
+      "Гранта": ["granta"],
+      "Приора": ["priora", "2170", "2171", "2172"],
+      "Калина": ["kalina", "1117", "1118", "1119"],
+      "2110 и т.д": { "name": "2110 и другие модели", "aliases": ["2110", "2111", "2112", "2101", "2104", "2105", "2106", "2107", "2108", "2109", "21099", "2113", "2114", "2115", "десятка", "девятка", "четырка", "копейка", "классика", "самара"] },
+      "Ларгус": ["largus"],
+      "Х-ray": { "name": "XRAY", "aliases": ["икс рей", "х рей", "xray"] }
+    },
+    "Ваз": {
+      "2120": { "name": "2120 «Надежда»", "aliases": ["надежда"] },
+      "Нива": ["niva", "4x4", "4х4", "21213", "21214", "нива легенд", "niva legend", "урбан"]
+    },
+    "ACURA": {
+      "MDX": ["мдх"],
+      "RDX": ["рдх"]
+    },
+    "INFINITI": {
+      "Q50 (G)": { "name": "Q50 / G", "aliases": ["g", "g25", "g35", "g37"] },
+      "Q60 (G)": { "name": "Q60 / G купе", "aliases": ["g37 coupe", "g37 купе"] },
+      "Q70 (M)": { "name": "Q70 / M", "aliases": ["m", "m25", "m35", "m37", "m56"] },
+      "QX50 (EX)": { "name": "QX50 / EX", "aliases": ["ex", "ex25", "ex35", "ex37"] },
+      "QX60": ["jx", "jx35"],
+      "QX 70 (FX)": { "name": "QX70 / FX", "aliases": ["fx", "фх", "фикс", "fx35", "fx37", "fx45", "fx50"] },
+      "QX80 (QX)": { "name": "QX80 / QX56", "aliases": ["qx56", "qx"] }
+    },
+    "JAGUAR": {
+      "E-type": { "name": "E-Type", "aliases": [] },
+      "F-type": { "name": "F-Type", "aliases": ["ф тайп"] },
+      "S-type": { "name": "S-Type", "aliases": [] }
+    },
+    "PORSHE": {
+      "Boxter": { "name": "Boxster", "aliases": ["бокстер", "boxter"] },
+      "Cayman": ["кайман"],
+      "911": ["каррера", "carrera"],
+      "Macan": ["макан"],
+      "Cayenne": ["кайен", "каен", "кайенн"],
+      "Panamera": ["панамера"]
+    },
+    "JEEP": {
+      "Compass": ["компас"],
+      "Cherokee": ["чероки"],
+      "Liberty": ["либерти"],
+      "Wrangler": ["вранглер", "рэнглер", "ренглер"],
+      "Grand Cherokee": ["гранд чероки"],
+      "Wrangler Unlimited": ["вранглер анлимитед", "unlimited"]
+    },
+    "LAND ROVER": {
+      "Evoque": ["эвок", "range rover evoque", "рендж ровер эвок"],
+      "Freelander": ["фрилендер", "фриландер"],
+      "Discovery": ["дискавери", "дискавери 3", "дискавери 4"],
+      "Defender": ["дефендер"],
+      "Range Rover": ["рендж ровер", "ренж ровер", "рейндж ровер", "рендж", "ренж", "vogue", "вог"],
+      "RR Sport": { "name": "Range Rover Sport", "aliases": ["range rover sport", "рендж ровер спорт", "ренж ровер спорт", "рендж спорт", "rrs"] }
+    },
+    "BENTLEY": {
+      "Arnage": ["арнаж"],
+      "Continental GT": ["континенталь", "континентал", "continental"],
+      "Flying Spur": ["флаинг спур", "флайинг спур"],
+      "Mulsanne": ["мюльсан", "мульсан"]
+    },
+    "HUMMER": {},
+    "MASERATI": {
+      "Chilbi": { "name": "Ghibli", "aliases": ["гибли", "chilbi"] },
+      "Granturismo": { "name": "GranTurismo", "aliases": ["гран туризмо", "грантуризмо"] },
+      "Quattroporte": ["кватропорте", "кваттропорте"]
+    },
+    "MAYBACH": {
+      "Guard": ["гард"]
+    },
+    "ROLLCE-ROYCE": {
+      "Gost": { "name": "Ghost", "aliases": ["гост", "gost"] },
+      "Mulsanne": ["мюльсан", "мульсан"],
+      "Phantom": ["фантом"],
+      "Wraith": ["рейт", "врейт"]
+    }
+  }
+}

@@ -7,23 +7,10 @@
    data-active на блок с таблицей, дальше всё решает CSS.
 
    Справочник приходит из prices.json (лист «Классификация машин»), руками
-   марки и классы не вписываются. */
-import { classes } from '../lib/services.js';
-
-/* Бренд встречается в нескольких классах — собираем одну запись на бренд */
-const index = new Map();
-for (const cls of classes) {
-  for (const { brand, models } of cls.brands) {
-    const key = brand.trim();
-    if (!index.has(key)) index.set(key, []);
-    for (const model of models) {
-      index.get(key).push({ model: model.trim(), cls: cls.id, label: cls.label });
-    }
-  }
-}
-const brands = [...index.entries()]
-  .map(([brand, models]) => ({ brand, models }))
-  .sort((a, b) => a.brand.localeCompare(b.brand, 'ru'));
+   марки и классы не вписываются. Вариации написания — car-aliases.json,
+   поиск по ним — lib/car-search.js. Первое поле ищет и марку, и модель:
+   «камри» сразу даёт Toyota Camry и класс. */
+import { carIndex } from '../lib/cars.js';
 
 const { target = 'price' } = Astro.props;
 ---
@@ -36,7 +23,7 @@ const { target = 'price' } = Astro.props;
 
   <div class="widget-fields">
     <div class="combo" data-combo="brand">
-      <label class="combo-label" for="class-brand">Марка</label>
+      <label class="combo-label" for="class-brand">Марка или модель</label>
       <input
         class="field combo-input"
         id="class-brand"
@@ -45,7 +32,7 @@ const { target = 'price' } = Astro.props;
         role="combobox"
         aria-expanded="false"
         aria-controls="class-brand-list"
-        placeholder="Начните вводить: BMW, Kia…"
+        placeholder="Например: Камри, Kia Rio, BMW X5"
       />
       <ul class="combo-list" id="class-brand-list" role="listbox" hidden></ul>
     </div>
@@ -77,10 +64,12 @@ const { target = 'price' } = Astro.props;
     Не нашли модель в списке — <a href="#contacts">оставьте номер</a>, назовём класс и цену по телефону.
   </p>
 
-  <script type="application/json" data-class-index set:html={JSON.stringify(brands)} />
+  <script type="application/json" data-class-index set:html={JSON.stringify(carIndex)} />
 </div>
 
 <script>
+  import { searchCars } from '../lib/car-search.js';
+
   document.querySelectorAll('[data-class-widget]').forEach((widget) => {
     const data = JSON.parse(widget.querySelector('[data-class-index]').textContent);
     const price = document.getElementById(widget.dataset.target);
@@ -104,34 +93,36 @@ const { target = 'price' } = Astro.props;
       active = -1;
     };
 
-    /* Поиск по первым буквам: сначала совпадения с начала строки, потом вхождения */
-    const match = (list, query, key) => {
-      const q = query.trim().toLowerCase();
-      if (!q) return list.slice(0, 40);
-      const starts = [];
-      const inside = [];
-      for (const item of list) {
-        const value = String(item[key]).toLowerCase();
-        if (value.startsWith(q)) starts.push(item);
-        else if (value.includes(q)) inside.push(item);
-      }
-      return [...starts, ...inside].slice(0, 40);
-    };
-
-    const render = (c, list, key, onPick) => {
+    /* Пункт списка: марка — просто название; модель — название и класс справа.
+       В первом поле модель показывается вместе с маркой: «Toyota Camry». */
+    const render = (c, list, onPick) => {
       items = list;
+      active = list.length ? 0 : -1;
       c.list.innerHTML = '';
       if (!list.length) {
         const li = document.createElement('li');
         li.className = 'combo-empty';
-        li.textContent = 'Ничего не нашли';
+        li.textContent = 'Такой модели нет в списке';
         c.list.append(li);
       }
       list.forEach((item, i) => {
         const li = document.createElement('li');
         li.className = 'combo-option';
         li.setAttribute('role', 'option');
-        li.textContent = item[key];
+        const name = document.createElement('span');
+        name.textContent =
+          item.type === 'brand'
+            ? item.brand.brand
+            : c === brand
+              ? `${item.brand.brand} ${item.model.model}`
+              : item.model.model;
+        li.append(name);
+        if (item.type === 'model') {
+          const cls = document.createElement('span');
+          cls.className = 'combo-class';
+          cls.textContent = item.model.label;
+          li.append(cls);
+        }
         li.addEventListener('mousedown', (e) => {
           e.preventDefault(); // не даём полю потерять фокус раньше выбора
           onPick(item);
@@ -141,6 +132,7 @@ const { target = 'price' } = Astro.props;
       });
       c.list.hidden = false;
       c.input.setAttribute('aria-expanded', 'true');
+      highlight(c);
     };
 
     const highlight = (c) => {
@@ -149,45 +141,71 @@ const { target = 'price' } = Astro.props;
       });
     };
 
-    const pickBrand = (item) => {
-      current = item;
-      brand.input.value = item.brand;
-      close(brand);
+    const selectBrand = (b) => {
+      current = b;
+      brand.input.value = b.brand;
       model.input.disabled = false;
-      model.input.value = '';
       model.input.placeholder = 'Начните вводить модель';
-      model.input.focus();
-      render(model, match(item.models, '', 'model'), 'model', pickModel);
     };
 
     const pickModel = (item) => {
-      model.input.value = item.model;
+      selectBrand(item.brand);
+      close(brand);
+      model.input.value = item.model.model;
       close(model);
-      resultValue.textContent = item.label;
+      resultValue.textContent = item.model.label;
       result.hidden = false;
-      if (price) price.dataset.active = item.cls;
+      if (price) price.dataset.active = item.model.cls;
       // Цель Метрики «использование виджета класса» подключится к этому событию
       document.dispatchEvent(
         new CustomEvent('carclass:selected', {
-          detail: { brand: current.brand, model: item.model, cls: item.cls },
+          detail: { brand: item.brand.brand, model: item.model.model, cls: item.model.cls },
         })
       );
     };
 
+    const pickBrand = (item) => {
+      if (item.type === 'model') return pickModel(item);
+      selectBrand(item.brand);
+      close(brand);
+      model.input.value = '';
+      model.input.focus();
+      render(model, searchCars(data, '', { brand: current }), pickModel);
+    };
+
+    /* Что искали и не нашли — на выходе из поля. По этим запросам дополняем
+       car-aliases.json; цель Метрики подключится к событию. */
+    let missed = '';
+    const showBrand = () => {
+      const found = searchCars(data, brand.input.value);
+      missed = found.length ? '' : brand.input.value.trim();
+      render(brand, found, pickBrand);
+    };
+    const showModel = () => {
+      if (!current) return;
+      const found = searchCars(data, model.input.value, { brand: current, limit: 40 });
+      missed = found.length ? '' : `${current.brand} ${model.input.value.trim()}`;
+      render(model, found, pickModel);
+    };
+    const reportMissed = () => {
+      if (missed.length < 3) return;
+      document.dispatchEvent(new CustomEvent('carclass:notfound', { detail: { query: missed } }));
+      missed = '';
+    };
+
     brand.input.addEventListener('input', () => {
-      render(brand, match(data, brand.input.value, 'brand'), 'brand', pickBrand);
+      // марку переписали — выбранная модель больше не относится к ней
+      if (current && brand.input.value !== current.brand) {
+        current = null;
+        model.input.value = '';
+        model.input.disabled = true;
+        model.input.placeholder = 'Сначала выберите марку';
+      }
+      showBrand();
     });
-    brand.input.addEventListener('focus', () => {
-      render(brand, match(data, brand.input.value, 'brand'), 'brand', pickBrand);
-    });
-    model.input.addEventListener('input', () => {
-      if (!current) return;
-      render(model, match(current.models, model.input.value, 'model'), 'model', pickModel);
-    });
-    model.input.addEventListener('focus', () => {
-      if (!current) return;
-      render(model, match(current.models, model.input.value, 'model'), 'model', pickModel);
-    });
+    brand.input.addEventListener('focus', showBrand);
+    model.input.addEventListener('input', showModel);
+    model.input.addEventListener('focus', showModel);
 
     // Стрелки и Enter — список должен работать без мыши
     [brand, model].forEach((c) => {
@@ -204,7 +222,10 @@ const { target = 'price' } = Astro.props;
           close(c);
         }
       });
-      c.input.addEventListener('blur', () => close(c));
+      c.input.addEventListener('blur', () => {
+        close(c);
+        reportMissed();
+      });
     });
 
     widget.querySelector('[data-reset]').addEventListener('click', () => {
@@ -222,6 +243,8 @@ const { target = 'price' } = Astro.props;
 
 <style>
   .widget {
+    /* у .dark-panel overflow: hidden — выпадающий список должен выходить за край плашки */
+    overflow: visible;
     padding: var(--sp-32) var(--sp-40);
     display: grid;
     gap: var(--sp-24);
@@ -258,18 +281,27 @@ const { target = 'price' } = Astro.props;
     display: grid;
     gap: 2px;
   }
-  .combo-option {
+  /* display: grid перебивает атрибут hidden — без этого закрытый список остаётся на экране */
+  .combo-list[hidden] { display: none; }
+
+  /* Пункты создаёт скрипт — scoped-стили до них не доходят, поэтому :global */
+  .combo-list :global(.combo-option) {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--sp-12);
     padding: 8px var(--sp-12);
     border-radius: var(--r-row);
     cursor: pointer;
     transition: background-color var(--t-hover-out) var(--ease-out);
   }
-  .combo-option:hover,
-  .combo-option.is-active {
+  .combo-list :global(.combo-option:hover),
+  .combo-list :global(.combo-option.is-active) {
     background: var(--color-row-hover-dark);
     transition-duration: var(--t-hover-in);
   }
-  .combo-empty { padding: 8px var(--sp-12); }
+  .combo-list :global(.combo-class) { flex-shrink: 0; font-size: var(--text-caption); }
+  .combo-list :global(.combo-empty) { padding: 8px var(--sp-12); }
 
   .widget-result {
     display: grid;

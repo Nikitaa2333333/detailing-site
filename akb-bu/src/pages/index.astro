@@ -6,21 +6,28 @@ import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
 import Section from '../components/Section.astro';
 import ServiceTiles from '../components/ServiceTiles.astro';
+import Calculator from '../components/Calculator.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import content from '../data/content.json';
 
-// Цифры, работы и расчёт временно сняты со страницы — компоненты
+// Цифры, работы и форма CalcPanel временно сняты со страницы — компоненты
 // Numbers/Works/CalcPanel лежат на месте, вернуть = раскомментировать секции ниже.
-const { services, brand } = content;
+const { services, brand, calculator } = content;
 ---
 
 <Layout>
   <Header />
   <Hero />
 
-  <!-- Услуги — тёмная полоса; плашка с фото занимает 2×2, по наведению показывает список услуг -->
+  <!-- Калькулятор сразу под первым экраном: машина → услуги → сумма → заявка -->
+  <Section id="calc" title={calculator.title} dark center>
+    <Calculator />
+  </Section>
+
+  <!-- Услуги — тёмная полоса; плашка с фото занимает 2×2, по наведению показывает список услуг.
+       Ссылки плашек ведут в свой раздел калькулятора -->
   <Section id="services" title={services.title} dark reveal={false}>
-    <ServiceTiles cta={services.cta} more={services.more} />
+    <ServiceTiles cta={services.cta} more={services.more} href="#calc" />
   </Section>
 
   <SiteFooter brand={brand} />

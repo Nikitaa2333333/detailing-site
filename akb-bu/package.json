@@ -7,7 +7,8 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node scripts/test-search.mjs && astro build",
+    "test:search": "node scripts/test-search.mjs",
     "preview": "astro preview",
     "astro": "astro"
   },

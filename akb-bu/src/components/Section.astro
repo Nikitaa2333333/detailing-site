@@ -8,6 +8,7 @@
    <Section>                            — без шапки, только контент
    dark      — чёрная полоса во всю ширину, белый текст
    flushTop  — прижать к предыдущей секции (убрать верхний отступ)
+   center    — заголовок без метки, по центру над блоком (калькулятор)
    reveal    — появление шапки при прокрутке; false — секция стоит на месте сразу */
 const {
   id,
@@ -15,6 +16,7 @@ const {
   title,
   dark = false,
   flushTop = false,
+  center = false,
   reveal = true,
   class: klass = '',
 } = Astro.props;
@@ -32,7 +34,7 @@ const {
 >
   <div class="container">
     {title && (
-      <div class:list={['section-head', !label && 'section-head--plain']} data-reveal={reveal || undefined}>
+      <div class:list={['section-head', !label && 'section-head--plain', center && 'section-head--center']} data-reveal={reveal || undefined}>
         {label && <p class="section-label">{label}</p>}
         <h2 class="section-title">{title}</h2>
       </div>

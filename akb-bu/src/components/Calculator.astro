@@ -1,0 +1,1275 @@
+---
+/* Калькулятор-мастер: машина → направление → услуги → заявка.
+
+   Одна карточка, четыре шага. На экране всегда только текущий шаг, высота
+   карточки плавно подстраивается под него. Внизу карточки прилипает полоса:
+   машина, сколько выбрано и на какую сумму, кнопка следующего шага.
+
+   Всё — в готовом HTML: услуги, цены «от» и описания печатаются на сборке,
+   скрипт переключает шаги и подставляет цену выбранного класса.
+   Цены — только из prices.json, машины — из lib/cars.js (прайс + вариации).
+   Мототехника в расчёт не входит: у неё свои два класса, не пять. */
+import content from '../data/content.json';
+import prices from '../data/prices.json';
+import { carIndex } from '../lib/cars.js';
+import { rub, plural } from '../lib/catalog.js';
+import { sentence } from '../lib/typo.js';
+import { serviceText } from '../lib/service-texts.js';
+import { checkIntents } from '../lib/service-intents.js';
+
+checkIntents(prices); // словарь «беда → услуги» ссылается только на то, что есть в прайсе
+
+const t = content.calculator;
+const { contacts } = content;
+const classIds = prices.classes.map((c) => c.id);
+const sheetByName = new Map(prices.categories.map((s) => [s.sheet, s]));
+
+/* Ячейка цены для клиента: ['e', 790] — точная, ['f', 790] — «от», null — по запросу */
+const cell = (c) => {
+  const v = c ? (c.value ?? c.min ?? null) : null;
+  return v == null ? null : [c.kind === 'exact' ? 'e' : 'f', v];
+};
+
+const cats = content.services.categories
+  .map((cat) => ({
+    id: cat.id,
+    title: cat.title,
+    sheets: cat.sheets
+      .map(({ sheet: name, title }) => ({ sheet: sheetByName.get(name), title }))
+      .filter(({ sheet }) => sheet && sheet.classLabels.length === classIds.length)
+      .map(({ sheet, title }) => ({
+        id: sheet.id,
+        title,
+        groups: sheet.groups.map((g) => ({
+          title: g.title ? sentence(g.title) : '',
+          services: g.services.map((s) => {
+            const cells = sheet.classLabels.map((label) => cell(s.prices[label]));
+            const known = cells.filter(Boolean).map((c) => c[1]);
+            // тексты — наша редактура из service-texts.json, иначе прайс как есть
+            const text = serviceText(sheet.id, s);
+            return {
+              key: `${sheet.id}:${s.id}`,
+              name: text.name,
+              duration: (s.duration ?? '').trim(),
+              desc: text.lead,
+              steps: text.includes,
+              terms: text.terms,
+              cells,
+              min: known.length ? Math.min(...known) : null,
+            };
+          }),
+        })),
+      })),
+  }))
+  .filter((c) => c.sheets.length);
+
+for (const c of cats) {
+  const all = c.sheets.flatMap((s) => s.groups.flatMap((g) => g.services));
+  c.count = all.length;
+  const mins = all.map((s) => s.min).filter((v) => v != null);
+  c.from = mins.length ? Math.min(...mins) : null;
+}
+
+const searchIcon =
+  '<circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m13.5 13.5 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>';
+---
+
+<div class="wiz" data-calc data-step="1" data-note-from={t.noteFrom} data-note-request={t.noteRequest} data-no-car={t.noCar}>
+  <!-- Шаги сверху: пройденный можно открыть снова -->
+  <div class="wiz-head">
+    <ol class="wiz-steps">
+      {t.steps.map((label, i) => (
+        <li>
+          <button class="wiz-step" type="button" data-go={i + 1} disabled={i > 0}>
+            <span class="wiz-step-num">{i + 1}</span>
+            <span class="wiz-step-label" data-step-label={i + 1}>{label}</span>
+          </button>
+        </li>
+      ))}
+    </ol>
+    <div class="wiz-find" data-find-box hidden>
+      <svg class="icon-search" viewBox="0 0 20 20" aria-hidden="true" set:html={searchIcon} />
+      <input class="field wiz-find-input" type="search" placeholder={t.searchPlaceholder} aria-label="Поиск услуги" data-find />
+    </div>
+  </div>
+
+  <div class="wiz-body" data-body>
+    <!-- 1. Машина -->
+    <section class="wiz-panel" data-panel="1">
+      <h3 class="wiz-title">{t.carTitle}</h3>
+      <div class="combo">
+        <svg class="icon-search" viewBox="0 0 20 20" aria-hidden="true" set:html={searchIcon} />
+        <input
+          class="field combo-input"
+          id="calc-car"
+          type="text"
+          autocomplete="off"
+          role="combobox"
+          aria-expanded="false"
+          aria-controls="calc-car-list"
+          aria-label={t.carTitle}
+          placeholder={t.carPlaceholder}
+          data-car-input
+        />
+        <ul class="combo-list" id="calc-car-list" role="listbox" hidden data-car-list></ul>
+      </div>
+      <div class="car-examples">
+        {t.carExamples.map((q) => <button class="car-example" type="button" data-car-example={q}>{q}</button>)}
+      </div>
+      <button class="wiz-link" type="button" data-skip>{t.skip}</button>
+    </section>
+
+    <!-- 2. Направление -->
+    <section class="wiz-panel" data-panel="2" hidden>
+      <h3 class="wiz-title">{t.catsTitle}</h3>
+      <p class="wiz-lead">{t.catsNote}</p>
+      <div class="cats">
+        {cats.map((c) => (
+          <button class="cat" type="button" data-cat={c.id}>
+            <span class="cat-top">
+              <span class="cat-count">{c.count} {plural(c.count)}</span>
+              <span class="cat-picked" data-cat-picked hidden></span>
+            </span>
+            <span class="cat-title">{c.title}</span>
+            <span class="cat-price" data-cat-price>{c.from == null ? 'по запросу' : `от ${rub(c.from)}`}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+
+    <!-- 3. Услуги направления: разделы чипами, на экране один короткий список -->
+    <section class="wiz-panel" data-panel="3" hidden>
+      <button class="wiz-back" type="button" data-go="2">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        {t.back}
+      </button>
+      <h3 class="wiz-title" data-cat-title></h3>
+      <!-- Поиск по задаче: «поцарапали дверь» → что это и что обычно берут. Заполняет скрипт -->
+      <div class="find-hints" data-find-hints hidden></div>
+      {cats.map((c) => (
+        <div class="chips" data-chips={c.id} hidden>
+          {c.sheets.map((s) => (
+            <button class="chip-btn" type="button" data-sheet-pick={s.id}>
+              {s.title}
+              <span class="chip-count" data-sheet-picked hidden></span>
+            </button>
+          ))}
+        </div>
+      ))}
+
+      {cats.map((c) =>
+        c.sheets.map((s) => (
+          <div class="sheet" id={`calc-sheet-${s.id}`} data-sheet={s.id} data-sheet-cat={c.id} hidden>
+            <h4 class="sheet-title">{c.title} · {s.title}</h4>
+            {s.groups.map((g) => (
+              <div class="group" data-group>
+                {g.title && <p class="group-title">{g.title}</p>}
+                <ul class="svc-list">
+                  {g.services.map((svc) => (
+                    <li class="svc" data-svc={svc.key} data-name={svc.name} data-cells={JSON.stringify(svc.cells)}>
+                      <label class="svc-main">
+                        <input class="svc-input" type="checkbox" value={svc.key} />
+                        <span class="svc-check" aria-hidden="true"></span>
+                        <span class="svc-body">
+                          <span class="svc-name">{svc.name}</span>
+                          {svc.desc && <span class="svc-desc">{svc.desc}</span>}
+                          {svc.duration && <span class="svc-time">{svc.duration}</span>}
+                          {svc.terms.length > 0 && <span class="svc-terms">{svc.terms.join(' ')}</span>}
+                        </span>
+                        <span class="svc-price" data-price>{svc.min == null ? 'по запросу' : `от ${rub(svc.min)}`}</span>
+                      </label>
+                      {svc.steps.length > 0 && (
+                        <details class="svc-more">
+                          <summary>{t.more}</summary>
+                          <ul class="bullets">
+                            {svc.steps.map((step) => <li>{step}</li>)}
+                          </ul>
+                        </details>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        ))
+      )}
+      <p class="find-empty" data-find-empty hidden>{t.searchEmpty}</p>
+    </section>
+
+    <!-- 4. Заявка -->
+    <section class="wiz-panel" data-panel="4" hidden>
+      <h3 class="wiz-title">{t.orderTitle}</h3>
+      <div class="order">
+        <div class="order-sum">
+          <p class="order-car" data-order-car></p>
+          <ul class="order-list" data-order-list></ul>
+          <p class="order-empty" data-order-empty>{t.orderEmpty}</p>
+          <div class="order-total" data-order-total>
+            <p class="order-total-label"><span>{t.total}</span><span data-order-count></span></p>
+            <p class="order-total-value" data-order-value></p>
+            <p class="order-note" data-order-note hidden></p>
+          </div>
+          <button class="wiz-link" type="button" data-go="2">{t.addMore}</button>
+        </div>
+
+        <div class="order-form">
+          <form class="form" data-form novalidate>
+            <input class="field" type="text" name="name" placeholder={t.name} autocomplete="name" />
+            <input class="field" type="tel" name="phone" placeholder={t.phone} autocomplete="tel" inputmode="tel" required data-phone />
+            <label class="consent">
+              <input type="checkbox" name="consent" required />
+              <span>{t.consent}</span>
+            </label>
+            <button class="btn btn--primary form-submit" type="submit">{t.button}</button>
+            <p class="form-error" data-form-error hidden></p>
+          </form>
+          <p class="form-success" data-form-success hidden>{t.success}</p>
+          <a class="form-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Полоса итога: прилипает к низу экрана, пока карточка на виду -->
+  <div class="wiz-foot" data-foot>
+    <button class="foot-car" type="button" data-go="1">
+      <span class="foot-car-name" data-foot-car>{t.noCar}</span>
+      <span class="foot-car-change">изменить</span>
+    </button>
+    <p class="foot-total" data-foot-total hidden><span data-foot-count></span><span data-foot-sum></span></p>
+    <button class="btn btn--primary foot-next" type="button" data-next hidden>{t.next}</button>
+  </div>
+
+  <script type="application/json" data-car-index set:html={JSON.stringify(carIndex)} />
+</div>
+
+<script>
+  import { searchCars, normalize } from '../lib/car-search.js';
+  import { haystack, matches } from '../lib/service-search.js';
+  import { matchIntents } from '../lib/service-intents.js';
+
+  const root = document.querySelector<HTMLElement>('[data-calc]');
+  if (root) init(root);
+
+  function init(root: HTMLElement) {
+    const $ = <T extends Element = HTMLElement>(s: string, el: ParentNode = root) => el.querySelector<T>(s)!;
+    const $$ = <T extends Element = HTMLElement>(s: string, el: ParentNode = root) => [...el.querySelectorAll<T>(s)];
+    const cars = JSON.parse($('[data-car-index]').textContent || '[]');
+    const NBSP = ' ';
+    const rub = (v: number) => `${String(v).replace(/\B(?=(\d{3})+(?!\d))/g, NBSP)}${NBSP}₽`;
+    const plural = (n: number, f: [string, string, string]) => {
+      const a = n % 10, b = n % 100;
+      return a === 1 && b !== 11 ? f[0] : a >= 2 && a <= 4 && (b < 10 || b >= 20) ? f[1] : f[2];
+    };
+    const services = (n: number) => `${n}${NBSP}${plural(n, ['услуга', 'услуги', 'услуг'])}`;
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    type Cell = ['e' | 'f', number] | null;
+    type Car = { brand?: string; model?: string; cls: string };
+
+    const rows = $$('[data-svc]').map((el) => ({
+      el,
+      key: el.dataset.svc!,
+      name: el.dataset.name!,
+      cells: JSON.parse(el.dataset.cells!) as Cell[],
+      input: $<HTMLInputElement>('.svc-input', el),
+      price: $('[data-price]', el),
+      sheet: el.closest<HTMLElement>('[data-sheet]')!.dataset.sheet!,
+      cat: el.closest<HTMLElement>('[data-sheet]')!.dataset.sheetCat!,
+      // ищем по всему тексту карточки, группе и «направление · раздел» — как в автотесте
+      find: haystack([
+        $('.svc-body', el).textContent,
+        el.closest('[data-group]')?.querySelector('.group-title')?.textContent,
+        el.closest('[data-sheet]')?.querySelector('.sheet-title')?.textContent,
+      ]),
+    }));
+    const byKey = new Map(rows.map((r) => [r.key, r]));
+    const picked = () => rows.filter((r) => r.input.checked);
+
+    const state: { step: number; car: Car | null; cat: string | null; sheet: string | null; carSeen: boolean } = {
+      step: 1,
+      car: null,
+      cat: null,
+      sheet: null,
+      carSeen: false, // шаг 1 пройден — с машиной или без
+    };
+
+    /* ---------- Цена строки для выбранного класса ---------- */
+    const cellOf = (r: (typeof rows)[number]): Cell => {
+      if (state.car) return r.cells[Number(state.car.cls) - 1];
+      const known = r.cells.filter(Boolean) as [string, number][];
+      return known.length ? ['f', Math.min(...known.map((c) => c[1]))] : null;
+    };
+    const fmt = (c: Cell) => (c ? (c[0] === 'f' ? `от ${rub(c[1])}` : rub(c[1])) : 'по запросу');
+    const carName = (car: Car | null) =>
+      car ? (car.model ? `${car.brand} ${car.model} · ${car.cls}-й класс` : `${car.cls}-й класс`) : root.dataset.noCar!;
+
+    /* ---------- Переход между шагами: высота карточки перетекает ---------- */
+    const body = $('[data-body]');
+    const panels = $$('[data-panel]');
+    const findBox = $('[data-find-box]');
+    const findInput = $<HTMLInputElement>('[data-find]');
+
+    function go(step: number, { scroll = true } = {}) {
+      const from = body.offsetHeight;
+      state.step = step;
+      root.dataset.step = String(step);
+      panels.forEach((p) => (p.hidden = p.dataset.panel !== String(step)));
+      findBox.hidden = step !== 2 && step !== 3;
+      if (step !== 3 && findInput.value) {
+        findInput.value = '';
+        filter();
+      }
+      if (!reduced) {
+        const to = body.offsetHeight;
+        if (from !== to) {
+          body.style.overflow = 'hidden';
+          body
+            .animate([{ height: `${from}px` }, { height: `${to}px` }], { duration: 320, easing: 'cubic-bezier(0.2, 0, 0, 1)' })
+            .finished.then(() => (body.style.overflow = ''));
+        }
+        panels
+          .find((p) => !p.hidden)
+          ?.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], {
+            duration: 280,
+            easing: 'cubic-bezier(0.2, 0, 0, 1)',
+          });
+      }
+      // верх карточки ушёл за экран — возвращаем к началу шага
+      if (scroll && root.getBoundingClientRect().top < 0) root.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+      update();
+    }
+    $$('[data-go]').forEach((btn) => btn.addEventListener('click', () => go(Number(btn.dataset.go))));
+
+    /* ---------- 1. Машина ---------- */
+    const carInput = $<HTMLInputElement>('[data-car-input]');
+    const carList = $('[data-car-list]');
+    let found: any[] = [];
+    let active = -1;
+    let missed = '';
+    let missedCar = ''; // последняя ненайденная машина — менеджер увидит её в заявке
+
+    const closeList = () => {
+      carList.hidden = true;
+      carInput.setAttribute('aria-expanded', 'false');
+      active = -1;
+    };
+    const highlight = () =>
+      $$('.combo-option', carList).forEach((el, i) => el.classList.toggle('is-active', i === active));
+
+    const renderCars = () => {
+      const q = carInput.value.trim();
+      if (!q) return closeList();
+      // только модели: марка без модели класса не даёт
+      found = searchCars(cars, q, { limit: 30 })
+        .flatMap((item: any) =>
+          item.type === 'model' ? [item] : item.brand.models.map((model: any) => ({ type: 'model', brand: item.brand, model }))
+        )
+        .filter((item: any, i: number, all: any[]) => all.findIndex((x) => x.model === item.model) === i)
+        .slice(0, 8);
+      missed = found.length ? '' : q;
+      if (!found.length && q.length >= 3) missedCar = q;
+      active = found.length ? 0 : -1;
+      carList.innerHTML = '';
+      // Не нашли — сама подсказка ведёт дальше: список закрывает ссылку «Без машины» под полем
+      if (!found.length) {
+        const li = document.createElement('li');
+        li.className = 'combo-option is-active';
+        li.setAttribute('role', 'option');
+        const text = document.createElement('span');
+        text.textContent = 'Такой модели нет в списке — посмотреть цены без машины';
+        const hint = document.createElement('span');
+        hint.className = 'combo-class';
+        hint.textContent = 'класс уточним по телефону';
+        li.append(text, hint);
+        li.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          skipCar();
+        });
+        carList.append(li);
+      }
+      found.forEach((item, i) => {
+        const li = document.createElement('li');
+        li.className = 'combo-option';
+        li.setAttribute('role', 'option');
+        const name = document.createElement('span');
+        name.textContent = `${item.brand.brand} ${item.model.model}`;
+        const cls = document.createElement('span');
+        cls.className = 'combo-class';
+        cls.textContent = item.model.label;
+        li.append(name, cls);
+        li.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          pickCar(i);
+        });
+        carList.append(li);
+      });
+      carList.hidden = false;
+      carInput.setAttribute('aria-expanded', 'true');
+      highlight();
+    };
+
+    const pickCar = (i: number) => {
+      const item = found[i];
+      if (!item) return;
+      missedCar = '';
+      closeList();
+      carInput.blur();
+      setCar({ brand: item.brand.brand, model: item.model.model, cls: item.model.cls });
+      document.dispatchEvent(
+        new CustomEvent('carclass:selected', {
+          detail: { brand: item.brand.brand, model: item.model.model, cls: item.model.cls },
+        })
+      );
+    };
+
+    function setCar(car: Car | null, { advance = true } = {}) {
+      state.car = car;
+      state.carSeen = true;
+      carInput.value = '';
+      rows.forEach((r) => {
+        const c = cellOf(r);
+        r.price.textContent = fmt(c);
+        r.el.classList.toggle('is-request', !c);
+      });
+      // цена «от» плитки направления — уже для этого класса
+      $$('[data-cat]').forEach((tile) => {
+        const vals = rows
+          .filter((r) => r.cat === tile.dataset.cat)
+          .map(cellOf)
+          .filter(Boolean)
+          .map((c) => c![1]);
+        $('[data-cat-price]', tile).textContent = vals.length ? `от ${rub(Math.min(...vals))}` : 'по запросу';
+      });
+      if (advance) go(state.cat && picked().length ? 3 : 2);
+      else update();
+      save();
+    }
+
+    carInput.addEventListener('input', renderCars);
+    carInput.addEventListener('focus', renderCars);
+    carInput.addEventListener('keydown', (e) => {
+      if (carList.hidden) return;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        active = Math.max(0, Math.min(found.length - 1, active + (e.key === 'ArrowDown' ? 1 : -1)));
+        highlight();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (found.length) pickCar(active);
+        else skipCar();
+      } else if (e.key === 'Escape') closeList();
+    });
+    carInput.addEventListener('blur', () => {
+      closeList();
+      // что искали и не нашли — по этим запросам дополняем car-aliases.json
+      if (missed.length >= 3) {
+        document.dispatchEvent(new CustomEvent('carclass:notfound', { detail: { query: missed } }));
+        missed = '';
+      }
+    });
+    $$('[data-car-example]').forEach((btn) =>
+      btn.addEventListener('click', () => {
+        carInput.value = btn.dataset.carExample!;
+        renderCars();
+        pickCar(0);
+      })
+    );
+    // Без машины: цены «от», класс уточнит менеджер. Что искали — остаётся для заявки
+    function skipCar() {
+      closeList();
+      carInput.blur();
+      setCar(null);
+    }
+    $('[data-skip]').addEventListener('click', skipCar);
+
+    /* ---------- 2–3. Направление и его разделы ---------- */
+    function openCat(cat: string, sheet?: string) {
+      state.cat = cat;
+      $('[data-cat-title]').textContent = $(`[data-cat="${cat}"] .cat-title`).textContent;
+      $$('[data-chips]').forEach((c) => (c.hidden = c.dataset.chips !== cat));
+      // по умолчанию — раздел, где уже есть отметки, иначе первый
+      const first = rows.find((r) => r.cat === cat && r.input.checked)?.sheet ?? $(`[data-chips="${cat}"] [data-sheet-pick]`).dataset.sheetPick!;
+      showSheet(sheet ?? first);
+      if (state.step !== 3) go(3);
+    }
+    function showSheet(id: string) {
+      state.sheet = id;
+      $$('[data-sheet-pick]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sheetPick === id)));
+      $$('[data-sheet]').forEach((s) => (s.hidden = s.dataset.sheet !== id));
+    }
+    $$('[data-cat]').forEach((tile) => tile.addEventListener('click', () => openCat(tile.dataset.cat!)));
+    $$('[data-sheet-pick]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const from = body.offsetHeight;
+        showSheet(b.dataset.sheetPick!);
+        if (!reduced) {
+          const to = body.offsetHeight;
+          body.animate([{ height: `${from}px` }, { height: `${to}px` }], { duration: 240, easing: 'cubic-bezier(0.2, 0, 0, 1)' });
+        }
+      })
+    );
+
+    /* Поиск по всем направлениям: разделы-чипы гаснут, видны только совпадения.
+       Сама проверка — lib/service-search.js, её же гоняет автотест */
+    const findEmpty = $('[data-find-empty]');
+    const findHints = $('[data-find-hints]');
+    let missedService = ''; // что искали и не нашли — уходит в заявку
+    /* Первая задача — заголовок шага (его ставит filter), здесь только её пояснение лидом.
+       Вторая, если запрос подошёл под две, — своим подзаголовком с пояснением */
+    function hints(found: ReturnType<typeof matchIntents>) {
+      findHints.replaceChildren(
+        ...found.map((i, n) => {
+          const box = document.createElement('div');
+          box.className = 'find-hint';
+          if (n > 0) {
+            const title = document.createElement('h4');
+            title.className = 'find-hint-title';
+            title.textContent = i.title;
+            box.append(title);
+          }
+          const lead = document.createElement('p');
+          lead.className = 'find-hint-lead';
+          lead.textContent = i.lead;
+          box.append(lead);
+          return box;
+        })
+      );
+      findHints.hidden = !found.length;
+    }
+    function filter() {
+      const q = normalize(findInput.value);
+      root.classList.toggle('is-finding', !!q);
+      if (q && state.step !== 3) go(3, { scroll: false });
+      // задача из словаря («запах в салоне») добавляет свою подборку к совпадениям по тексту карточек
+      const found = q ? matchIntents(findInput.value) : [];
+      const suggested = new Set(found.flatMap((i) => i.services));
+      hints(found);
+      let any = false;
+      rows.forEach((r) => {
+        const hit = !q || suggested.has(r.key) || matches(r.find, q);
+        r.el.hidden = !hit;
+        any ||= hit;
+      });
+      $$('[data-group]').forEach((g) => (g.hidden = !!q && !$$('[data-svc]', g).some((el) => !el.hidden)));
+      if (q) {
+        $$('[data-sheet]').forEach((s) => (s.hidden = !$$('[data-svc]', s).some((el) => !el.hidden)));
+        $$('[data-chips]').forEach((c) => (c.hidden = true));
+        $('[data-cat-title]').textContent = !any ? '' : found.length ? found[0].title : 'Нашли';
+      } else if (state.step === 3) {
+        if (state.cat) openCat(state.cat, state.sheet ?? undefined);
+        else go(2, { scroll: false });
+      }
+      findEmpty.hidden = !q || any;
+      if (q && !any && q.length >= 3) missedService = findInput.value.trim();
+    }
+    findInput.addEventListener('input', filter);
+
+    /* Плашки услуг на главной ведут прямо в свой раздел калькулятора */
+    document.addEventListener('click', (e) => {
+      const link = (e.target as HTMLElement)?.closest?.<HTMLElement>('[data-service-id]');
+      if (!link) return;
+      const sheet = $(`[data-sheet="${link.dataset.serviceId}"]`);
+      if (!sheet) return;
+      e.preventDefault();
+      state.carSeen = true;
+      openCat(sheet.dataset.sheetCat!, sheet.dataset.sheet!);
+      root.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+    });
+
+    /* Первый экран: поле «марка или модель» ведёт сюда */
+    document.addEventListener('click', (e) => {
+      if (!(e.target as HTMLElement)?.closest?.('[data-calc-open]')) return;
+      e.preventDefault();
+      if (state.step !== 1) go(1, { scroll: false });
+      carInput.focus({ preventScroll: true });
+      root.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+    });
+
+    /* ---------- Итог: полоса снизу, плитки, чипы, шаг 4 ---------- */
+    let totalText = '';
+    function update() {
+      const list = picked();
+      let sum = 0;
+      let from = !state.car;
+      let request = 0;
+      for (const r of list) {
+        const c = cellOf(r);
+        if (c) {
+          sum += c[1];
+          if (c[0] === 'f') from = true;
+        } else request += 1;
+      }
+      totalText = sum ? `${from ? 'от ' : ''}${rub(sum)}` : 'по запросу';
+
+      // шаги сверху: пройденные открываются, у первого — имя машины
+      const reach = state.carSeen ? 4 : 1;
+      $$<HTMLButtonElement>('.wiz-step').forEach((b) => {
+        const n = Number(b.dataset.go);
+        b.disabled = n > reach || (n === 3 && !state.cat);
+        b.classList.toggle('is-current', n === state.step);
+        b.classList.toggle('is-done', n < state.step || (n === 1 && state.carSeen));
+      });
+      $('[data-step-label="1"]').textContent = state.car?.model ? `${state.car.brand} ${state.car.model}` : state.car ? `${state.car.cls}-й класс` : 'Машина';
+
+      // счётчики на плитках направлений и чипах разделов
+      $$('[data-cat]').forEach((tile) => {
+        const n = list.filter((r) => r.cat === tile.dataset.cat).length;
+        const badge = $('[data-cat-picked]', tile);
+        badge.textContent = `выбрано ${n}`;
+        badge.hidden = !n;
+        tile.classList.toggle('has-picked', n > 0);
+      });
+      $$('[data-sheet-pick]').forEach((b) => {
+        const n = list.filter((r) => r.sheet === b.dataset.sheetPick).length;
+        const badge = $('[data-sheet-picked]', b);
+        badge.textContent = String(n);
+        badge.hidden = !n;
+      });
+
+      // полоса снизу
+      $('[data-foot-car]').textContent = carName(state.car);
+      $('[data-foot-total]').hidden = !list.length;
+      $('[data-foot-count]').textContent = services(list.length);
+      $('[data-foot-sum]').textContent = totalText;
+      $('[data-next]').hidden = !list.length || state.step === 4;
+      root.classList.toggle('has-picked', list.length > 0);
+
+      // шаг 4
+      $('[data-order-car]').textContent = carName(state.car);
+      const orderList = $('[data-order-list]');
+      orderList.innerHTML = '';
+      for (const r of list) {
+        const li = document.createElement('li');
+        li.className = 'order-item';
+        const name = document.createElement('span');
+        name.textContent = r.name;
+        const price = document.createElement('span');
+        price.className = 'order-item-price';
+        price.textContent = fmt(cellOf(r));
+        const drop = document.createElement('button');
+        drop.type = 'button';
+        drop.className = 'order-item-drop';
+        drop.setAttribute('aria-label', `Убрать: ${r.name}`);
+        drop.innerHTML =
+          '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4.5 4.5 7 7m0-7-7 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+        drop.addEventListener('click', () => {
+          r.input.checked = false;
+          update();
+          save();
+        });
+        li.append(name, price, drop);
+        orderList.append(li);
+      }
+      $('[data-order-empty]').hidden = list.length > 0;
+      $('[data-order-total]').hidden = !list.length;
+      $('[data-order-count]').textContent = services(list.length);
+      $('[data-order-value]').textContent = totalText;
+      const notes: string[] = [];
+      if (from && state.car) notes.push(root.dataset.noteFrom!);
+      if (!state.car) notes.push('Укажите машину — сумма станет точной.');
+      if (request) notes.push(`${services(request)} ${root.dataset.noteRequest}`);
+      $('[data-order-note]').textContent = notes.join(' ');
+      $('[data-order-note]').hidden = !notes.length;
+    }
+
+    rows.forEach((r) =>
+      r.input.addEventListener('change', () => {
+        update();
+        save();
+      })
+    );
+    $('[data-next]').addEventListener('click', () => go(4));
+
+    /* ---------- Сохранение: вернулся на сайт — расчёт на месте ---------- */
+    const STORE = 'ds-calc-v1';
+    function save() {
+      try {
+        localStorage.setItem(STORE, JSON.stringify({ car: state.car, seen: state.carSeen, sel: picked().map((r) => r.key) }));
+      } catch {}
+    }
+    try {
+      const data = JSON.parse(localStorage.getItem(STORE) || 'null');
+      if (data) {
+        for (const key of data.sel ?? []) {
+          const r = byKey.get(key);
+          if (r) r.input.checked = true;
+        }
+        if (data.car?.cls || data.seen) {
+          setCar(data.car?.cls ? data.car : null, { advance: false });
+          go(2, { scroll: false });
+        }
+      }
+    } catch {}
+
+    /* ---------- Заявка ---------- */
+    const form = $<HTMLFormElement>('[data-form]');
+    const phone = $<HTMLInputElement>('[data-phone]');
+    const error = $('[data-form-error]');
+
+    phone.addEventListener('input', (e) => {
+      if ((e as InputEvent).inputType?.startsWith('delete')) return;
+      let d = phone.value.replace(/\D/g, '');
+      if (d.startsWith('8')) d = `7${d.slice(1)}`;
+      if (d && !d.startsWith('7')) d = `7${d}`;
+      const p = d.slice(1, 11);
+      let out = '+7';
+      if (p.length) out += ` (${p.slice(0, 3)}`;
+      if (p.length >= 3) out += `) ${p.slice(3, 6)}`;
+      if (p.length >= 6) out += `-${p.slice(6, 8)}`;
+      if (p.length >= 8) out += `-${p.slice(8, 10)}`;
+      phone.value = out;
+    });
+
+    // UTM с первого захода — держим на всю сессию
+    const utm = (() => {
+      try {
+        const own = Object.fromEntries([...new URLSearchParams(location.search)].filter(([k]) => k.startsWith('utm_')));
+        if (Object.keys(own).length) sessionStorage.setItem('ds-utm', JSON.stringify(own));
+        return JSON.parse(sessionStorage.getItem('ds-utm') || '{}');
+      } catch {
+        return {};
+      }
+    })();
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const digits = phone.value.replace(/\D/g, '');
+      const consent = form.elements.namedItem('consent') as HTMLInputElement;
+      const problem =
+        digits.length !== 11 ? 'Проверьте номер телефона' : !consent.checked ? 'Нужно согласие на обработку данных' : '';
+      error.textContent = problem;
+      error.hidden = !problem;
+      if (problem) return;
+      const list = picked();
+      const lead = {
+        name: (form.elements.namedItem('name') as HTMLInputElement).value.trim(),
+        phone: phone.value,
+        car: state.car,
+        services: list.map((r) => ({ name: r.name, price: fmt(cellOf(r)) })),
+        total: list.length ? totalText : '',
+        // чего не нашёл в справочниках: менеджеру — какая машина, нам — что дописать
+        searched: {
+          car: state.car?.model ? '' : missedCar,
+          service: missedService,
+        },
+        page: location.href,
+        utm,
+      };
+      // Доставка заявок (Telegram + Таблица через Apps Script) подключится к этому событию
+      document.dispatchEvent(new CustomEvent('lead:submit', { detail: lead }));
+      form.hidden = true;
+      $('[data-form-success]').hidden = false;
+    });
+
+    update();
+  }
+</script>
+
+<style>
+  /* ---------- Цвета мастера ----------
+     Светлая схема — по умолчанию; в тёмной секции (<Section dark>, класс .on-dark)
+     мастер переключается сам. Всё ниже читает только эти переменные. */
+  .wiz {
+    --wiz-bg: var(--color-white);                 /* сама карточка */
+    --wiz-fg: var(--color-ink);
+    --wiz-field: var(--color-page);               /* поля, плитки, карточки услуг */
+    --wiz-field-hover: var(--color-tile);
+    --wiz-hover: var(--color-row-hover-light);    /* наведение на прозрачные кнопки */
+    --wiz-line: var(--color-line-ink);            /* обводки кружков и чипов */
+    --wiz-sel-bg: var(--color-ink);               /* выбранное: плитка, чип, услуга */
+    --wiz-sel-fg: var(--color-white);
+    --wiz-sel-hover: var(--color-ink-hover);
+    --wiz-sel-row-hover: var(--color-row-hover-dark);
+    --wiz-pop: var(--color-white);                /* выпадающий список марок */
+    --wiz-form: var(--color-ink);                 /* плашка заявки */
+    --wiz-foot-btn-hover: var(--color-tile);      /* кнопка в полосе итога — инверсия полосы */
+  }
+  :global(.on-dark) .wiz {
+    --wiz-bg: var(--color-tile-dark);
+    --wiz-fg: var(--color-white);
+    --wiz-field: var(--veil-fill-soft);
+    --wiz-field-hover: var(--veil-fill);
+    --wiz-hover: var(--color-row-hover-dark);
+    --wiz-line: var(--veil-line);
+    --wiz-sel-bg: var(--color-white);
+    --wiz-sel-fg: var(--color-ink);
+    --wiz-sel-hover: var(--color-tile);
+    --wiz-sel-row-hover: var(--color-row-hover-light);
+    --wiz-pop: var(--color-tile-back);
+    --wiz-form: transparent;                      /* карточка уже тёмная — вторая плашка не нужна */
+    --wiz-foot-btn-hover: var(--color-ink-hover);
+  }
+  :global(.on-dark) .wiz ::selection { background: var(--color-white); color: var(--color-ink); }
+
+  /* ---------- Карточка мастера ---------- */
+  .wiz {
+    position: relative;
+    max-width: 1120px;
+    margin-inline: auto;
+    border-radius: var(--r-panel);
+    background: var(--wiz-bg);
+    color: var(--wiz-fg);
+    scroll-margin-top: calc(var(--header-h) + var(--sp-16));
+  }
+  .wiz [hidden] { display: none !important; }
+
+  /* Шаги сверху */
+  .wiz-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-16) var(--sp-24);
+    padding: var(--sp-24) var(--sp-32) 0;
+  }
+  .wiz-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--sp-4); }
+  .wiz-step {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-8);
+    padding: 6px 14px 6px 6px;
+    border: none;
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: inherit;
+    font-size: var(--text-caption);
+    font-weight: var(--w-medium);
+    cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .wiz-step:disabled { cursor: default; }
+  .wiz-step:not(:disabled):hover { background: var(--wiz-hover); transition-duration: var(--t-hover-in); }
+  .wiz-step-num {
+    display: grid;
+    place-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px var(--wiz-line);
+    font-weight: var(--w-semibold);
+  }
+  .wiz-step.is-done .wiz-step-num { background: var(--wiz-field-hover); box-shadow: none; }
+  .wiz-step.is-current .wiz-step-num { background: var(--wiz-sel-bg); color: var(--wiz-sel-fg); box-shadow: none; }
+  .wiz-step-label { max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wiz-step:disabled:not(.is-current) .wiz-step-label { text-decoration: none; }
+
+  .wiz-find { position: relative; flex: 1 1 280px; max-width: 400px; }
+  .wiz-find-input { padding: 11px 18px 11px 46px; background: var(--wiz-field); font-size: var(--text-caption); }
+  /* Поля мастера живут на его фоне: текст и рамка фокуса — цвета мастера, не глобального .field */
+  .wiz-find-input, .combo-input { color: var(--wiz-fg); }
+  /* Свой крестик очистки вместо синего браузерного: цвет текста поля, та же толщина линий, что у лупы */
+  .wiz-find-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 3.5l9 9M12.5 3.5l-9 9' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 3.5l9 9M12.5 3.5l-9 9' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    cursor: pointer;
+  }
+  .wiz-find-input:focus, .combo-input:focus { border-color: var(--wiz-fg); }
+
+  .icon-search {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    translate: 0 -50%;
+    pointer-events: none;
+  }
+
+  .wiz-body { padding: var(--sp-32) var(--sp-32) var(--sp-24); }
+  .wiz-panel { display: grid; gap: var(--sp-16); align-content: start; }
+  .wiz-title { font-size: var(--text-tile); max-width: var(--measure-head); }
+  .wiz-lead { max-width: var(--measure-lead); margin-top: calc(var(--sp-8) * -1); }
+  .wiz-link {
+    justify-self: start;
+    padding: 6px 12px;
+    margin-left: -12px;
+    border: none;
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: inherit;
+    font-weight: var(--w-medium);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .wiz-link:hover { background: var(--wiz-hover); }
+
+  /* ---------- 1. Машина ---------- */
+  .combo { position: relative; max-width: 720px; }
+  .combo .icon-search { left: 22px; width: 20px; height: 20px; }
+  .combo-input { padding: 20px 24px 20px 56px; font-size: var(--text-body-lg); background: var(--wiz-field); }
+  .combo-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    margin: var(--sp-8) 0 0;
+    padding: var(--sp-8);
+    list-style: none;
+    display: grid;
+    gap: 2px;
+    max-height: 360px;
+    overflow-y: auto;
+    background: var(--wiz-pop);
+    border-radius: var(--r-input);
+    box-shadow: 0 0 0 1px var(--wiz-line), 0 16px 40px rgba(10, 10, 11, 0.12);
+  }
+  .combo-list :global(.combo-option) {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--sp-12);
+    padding: 10px var(--sp-16);
+    border-radius: var(--r-row);
+    cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .combo-list :global(.combo-option:hover),
+  .combo-list :global(.combo-option.is-active) { background: var(--wiz-hover); transition-duration: var(--t-hover-in); }
+  .combo-list :global(.combo-class) { flex: none; font-size: var(--text-caption); font-weight: var(--w-medium); }
+  .combo-list :global(.combo-empty) { padding: 10px var(--sp-16); }
+
+  .car-examples { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
+  .car-example {
+    padding: 6px 14px;
+    border: none;
+    border-radius: var(--r-pill);
+    background: var(--wiz-field);
+    color: inherit;
+    font-size: var(--text-caption);
+    font-weight: var(--w-medium);
+    cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .car-example:hover { background: var(--wiz-field-hover); transition-duration: var(--t-hover-in); }
+
+  /* ---------- 2. Направления — шесть плиток ---------- */
+  .cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-12); padding-top: var(--sp-8); }
+  .cat {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: var(--sp-12);
+    min-height: 168px;
+    padding: var(--sp-20) var(--sp-24);
+    border: none;
+    border-radius: var(--r-tile);
+    background: var(--wiz-field);
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .cat:hover { background: var(--wiz-field-hover); transition-duration: var(--t-hover-in); }
+  .cat.has-picked { background: var(--wiz-sel-bg); color: var(--wiz-sel-fg); }
+  .cat.has-picked:hover { background: var(--wiz-sel-hover); }
+  .cat-top { display: flex; justify-content: space-between; gap: var(--sp-8); font-size: var(--text-caption); font-weight: var(--w-medium); }
+  .cat-picked { padding: 2px 10px; border-radius: var(--r-pill); background: var(--wiz-sel-fg); color: var(--wiz-sel-bg); font-weight: var(--w-semibold); }
+  .cat-title { align-self: end; font-size: var(--text-subhead); font-weight: var(--w-semibold); letter-spacing: -0.03em; line-height: 1.1; }
+  .cat-price { font-weight: var(--w-semibold); }
+
+  /* ---------- 3. Услуги направления ---------- */
+  .wiz-back {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: 6px 12px 6px 8px;
+    margin-left: -8px;
+    border: none;
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: inherit;
+    font-size: var(--text-caption);
+    font-weight: var(--w-medium);
+    cursor: pointer;
+  }
+  .wiz-back:hover { background: var(--wiz-hover); }
+  .wiz-back svg { width: 16px; height: 16px; }
+  .is-finding .wiz-back { display: none; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: var(--sp-8); padding-bottom: var(--sp-8); }
+  .chip-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-8);
+    padding: 9px 16px;
+    border: none;
+    border-radius: var(--r-pill);
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--wiz-line);
+    color: inherit;
+    font-weight: var(--w-medium);
+    cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .chip-btn:hover { background: var(--wiz-hover); transition-duration: var(--t-hover-in); }
+  .chip-btn[aria-pressed='true'] { background: var(--wiz-sel-bg); color: var(--wiz-sel-fg); box-shadow: none; }
+  .chip-count {
+    display: grid;
+    place-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: var(--r-pill);
+    background: var(--wiz-sel-bg);
+    color: var(--wiz-sel-fg);
+    font-size: 0.75rem;
+    font-weight: var(--w-semibold);
+  }
+  .chip-btn[aria-pressed='true'] .chip-count { background: var(--wiz-sel-fg); color: var(--wiz-sel-bg); }
+
+  .sheet { display: grid; gap: var(--sp-12); scroll-margin-top: calc(var(--header-h) + var(--sp-16)); }
+  /* Заголовок раздела нужен только в поиске — в обычном режиме его заменяет чип */
+  .sheet-title { display: none; font-size: var(--text-body-lg); padding-top: var(--sp-8); }
+  .is-finding .sheet-title { display: block; }
+  .group { display: grid; gap: var(--sp-8); }
+  .group-title { font-weight: var(--w-medium); padding-top: var(--sp-8); }
+  .svc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-8); }
+
+  /* Карточка услуги: вся карточка — чекбокс. Отмеченная инвертируется в чёрную */
+  .svc { border-radius: var(--r-tile); background: var(--wiz-field); transition: background-color var(--t-hover-out) var(--ease-out); }
+  .svc:hover { background: var(--wiz-field-hover); transition-duration: var(--t-hover-in); }
+  .svc:has(.svc-input:checked) { background: var(--wiz-sel-bg); color: var(--wiz-sel-fg); }
+  .svc:has(.svc-input:focus-visible) { outline: 2px solid var(--wiz-sel-bg); outline-offset: 2px; }
+  .svc-main {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--sp-16);
+    align-items: start;
+    padding: var(--sp-16) var(--sp-20);
+    cursor: pointer;
+  }
+  .svc-input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+  .svc-check {
+    display: grid;
+    place-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px var(--wiz-line);
+  }
+  /* Галочка — уголок из двух рамок, повёрнутый на 45°: без SVG в каждой из 160 карточек */
+  .svc-check::after {
+    content: '';
+    width: 6px;
+    height: 11px;
+    margin-top: -3px;
+    border: solid var(--wiz-sel-bg);
+    border-width: 0 2px 2px 0;
+    rotate: 45deg;
+    opacity: 0;
+  }
+  .svc:has(.svc-input:checked) .svc-check { background: var(--wiz-sel-fg); box-shadow: none; }
+  .svc:has(.svc-input:checked) .svc-check::after { opacity: 1; }
+  .svc-body { display: grid; gap: var(--sp-4); }
+  .svc-name { font-size: var(--text-body-lg); font-weight: var(--w-medium); line-height: 1.3; }
+  .svc-desc { font-size: var(--text-caption); line-height: 1.45; max-width: var(--measure-text); }
+  .svc-time { font-size: var(--text-caption); font-weight: var(--w-medium); }
+  /* Условия и оговорки — отдельной строкой после сути, чтобы не заслоняли её */
+  .svc-terms { font-size: var(--text-caption); line-height: 1.45; max-width: var(--measure-text); padding-top: var(--sp-4); }
+  .svc-price { font-size: var(--text-body-lg); font-weight: var(--w-semibold); white-space: nowrap; line-height: 1.3; }
+
+  .svc-more { padding: 0 var(--sp-20) var(--sp-16) calc(var(--sp-20) + 26px + var(--sp-16)); font-size: var(--text-caption); }
+  .svc-more summary {
+    display: inline-flex;
+    padding: 4px 12px;
+    margin-left: -12px;
+    border-radius: var(--r-pill);
+    font-weight: var(--w-medium);
+    cursor: pointer;
+    list-style: none;
+  }
+  .svc-more summary::-webkit-details-marker { display: none; }
+  .svc-more summary::after { content: '+'; margin-left: 6px; }
+  .svc-more[open] summary::after { content: '−'; }
+  .svc-more summary:hover { background: var(--wiz-hover); }
+  .svc:has(.svc-input:checked) .svc-more summary:hover { background: var(--wiz-sel-row-hover); }
+  .svc-more .bullets { padding-top: var(--sp-8); max-width: var(--measure-text); }
+  /* Лид первой задачи прижат к заголовку шага, как .wiz-lead; вторая задача — отдельным блоком */
+  .find-hints { display: grid; gap: var(--sp-20); margin-top: calc(var(--sp-8) * -1); }
+  .find-hint { display: grid; gap: var(--sp-4); }
+  .find-hint-title { font-size: var(--text-subhead); font-weight: var(--w-semibold); letter-spacing: -0.03em; line-height: 1.15; }
+  .find-hint-lead { max-width: var(--measure-lead); }
+  .find-empty { padding: var(--sp-24); border-radius: var(--r-tile); background: var(--wiz-field); }
+
+  /* ---------- 4. Заявка: слева расчёт, справа тёмная плашка с янтарной искрой ---------- */
+  .order { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-24); align-items: start; padding-top: var(--sp-8); }
+  .order-sum { display: grid; gap: var(--sp-12); }
+  .order-car { font-weight: var(--w-medium); }
+  .order-list { list-style: none; margin: 0 calc(var(--sp-8) * -1); padding: 0; display: grid; gap: 2px; }
+  .order-list :global(.order-item) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: var(--sp-12);
+    align-items: center;
+    padding: 8px var(--sp-8);
+    border-radius: var(--r-row);
+  }
+  .order-list :global(.order-item:hover) { background: var(--wiz-hover); }
+  .order-list :global(.order-item-price) { font-weight: var(--w-semibold); white-space: nowrap; }
+  .order-list :global(.order-item-drop) {
+    display: grid;
+    place-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--wiz-field);
+    color: inherit;
+    cursor: pointer;
+  }
+  .order-list :global(.order-item-drop:hover) { background: var(--wiz-field-hover); }
+  .order-list :global(.order-item-drop svg) { width: 12px; height: 12px; }
+  .order-total { display: grid; gap: var(--sp-4); padding-top: var(--sp-12); }
+  .order-total-label { display: flex; justify-content: space-between; font-size: var(--text-caption); font-weight: var(--w-medium); }
+  .order-total-value { font-size: var(--text-heading); font-weight: var(--w-semibold); letter-spacing: -0.03em; line-height: 1.05; }
+  .order-note { font-size: var(--text-caption); }
+
+  .order-form {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    gap: var(--sp-16);
+    padding: var(--sp-28);
+    border-radius: var(--r-tile);
+    background: var(--wiz-form);
+    color: var(--color-white);
+    isolation: isolate;
+  }
+  .order-form::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    width: 320px;
+    height: 320px;
+    right: -120px;
+    top: -150px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--color-orange) 0%, var(--color-ember) 45%, transparent 70%);
+    filter: blur(40px);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  /* На тёмной карточке форма стоит прямо на ней: без своей подложки, отступов и искры */
+  :global(.on-dark) .order-form { padding: 0; overflow: visible; }
+  :global(.on-dark) .order-form::before { display: none; }
+  .order-form ::selection { background: var(--color-white); color: var(--color-ink); }
+  .form { display: grid; gap: var(--sp-8); }
+  .order-form .btn--primary { background: var(--color-white); color: var(--color-ink); }
+  .order-form .btn--primary:hover { background: var(--color-tile); }
+  .form-submit { width: 100%; margin-top: var(--sp-8); }
+  .form-error { font-size: var(--text-caption); font-weight: var(--w-medium); color: var(--color-amber); }
+  .form-success { padding: var(--sp-16); border-radius: var(--r-input); background: var(--veil-fill); font-weight: var(--w-medium); }
+  .form-phone { justify-self: start; font-weight: var(--w-medium); font-size: var(--text-caption); }
+  .form-phone:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .consent {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-12);
+    padding-top: var(--sp-4);
+    font-size: var(--text-caption);
+    line-height: 1.4;
+    cursor: pointer;
+  }
+  .consent input {
+    appearance: none;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin: 1px 0 0;
+    border-radius: 50%;
+    border: 1.5px solid var(--veil-line-strong);
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+  }
+  .consent input::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-white);
+    transform: scale(0);
+    transition: transform 0.15s var(--ease-out);
+  }
+  .consent input:checked::before { transform: scale(1); }
+
+  /* ---------- Полоса итога: прилипает к низу экрана ---------- */
+  .wiz-foot {
+    position: sticky;
+    bottom: max(var(--sp-12), env(safe-area-inset-bottom));
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-16);
+    margin: 0 var(--sp-12) var(--sp-12);
+    padding: 8px 8px 8px var(--sp-12);
+    border-radius: var(--r-pill);
+    background: var(--wiz-sel-bg);
+    color: var(--wiz-sel-fg);
+  }
+  .foot-car {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--sp-8);
+    min-width: 0;
+    padding: 8px 12px;
+    border: none;
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: inherit;
+    font-weight: var(--w-medium);
+    cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .foot-car:hover { background: var(--wiz-sel-row-hover); transition-duration: var(--t-hover-in); }
+  .foot-car-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .foot-car-change { flex: none; font-size: var(--text-caption); text-decoration: underline; text-underline-offset: 3px; }
+  [data-step='1'] .foot-car { pointer-events: none; }
+  [data-step='1'] .foot-car-change { display: none; }
+  .foot-total { display: flex; align-items: baseline; gap: var(--sp-12); margin-left: auto; white-space: nowrap; }
+  .foot-total span:first-child { font-size: var(--text-caption); font-weight: var(--w-medium); }
+  .foot-total span:last-child { font-size: var(--text-body-lg); font-weight: var(--w-semibold); }
+  .foot-next { flex: none; }
+  .wiz-foot .btn--primary { background: var(--wiz-sel-fg); color: var(--wiz-sel-bg); }
+  .wiz-foot .btn--primary:hover { background: var(--wiz-foot-btn-hover); }
+  .wiz:not(.has-picked) .wiz-foot { padding-right: var(--sp-12); }
+
+  @media (max-width: 1024px) {
+    .cats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 760px) {
+    .wiz-head { padding: var(--sp-16) var(--sp-16) 0; }
+    .wiz-step-label { display: none; }
+    .wiz-step.is-current .wiz-step-label { display: inline; max-width: 16ch; }
+    .wiz-find { flex-basis: 100%; max-width: none; }
+    .wiz-body { padding: var(--sp-24) var(--sp-16) var(--sp-16); }
+    .combo-input { font-size: var(--text-body); padding-block: 16px; }
+    .cat { min-height: 132px; padding: var(--sp-16); }
+    .chips { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(var(--sp-16) * -1); padding-inline: var(--sp-16); scrollbar-width: none; }
+    .chip-btn { flex: none; }
+    .svc-main { grid-template-columns: auto minmax(0, 1fr); padding: var(--sp-16); gap: var(--sp-12); }
+    .svc-price { grid-column: 2; }
+    .svc-more { padding: 0 var(--sp-16) var(--sp-16) calc(var(--sp-16) + 26px + var(--sp-12)); }
+    .order { grid-template-columns: minmax(0, 1fr); }
+    .order-form { padding: var(--sp-20); }
+    .wiz-foot { margin: 0 var(--sp-8) var(--sp-8); gap: var(--sp-8); }
+    .foot-car { display: none; }
+    .wiz:not(.has-picked) .foot-car { display: inline-flex; }
+    .foot-total { margin-left: var(--sp-8); display: grid; gap: 0; line-height: 1.2; }
+    .foot-next { margin-left: auto; padding: 12px 18px; }
+  }
+  @media (max-width: 480px) {
+    .cats { grid-template-columns: minmax(0, 1fr); }
+    .cat { min-height: 0; }
+  }
+</style>

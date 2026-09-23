@@ -1,0 +1,802 @@
+{
+  "_readme": "Словарь «беда → услуги» для поиска в калькуляторе. Человек пишет, что у него случилось («поцарапали дверь», «воняет в салоне»), а не название услуги — поиск сверяет запрос с phrases и показывает title, lead и подборку services. phrases — как люди это пишут, в любом падеже: слово сравнивается по основе, окончания не важны; фраза из нескольких слов срабатывает, когда в запросе есть все её слова в любом порядке. services — ключи «раздел:услуга», как в prices.json; только то, что реально есть в прайсе. lead — одна фраза без обещаний и фактов, которых нет в прайсе. Услуга пропала из прайса — сборка падает и называет ключ.",
+  "intents": [
+    {
+      "id": "scratches",
+      "title": "Царапины и потёртости на кузове",
+      "lead": "Мелкие царапины, потёртости и «паутинку» на лаке убирает полировка — одной детали, локальная или всего кузова. Насколько глубоко, мастер скажет на осмотре.",
+      "phrases": [
+        "царапина",
+        "царапины",
+        "царапка",
+        "поцарапал",
+        "поцарапали",
+        "поцарапана",
+        "царапнул",
+        "оцарапал",
+        "потертость",
+        "потертости",
+        "потерто",
+        "паутинка",
+        "голограммы",
+        "свирлы",
+        "риски на лаке",
+        "задели машину",
+        "задел",
+        "шоркнул",
+        "шаркнул",
+        "притерся",
+        "поцарапали ключом",
+        "гвоздем",
+        "ветки поцарапали"
+      ],
+      "services": [
+        "polirovka-lkp:lokalnaya-polirovka-korrekciya-povrezhdenij",
+        "polirovka-lkp:polirovka-odnoj-detali",
+        "polirovka-lkp:vosstanovitelnaya-polirovka-lkp"
+      ]
+    },
+    {
+      "id": "dull-paint",
+      "title": "Лак потускнел, пропал блеск",
+      "lead": "Блеск возвращает восстановительная полировка, а удержать его помогает защитное покрытие поверх.",
+      "phrases": [
+        "тусклый",
+        "потускнел",
+        "потускнела",
+        "нет блеска",
+        "пропал блеск",
+        "вернуть блеск",
+        "блестела",
+        "выцвел",
+        "выгорел",
+        "выгорела краска",
+        "старый лак",
+        "освежить кузов",
+        "полировка",
+        "полеровка",
+        "отполировать",
+        "полирнуть"
+      ],
+      "services": [
+        "polirovka-lkp:vosstanovitelnaya-polirovka-lkp",
+        "polirovka-lkp:podgotovitelnaya-polirovka-lkp-myagkaya",
+        "polirovka-lkp:podgotovka-avtomobilya-k-polirovke-avtomobil-s-probegom",
+        "zaschita-lkp-keramika:keramicheskoe-pokrytie-power-shield-dlya-avto-s-probegom-2-s"
+      ]
+    },
+    {
+      "id": "dents",
+      "title": "Вмятины без покраски",
+      "lead": "Небольшие вмятины выправляют изнутри, без покраски и шпаклёвки: заводской лак остаётся на месте.",
+      "phrases": [
+        "вмятина",
+        "вмятины",
+        "вмятинка",
+        "помял",
+        "помяли",
+        "помята",
+        "замял",
+        "град",
+        "градом",
+        "побило градом",
+        "тычок",
+        "вогнутость",
+        "pdr"
+      ],
+      "services": [
+        "udalenie-vmyatin-pdr:udalenie-vmyatin-bez-pokraski"
+      ]
+    },
+    {
+      "id": "chips",
+      "title": "Сколы от камней на трассе",
+      "lead": "Капот, бампер, крылья и фары первыми ловят камни. Их закрывает прозрачная антигравийная плёнка — её почти не видно.",
+      "phrases": [
+        "скол",
+        "сколы",
+        "сколов",
+        "камни",
+        "камень",
+        "камешки",
+        "камнем",
+        "гравий",
+        "пескоструй",
+        "трасса",
+        "трассе",
+        "по трассе",
+        "антигравий",
+        "антигравийка",
+        "бронепленка",
+        "броня кузова",
+        "оклеить",
+        "оклейка",
+        "обклеить",
+        "пленка на капот",
+        "полиуретан",
+        "ppf"
+      ],
+      "services": [
+        "zaschita-lkp-plenka-ppf:ustanovka-poliuretanovoj-antigravijnoj-plenki-krytex-ppf-pro-2",
+        "zaschita-lkp-plenka-ppf:ustanovka-poliuretanovoj-antigravijnoj-plenki-suntek-ppf-bam",
+        "zaschita-lkp-plenka-ppf:ustanovka-poliuretanovoj-antigravijnoj-plenki-krytex-ppf-pro",
+        "zaschita-far:ustanovka-poliuretanovoj-antigravijnoj-plenki-na-fary-golovn"
+      ]
+    },
+    {
+      "id": "new-car",
+      "title": "Новая машина — защитить с первых дней",
+      "lead": "Пока лак без следов эксплуатации, его готовят и закрывают покрытием или плёнкой — для нового авто в прайсе отдельные цены.",
+      "phrases": [
+        "новая машина",
+        "новое авто",
+        "новый автомобиль",
+        "новую машину",
+        "только купил",
+        "купил машину",
+        "купили машину",
+        "забрал из салона",
+        "забираю из салона",
+        "с завода",
+        "пробег маленький",
+        "без пробега"
+      ],
+      "services": [
+        "polirovka-lkp:podgotovka-avtomobilya-k-polirovke-novoe-avto",
+        "zaschita-lkp-keramika:keramicheskoe-pokrytie-power-shield-dlya-novogo-avto-probeg-",
+        "zaschita-lkp-keramika:zhidkoe-steklo-power-shield-supershine-dlya-novogo-avto-prob",
+        "zaschita-lkp-plenka-ppf:ustanovka-poliuretanovoj-antigravijnoj-plenki-krytex-ppf-pro-2"
+      ]
+    },
+    {
+      "id": "selling",
+      "title": "Подготовить машину к продаже",
+      "lead": "Покупатель смотрит на блеск кузова, чистоту салона и подкапотное пространство — с этого обычно и начинают.",
+      "phrases": [
+        "продаю",
+        "продать",
+        "продажа",
+        "продажу",
+        "на продажу",
+        "перед продажей",
+        "предпродажная",
+        "предпродажка",
+        "предпродажную",
+        "товарный вид",
+        "продаем"
+      ],
+      "services": [
+        "kompleksy-kuzov-salon:detejling-kompleks-dlya-vashego-avto-180-240-min",
+        "himchistka-salona:polnaya-himchistka-temnogo-salona",
+        "polirovka-lkp:vosstanovitelnaya-polirovka-lkp",
+        "dvigatel-radiatory-dvs:mojka-dvigatelya-i-konservaciya-podkapotnogo-prostranstva"
+      ]
+    },
+    {
+      "id": "smell",
+      "title": "Запах в салоне",
+      "lead": "Запах сидит в ткани сидений, коврах и потолке — его выводит химчистка этих поверхностей.",
+      "phrases": [
+        "запах",
+        "запахом",
+        "воняет",
+        "вонь",
+        "вонючий",
+        "пахнет",
+        "попахивает",
+        "прокурено",
+        "прокуренный",
+        "курили",
+        "сигареты",
+        "табак",
+        "собака",
+        "собаки",
+        "шерсть",
+        "кошка",
+        "пролили молоко",
+        "сырость",
+        "затхлый",
+        "плесень"
+      ],
+      "services": [
+        "himchistka-salona:polnaya-himchistka-temnogo-salona",
+        "himchistka-salona:polnaya-himchistka-svetlogo-salona",
+        "himchistka-salona:himchistka-potolka",
+        "himchistka-salona:himchistka-pola"
+      ]
+    },
+    {
+      "id": "stains",
+      "title": "Пятна на сиденьях и потолке",
+      "lead": "Одно пятно выводят точечно, а если грязь по всему сиденью — чистят сиденья или салон целиком.",
+      "phrases": [
+        "пятно",
+        "пятна",
+        "пятнышко",
+        "пролил",
+        "пролили",
+        "кофе",
+        "засаленный",
+        "засалился",
+        "жирное",
+        "грязные сиденья",
+        "грязное сиденье",
+        "детское кресло",
+        "ребенок испачкал",
+        "химчистка",
+        "химчиска",
+        "химия салона"
+      ],
+      "services": [
+        "himchistka-salona:himchistka-odnogo-pyatna-5sm-h-5sm",
+        "himchistka-salona:himchistka-sidenij-velyur-tkan",
+        "himchistka-salona:himchistka-sidenij-kozha",
+        "himchistka-salona:himchistka-potolka",
+        "himchistka-salona:polnaya-himchistka-temnogo-salona"
+      ]
+    },
+    {
+      "id": "interior-cleaning",
+      "title": "Навести порядок в салоне",
+      "lead": "Если пятен нет, а нужно просто убрать пыль, песок и крошки, хватит уборки салона.",
+      "phrases": [
+        "убраться в салоне",
+        "уборка салона",
+        "убрать салон",
+        "пропылесосить",
+        "пылесос",
+        "пыль",
+        "пыльный",
+        "крошки",
+        "песок в салоне",
+        "мусор",
+        "грязный салон",
+        "коврики",
+        "ковры"
+      ],
+      "services": [
+        "interer-salon:kompleksnaya-uborka-salona",
+        "interer-salon:detejling-uborka-salona",
+        "interer-salon:uborka-salona-pylesosom",
+        "interer-salon:kovry-salona"
+      ]
+    },
+    {
+      "id": "wash",
+      "title": "Помыть машину",
+      "lead": "От быстрой мойки кузова до детейлинг-мойки и комплексов «кузов + салон» за один визит.",
+      "phrases": [
+        "помыть",
+        "помойте",
+        "мойка",
+        "мыть",
+        "помывка",
+        "отмыть",
+        "грязная машина",
+        "машина грязная",
+        "после дороги",
+        "после поездки",
+        "ручная мойка",
+        "мойка кузова"
+      ],
+      "services": [
+        "eksterer-kuzov:ekspress-15-min",
+        "eksterer-kuzov:standart-25-35-min",
+        "eksterer-kuzov:detejling-mojka-dlya-vashego-avto-90-120-min",
+        "kompleksy-kuzov-salon:kompleksnaya-programma-nano-magic-90-120-min"
+      ]
+    },
+    {
+      "id": "contamination",
+      "title": "Битум, смола, рыжие точки на лаке",
+      "lead": "Такое обычной мойкой не уходит — для каждого вида загрязнения свой состав.",
+      "phrases": [
+        "битум",
+        "гудрон",
+        "смола",
+        "тополь",
+        "почки",
+        "липкое",
+        "мошки",
+        "насекомые",
+        "мошкара",
+        "жуки",
+        "рыжие точки",
+        "ржавые точки",
+        "металлические вкрапления",
+        "шершавый лак",
+        "краска попала",
+        "опыл",
+        "брызги краски",
+        "глина"
+      ],
+      "services": [
+        "dop-uslugi-chistka-lkp-diskov:ochistka-lkp-ot-bitumnyh-reagentnyh-pyaten-kompleks-antibitu",
+        "dop-uslugi-chistka-lkp-diskov:ochistka-lkp-ot-smoly-derevev-kompleks",
+        "dop-uslugi-chistka-lkp-diskov:ochistka-lkp-ot-zhelezistogo-naleta-kompleks",
+        "dop-uslugi-chistka-lkp-diskov:ochistka-lkp-udalenie-nasekomyh-s-poverhnosti-perednyaya-cha",
+        "dop-uslugi-chistka-lkp-diskov:ochistka-lkp-ot-opylov-kraski-za-odnu-detal",
+        "dop-uslugi-chistka-lkp-diskov:ochistka-lkp-sinteticheskoj-glinoj-kompleks"
+      ]
+    },
+    {
+      "id": "after-winter",
+      "title": "После зимы",
+      "lead": "Реагенты и соль остаются на лаке, дисках и снизу машины — весной их смывают и обновляют защиту.",
+      "phrases": [
+        "после зимы",
+        "весна",
+        "весной",
+        "реагенты",
+        "реагент",
+        "соль",
+        "солью",
+        "реагентами"
+      ],
+      "services": [
+        "dop-uslugi-chistka-lkp-diskov:ochistka-lkp-ot-bitumnyh-reagentnyh-pyaten-kompleks-antibitu",
+        "dop-uslugi-chistka-lkp-diskov:ochistka-lkp-ot-zhelezistogo-naleta-kompleks",
+        "hodovaya-chast-podveska:mojka-himchistka-i-konservaciya-podveski-pnevmaticheskoj-pod",
+        "dvigatel-radiatory-dvs:mojka-dvigatelya-i-konservaciya-podkapotnogo-prostranstva"
+      ]
+    },
+    {
+      "id": "before-winter",
+      "title": "Подготовить к зиме",
+      "lead": "Стёкла, уплотнители, диски и кузов закрывают заранее — тогда снег, лёд и реагенты цепляются меньше.",
+      "phrases": [
+        "к зиме",
+        "перед зимой",
+        "на зиму",
+        "зимой",
+        "осень",
+        "осенью",
+        "мороз",
+        "снег",
+        "наледь",
+        "лед",
+        "примерзают двери",
+        "примерзает",
+        "зима",
+        "зиму"
+      ],
+      "services": [
+        "zaschita-stekla-antidozhd:obrabotka-stekol-antidozhd-sneg-led",
+        "obrabotka-kuzova-vosk-polim:zaschita-obrabotka-dvernyh-uplotnitelej",
+        "obrabotka-kuzova-vosk-polim:zaschita-obrabotka-kuzova-konservantom-krytex-bystroe-kvarce",
+        "zaschita-kolesnyh-diskov:diski-polnostyu-za-4sht"
+      ]
+    },
+    {
+      "id": "wheels",
+      "title": "Грязные диски и шины",
+      "lead": "Тормозную пыль и налёт снимают спецсоставом, а защитное покрытие потом не даёт им так въедаться.",
+      "phrases": [
+        "диски",
+        "диск",
+        "дисков",
+        "колеса",
+        "колес",
+        "колесо",
+        "тормозная пыль",
+        "налет на дисках",
+        "шины",
+        "резина",
+        "чернение",
+        "чернить",
+        "почернить резину"
+      ],
+      "services": [
+        "dop-uslugi-chistka-lkp-diskov:ochistka-lkp-kolesnyh-diskov-himchistka-kislotnym-spec-sosta-3",
+        "dop-uslugi-chistka-lkp-diskov:kompleks-dlya-demontirovannyh-koles-za-4sht",
+        "zaschita-kolesnyh-diskov:diski-s-licevoj-storony-za-4sht",
+        "obrabotka-kuzova-vosk-polim:zaschita-obrabotka-shin-chernenie"
+      ]
+    },
+    {
+      "id": "headlights",
+      "title": "Мутные фары",
+      "lead": "Помутневший пластик фар полируют, а чтобы снова не затёрся песком — закрывают плёнкой.",
+      "phrases": [
+        "фары",
+        "фара",
+        "мутные фары",
+        "фары пожелтели",
+        "желтые фары",
+        "фонари",
+        "задние фонари",
+        "плохо светят",
+        "тусклый свет"
+      ],
+      "services": [
+        "polirovka-lkp:polirovka-far-zadnih-fonarej-za-1sht",
+        "zaschita-far:ustanovka-poliuretanovoj-antigravijnoj-plenki-na-fary-golovn"
+      ]
+    },
+    {
+      "id": "glass",
+      "title": "Стёкла: разводы, налёт, дождь",
+      "lead": "Налёт и разводы снимают очисткой, а антидождь помогает воде скатываться со стекла на ходу.",
+      "phrases": [
+        "антидождь",
+        "дождь",
+        "дворники",
+        "лобовое",
+        "лобовуха",
+        "стекло",
+        "стекла",
+        "разводы",
+        "налет на стеклах",
+        "известь",
+        "водный камень",
+        "запотевает",
+        "запотевают",
+        "мутное стекло",
+        "плохо видно"
+      ],
+      "services": [
+        "zaschita-stekla-antidozhd:obrabotka-stekol-antidozhd-sneg-led",
+        "zaschita-stekla-antidozhd:ochistka-stekol-ot-kalijnyh-solej",
+        "interer-salon:ochistka-vseh-stekol-vnutri-kompleks",
+        "tonirovanie-bronirovanie-stekol:ustanovka-zaschitnoj-plenki-clear-plex-na-lobovoe-steklo"
+      ]
+    },
+    {
+      "id": "tint",
+      "title": "Тонировка, жара, защита стёкол",
+      "lead": "Тонировка затемняет заднюю полусферу, атермальная плёнка держит жару, а защитная — усложняет взлом через стекло.",
+      "phrases": [
+        "тонировка",
+        "тонировку",
+        "тонировать",
+        "затонировать",
+        "тонеровка",
+        "тонер",
+        "тонирка",
+        "жарко",
+        "жара",
+        "солнце",
+        "печет",
+        "припекает",
+        "темные стекла",
+        "атермалка",
+        "атермальная",
+        "бронирование стекол",
+        "бронировать стекла",
+        "взлом",
+        "разобьют стекло",
+        "лобовое плёнка"
+      ],
+      "services": [
+        "tonirovanie-bronirovanie-stekol:ustanovka-tonirovochnoj-plenki-llumar-atr-na-zadnyuyu-polusf",
+        "tonirovanie-bronirovanie-stekol:ustanovka-tonirovochnoj-plenki-llumar-atr-na-bokovoe-steklo-",
+        "tonirovanie-bronirovanie-stekol:ustanovka-atermalnoj-plenki-llumar-air-na-bokovoe-steklo-za-",
+        "tonirovanie-bronirovanie-stekol:ustanovka-zaschitnoj-plenki-llumar-s-cl-sr-ps-4-na-bokovoe-s",
+        "tonirovanie-bronirovanie-stekol:ustanovka-zaschitnoj-plenki-clear-plex-na-lobovoe-steklo"
+      ]
+    },
+    {
+      "id": "body-protection",
+      "title": "Защитить кузов надолго",
+      "lead": "Керамика и «жидкое стекло» держатся дольше, воск и кварцевые консерванты — быстрее и дешевле.",
+      "phrases": [
+        "керамика",
+        "керамику",
+        "керамическое",
+        "жидкое стекло",
+        "защитить кузов",
+        "защита кузова",
+        "защитное покрытие",
+        "покрыть кузов",
+        "меньше пачкалась",
+        "меньше грязнилась",
+        "гидрофоб",
+        "вода скатывалась",
+        "воск",
+        "воском",
+        "нано"
+      ],
+      "services": [
+        "zaschita-lkp-keramika:keramicheskoe-pokrytie-power-shield-dlya-avto-s-probegom-2-s",
+        "zaschita-lkp-keramika:zhidkoe-steklo-power-shield-supershine-dlya-avto-s-probegom",
+        "obrabotka-kuzova-vosk-polim:zaschita-obrabotka-kuzova-konservantom-krytex-bystroe-kvarce",
+        "obrabotka-kuzova-vosk-polim:zaschita-obrabotka-kuzova-zhidkim-voskom-twin-wax"
+      ]
+    },
+    {
+      "id": "leather-damage",
+      "title": "Кожа: трещины, потёртости, прожоги",
+      "lead": "Трещины, порезы и прожоги на коже заделывают локально, потёртые места — подкрашивают в цвет.",
+      "phrases": [
+        "кожа потрескалась",
+        "трещины на коже",
+        "трещина",
+        "потрескалось",
+        "потерлась кожа",
+        "стерлась кожа",
+        "облезла кожа",
+        "облезла",
+        "облез",
+        "порвал сиденье",
+        "порвалось сиденье",
+        "порез",
+        "задир",
+        "прожог",
+        "прожег",
+        "прожгли",
+        "дырка в сиденье",
+        "сигаретой",
+        "руль облез",
+        "руль стерся",
+        "потертый руль",
+        "покрасить кожу",
+        "окрас кожи"
+      ],
+      "services": [
+        "remont-salona:remont-treschiny-kozha-iskusstvennaya-kozha",
+        "remont-salona:remont-carapiny-kozha-iskusstvennaya-kozha",
+        "remont-salona:remont-prozhoga-kozha-iskusstvennaya-kozha",
+        "remont-salona:remont-poreza-zadira-kozha-iskusstvennaya-kozha",
+        "remont-salona:okras-sidene-licevaya-chast-kozha-iskusstvennaya-kozha",
+        "remont-salona:okras-rulevoe-koleso-kozha-iskusstvennaya-kozha"
+      ]
+    },
+    {
+      "id": "steering-wheel",
+      "title": "Руль: перешить или обновить",
+      "lead": "Руль перешивают в кожу или алькантару, с обогревом или без; если кожа цела, хватит окраса.",
+      "phrases": [
+        "руль",
+        "руля",
+        "рулем",
+        "рулевое",
+        "перешить руль",
+        "перетянуть руль",
+        "перетяжка руля",
+        "оплетка",
+        "руль с подогревом",
+        "обогрев руля",
+        "толстый руль",
+        "утолщение руля"
+      ],
+      "services": [
+        "poshiv-rulej:poshiv-rulevogo-kolesa-kozha-bez-obogreva",
+        "poshiv-rulej:poshiv-rulevogo-kolesa-kozha-s-obogrevom",
+        "poshiv-rulej:poshiv-rulevogo-kolesa-alkantara",
+        "poshiv-rulej:utolschenie-rulevogo-kolesa-kozha-alkantara",
+        "remont-salona:okras-rulevoe-koleso-kozha-iskusstvennaya-kozha"
+      ]
+    },
+    {
+      "id": "reupholstery",
+      "title": "Перетяжка салона",
+      "lead": "Сиденья, диван, двери и торпедо перешивают по отдельности или весь салон — в новой коже, алькантаре, другом цвете.",
+      "phrases": [
+        "перетяжка",
+        "перетянуть",
+        "перетянуть салон",
+        "перешить",
+        "перешить сиденья",
+        "пошив",
+        "пошив салона",
+        "перешив",
+        "новая кожа",
+        "сменить цвет салона",
+        "поменять цвет салона",
+        "наппа",
+        "алькантара",
+        "алькантару",
+        "тюнинг салона",
+        "сиденья перешить"
+      ],
+      "services": [
+        "poshiv-salona:poshiv-perednih-sidenij-za-2sht",
+        "poshiv-salona:poshiv-zadnego-divana",
+        "poshiv-salona:poshiv-dvernoj-karty-celikom-za-4sht",
+        "poshiv-salona:poshiv-torpedo-celikom"
+      ]
+    },
+    {
+      "id": "ceiling",
+      "title": "Потолок провис или испачкан",
+      "lead": "Провисший потолок перетягивают тканью, алькантарой или кожей, а грязный — сначала пробуют отчистить.",
+      "phrases": [
+        "потолок",
+        "потолка",
+        "провис потолок",
+        "потолок провис",
+        "отклеился потолок",
+        "потолок отклеился",
+        "обвис потолок",
+        "шторка люка",
+        "шторка панорамы",
+        "панорама"
+      ],
+      "services": [
+        "peretyazhka-potolka:peretyazhka-potolka-tkan-bez-okrasa-potolochnogo-plastika",
+        "peretyazhka-potolka:peretyazhka-potolka-alkantara-bez-okrasa-potolochnogo-plasti",
+        "himchistka-salona:himchistka-potolka",
+        "peretyazhka-potolka:zamena-shtorki-lyuka-na-alkantaru",
+        "peretyazhka-potolka:zamena-shtorki-panoramy-na-alkantaru"
+      ]
+    },
+    {
+      "id": "engine",
+      "title": "Мойка двигателя и радиаторов",
+      "lead": "Подкапотное пространство моют и консервируют, радиаторы — отдельным комплексом.",
+      "phrases": [
+        "двигатель",
+        "двигателя",
+        "мотор",
+        "мотора",
+        "подкапотка",
+        "подкапотное",
+        "под капотом",
+        "грязный мотор",
+        "двигатель в масле",
+        "радиатор",
+        "радиаторы",
+        "помыть двигатель"
+      ],
+      "services": [
+        "dvigatel-radiatory-dvs:mojka-dvigatelya-i-konservaciya-podkapotnogo-prostranstva",
+        "dvigatel-radiatory-dvs:detejling-mojka-dvigatelya-parom-i-konservaciya-podkapotnogo",
+        "dvigatel-radiatory-dvs:mojka-radiatorov-dvs-kompleks"
+      ]
+    },
+    {
+      "id": "underbody",
+      "title": "Подвеска и днище",
+      "lead": "Подвеску моют, чистят и консервируют — в том числе пневматическую, при необходимости со снятием локеров.",
+      "phrases": [
+        "подвеска",
+        "подвеску",
+        "пневма",
+        "пневмоподвеска",
+        "днище",
+        "дно",
+        "арки",
+        "локеры",
+        "ходовая",
+        "грязь снизу"
+      ],
+      "services": [
+        "hodovaya-chast-podveska:mojka-himchistka-i-konservaciya-podveski-pnevmaticheskoj-pod",
+        "hodovaya-chast-podveska:mojka-himchistka-i-konservaciya-podveski-pnevmaticheskoj-pod-2"
+      ]
+    },
+    {
+      "id": "interior-protection",
+      "title": "Защитить салон от износа",
+      "lead": "Покрытие на кожу, ткань и пластик — чтобы грязь и краска с одежды меньше въедались, особенно в светлом салоне.",
+      "phrases": [
+        "защитить салон",
+        "защита салона",
+        "салон не пачкался",
+        "светлый салон",
+        "светлая кожа",
+        "белый салон",
+        "джинсы красят",
+        "джинсы",
+        "пачкается",
+        "дети в машине",
+        "с детьми",
+        "кондиционер для кожи",
+        "уход за кожей"
+      ],
+      "services": [
+        "zaschita-kozhanyh-pokrytij:salon-polnostyu-bez-potolka",
+        "zaschita-tekstilnyh-pokrytij:salon-polnostyu-bez-potolka",
+        "zaschita-plastika:salon-polnostyu-bez-potolka",
+        "interer-salon:obrabotka-izdelij-iz-kozhi-kondicionerom-ot-koch-chemie-unna"
+      ]
+    },
+    {
+      "id": "matte",
+      "title": "Сделать машину матовой",
+      "lead": "Матовая полиуретановая плёнка меняет вид лака и одновременно защищает его от сколов.",
+      "phrases": [
+        "матовая",
+        "матовой",
+        "матовый",
+        "матовую",
+        "сделать матовой",
+        "матовая пленка",
+        "матовый цвет",
+        "сатин"
+      ],
+      "services": [
+        "zaschita-lkp-plenka-ppf:ustanovka-poliuretanovoj-antigravijnoj-plenki-krytex-ppf-mat",
+        "zaschita-lkp-plenka-ppf:ustanovka-poliuretanovoj-antigravijnoj-plenki-krytex-ppf-mat-2"
+      ]
+    },
+    {
+      "id": "belts",
+      "title": "Ремни безопасности",
+      "lead": "Ремни перешивают парами — передние или задние, в том числе цветные.",
+      "phrases": [
+        "ремень",
+        "ремни",
+        "ремней",
+        "цветные ремни",
+        "ремень безопасности"
+      ],
+      "services": [
+        "poshiv-remnej:poshiv-perednih-remnej-bezopasnosti-za-2sht",
+        "poshiv-remnej:poshiv-zadnih-remnej-bezopasnosti-za-2sht"
+      ]
+    },
+    {
+      "id": "gear-airbag",
+      "title": "Ручка КПП и подушка руля",
+      "lead": "Ручку и чехол КПП, подушку SRS перешивают в кожу или алькантару; потёртую ручку можно просто подкрасить.",
+      "phrases": [
+        "кпп",
+        "ручка кпп",
+        "селектор",
+        "рычаг",
+        "кулиса",
+        "фартук",
+        "подушка руля",
+        "подушка безопасности",
+        "airbag",
+        "srs",
+        "эйрбег"
+      ],
+      "services": [
+        "poshiv-kpp:poshiv-ruchki-kpp-kozha-alkantara",
+        "poshiv-kpp:poshiv-chehla-fartuka-kpp-kozha-alkantara",
+        "remont-salona:okras-ruchka-kpp-kozha-iskusstvennaya-kozha",
+        "poshiv-srs:poshiv-podushki-srs-airbag-kozha"
+      ]
+    },
+    {
+      "id": "exterior-trim",
+      "title": "Выцвел пластик и хром снаружи",
+      "lead": "Посеревший наружный пластик и помутневший хром восстанавливают отдельным уходом.",
+      "phrases": [
+        "пластик выгорел",
+        "серый пластик",
+        "наружный пластик",
+        "пластик побелел",
+        "бампер выцвел",
+        "молдинги",
+        "хром",
+        "хромированные",
+        "хромированный",
+        "помутнел хром",
+        "решетка радиатора",
+        "уплотнители"
+      ],
+      "services": [
+        "obrabotka-kuzova-vosk-polim:zaschita-obrabotka-uhod-za-vneshnim-plastikom-eksterera",
+        "obrabotka-kuzova-vosk-polim:zaschita-obrabotka-uhod-za-hromirovannymi-detalyami-za-detal",
+        "obrabotka-kuzova-vosk-polim:zaschita-obrabotka-dvernyh-uplotnitelej"
+      ]
+    },
+    {
+      "id": "full",
+      "title": "Всё и сразу",
+      "lead": "Комплексы «кузов + салон» собирают мойку, уборку и защиту в один визит.",
+      "phrases": [
+        "комплекс",
+        "комплексно",
+        "полный детейлинг",
+        "все сразу",
+        "всё и сразу",
+        "привести в порядок",
+        "в порядок",
+        "как новая",
+        "с ног до головы",
+        "подарок",
+        "в подарок",
+        "детейлинг"
+      ],
+      "services": [
+        "kompleksy-kuzov-salon:detejling-kompleks-dlya-vashego-avto-180-240-min",
+        "kompleksy-kuzov-salon:kompleksnaya-programma-nano-magic-90-120-min",
+        "kompleksy-kuzov-salon:kompleksnaya-programma-siloxan-sio2-90-120-min"
+      ]
+    }
+  ]
+}
