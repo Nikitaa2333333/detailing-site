@@ -6,9 +6,14 @@
    поэтому вариации живут отдельно и привязаны к марке и модели как в xlsx.
 
    Если после обновления прайса вариация ссылается на модель, которой больше
-   нет, сборка падает: иначе вариации тихо отваливаются и поиск слепнет. */
+   нет, сборка падает: иначе вариации тихо отваливаются и поиск слепнет.
+
+   car-extra.json — машины, которых в прайсе нет (китайцы, новые поколения).
+   Класс им не пишется руками: берётся у похожей модели из прайса (like), и такая
+   модель несёт like — менеджер в заявке видит, что класс по аналогии. */
 import { classes } from './services.js';
 import aliases from '../data/car-aliases.json';
+import extra from '../data/car-extra.json';
 import { normalize } from './car-search.js';
 
 const keysOf = (...lists) => [...new Set(lists.flat().map(normalize).filter(Boolean))];
@@ -59,5 +64,42 @@ for (const cls of classes) {
   }
 }
 
-/** [{ brand, keys, models: [{ model, cls, label, keys }] }] — по алфавиту */
+/* Машины вне прайса: класс и подпись — у аналога, найденного по [марка, модель] как в xlsx */
+const byRaw = new Map();
+for (const cls of classes) {
+  for (const { brand, models } of cls.brands) {
+    for (const model of models) byRaw.set(`${brand.trim()}|${model.trim()}`, { cls, brand: brand.trim(), model: model.trim() });
+  }
+}
+const lost = [];
+for (const [brandName, models] of Object.entries(extra.models)) {
+  if (!byName.has(brandName)) {
+    if (!extra.brands[brandName]) lost.push(`марка «${brandName}» — нет ни в прайсе, ни в brands`);
+    byName.set(brandName, { brand: brandName, keys: keysOf(brandName, extra.brands[brandName] ?? []), models: [] });
+  } else if (extra.brands[brandName]) lost.push(`марка «${brandName}» уже есть в прайсе — убрать из brands`);
+  const entry = byName.get(brandName);
+  for (const [modelName, { like, aliases: modelAliases = [] }] of Object.entries(models)) {
+    const analog = byRaw.get(like.join('|'));
+    if (!analog) {
+      lost.push(`${brandName} ${modelName}: аналог «${like.join(' ')}»`);
+      continue;
+    }
+    if (entry.models.some((m) => normalize(m.model) === normalize(modelName))) {
+      lost.push(`${brandName} ${modelName} появилась в прайсе — убрать из car-extra.json`);
+      continue;
+    }
+    const analogName = aliases.models[analog.brand]?.[analog.model]?.name ?? analog.model;
+    const analogBrand = aliases.brands[analog.brand]?.name ?? analog.brand;
+    entry.models.push({
+      model: modelName,
+      cls: analog.cls.id,
+      label: analog.cls.label,
+      keys: keysOf(modelName, modelAliases),
+      like: `${analogBrand} ${analogName}`,
+    });
+  }
+}
+if (lost.length) throw new Error(`car-extra.json: ${lost.join('; ')}.`);
+
+/** [{ brand, keys, models: [{ model, cls, label, keys, like? }] }] — по алфавиту */
 export const carIndex = [...byName.values()].sort((a, b) => a.brand.localeCompare(b.brand, 'ru'));

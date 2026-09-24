@@ -266,7 +266,7 @@ const searchIcon =
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     type Cell = ['e' | 'f', number] | null;
-    type Car = { brand?: string; model?: string; cls: string };
+    type Car = { brand?: string; model?: string; cls: string; like?: string }; // like — модели нет в прайсе, класс взят у этой
 
     const rows = $$('[data-svc]').map((el) => ({
       el,
@@ -375,14 +375,9 @@ const searchIcon =
       // Не нашли — сама подсказка ведёт дальше: список закрывает ссылку «Без машины» под полем
       if (!found.length) {
         const li = document.createElement('li');
-        li.className = 'combo-option is-active';
+        li.className = 'combo-option combo-miss is-active';
         li.setAttribute('role', 'option');
-        const text = document.createElement('span');
-        text.textContent = 'Такой модели нет в списке — посмотреть цены без машины';
-        const hint = document.createElement('span');
-        hint.className = 'combo-class';
-        hint.textContent = 'класс уточним по телефону';
-        li.append(text, hint);
+        li.textContent = `«${q}» нет в списке — покажем цены «от», класс уточнит менеджер`;
         li.addEventListener('mousedown', (e) => {
           e.preventDefault();
           skipCar();
@@ -416,12 +411,10 @@ const searchIcon =
       missedCar = '';
       closeList();
       carInput.blur();
-      setCar({ brand: item.brand.brand, model: item.model.model, cls: item.model.cls });
-      document.dispatchEvent(
-        new CustomEvent('carclass:selected', {
-          detail: { brand: item.brand.brand, model: item.model.model, cls: item.model.cls },
-        })
-      );
+      const car: Car = { brand: item.brand.brand, model: item.model.model, cls: item.model.cls };
+      if (item.model.like) car.like = item.model.like;
+      setCar(car);
+      document.dispatchEvent(new CustomEvent('carclass:selected', { detail: car }));
     };
 
     function setCar(car: Car | null, { advance = true } = {}) {
@@ -844,6 +837,7 @@ const searchIcon =
   .wiz-step-num {
     display: grid;
     place-content: center;
+    flex: none; /* без этого флекс поджимает кружок рядом с длинной подписью — выходит овал */
     width: 26px;
     height: 26px;
     border-radius: 50%;
@@ -936,6 +930,8 @@ const searchIcon =
   .combo-list :global(.combo-option.is-active) { background: var(--wiz-hover); transition-duration: var(--t-hover-in); }
   .combo-list :global(.combo-class) { flex: none; font-size: var(--text-caption); font-weight: var(--w-medium); }
   .combo-list :global(.combo-empty) { padding: 10px var(--sp-16); }
+  /* «не нашли» — одна фраза на всю ширину, без колонки класса */
+  .combo-list :global(.combo-miss) { display: block; }
 
   .car-examples { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
   .car-example {

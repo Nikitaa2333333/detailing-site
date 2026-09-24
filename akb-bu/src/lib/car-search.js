@@ -4,7 +4,7 @@
    вариант, а не ответ. Что разбирает сам, без записей в car-aliases.json:
    - регистр, ё/е, дефисы, пробелы и точки («rav-4» = «rav 4» = «RAV4»);
    - неправильную раскладку («rfvhb» → «камри», «ыщдфкшы» → «solaris»);
-   - кириллицу вместо латиницы в коротких кодах («х5», «е200», «рх350»);
+   - кириллицу вместо латиницы в коротких кодах («х5», «е200», «рх350», «г30»);
    - марку и модель одной строкой в любом порядке слов («киа рио», «rio kia»);
    - лишнее после модели («камри 70 кузов», «320d»);
    - одну-две опечатки («хундай», «тигуан» → «тигуан», «kashkai»).
@@ -17,10 +17,12 @@ const toRu = Object.fromEntries([...EN].map((c, i) => [c, RU[i]]));
 const toEn = Object.fromEntries([...RU].map((c, i) => [c, EN[i]]));
 
 /* Кириллица, которой набирают латинские коды моделей. «р» → r, «в» → v:
-   «рх» пишут, имея в виду RX, «в40» — Volvo V40. */
+   «рх» пишут, имея в виду RX, «в40» — Volvo V40. Вторая строка — не похожие
+   на вид, а те, что пишут вместо латиницы по звуку: «г30» — это BMW G30. */
 const LOOKALIKE = {
   а: 'a', в: 'v', с: 'c', е: 'e', н: 'h', к: 'k', м: 'm',
   о: 'o', р: 'r', т: 't', х: 'x', у: 'y',
+  г: 'g', ф: 'f', д: 'd', л: 'l', б: 'b', п: 'p', и: 'i', з: 'z',
 };
 
 const DIACRITICS = { ë: 'e', é: 'e', è: 'e', š: 's', ä: 'a', ö: 'o', ü: 'u' };
@@ -38,22 +40,29 @@ export function normalize(s) {
 const compact = (s) => s.replace(/ /g, '');
 const swap = (s, map) => [...s].map((c) => map[c] ?? c).join('');
 
-/* Код модели — слово с цифрой или из одной-двух букв: там кириллицу меняем на латиницу */
-const latinize = (s) =>
+/* Код модели — слово с цифрой или из одной-двух букв: там кириллицу меняем на латиницу.
+   «в» в коде — и V (Volvo V40), и W (кузова Mercedes: «в212» = W212): второе прочтение */
+const latinize = (s, extra = {}) =>
   s
     .split(' ')
-    .map((w) => (/\d/.test(w) || w.length <= 2 ? swap(w, LOOKALIKE) : w))
+    .map((w) => (/\d/.test(w) || w.length <= 2 ? swap(w, { ...LOOKALIKE, ...extra }) : w))
     .join(' ');
+
+/* Код с цифрой в другую раскладку не переводим: «f20» — это BMW F20, а не «а20»
+   (→ a20 → Mercedes A200), «х3» — X3, а не «[3» (→ «3» → BMW 3 серии).
+   Кириллицу в кодах разбирает latinize */
+const swapWords = (s, map) => s.split(/(\s+)/).map((w) => (/\d/.test(w) ? w : swap(w, map))).join('');
 
 /** Все прочтения запроса: как есть, в другой раскладке, с латиницей в кодах */
 function readings(query) {
   const raw = String(query).toLowerCase();
   const out = new Set();
-  for (const v of [raw, swap(raw, toRu), swap(raw, toEn)]) {
+  for (const v of [raw, swapWords(raw, toRu), swapWords(raw, toEn)]) {
     const n = normalize(v);
     if (!n) continue;
     out.add(n);
     out.add(latinize(n));
+    out.add(latinize(n, { в: 'w' }));
   }
   return [...out].map(compact);
 }
@@ -135,6 +144,8 @@ function rank(list, qs, limit) {
       }
       // одна буква — это начало марки, а не код модели вроде TT
       if (item.type === 'brand' && Math.max(...qs.map((q) => q.length)) === 1) best -= 100;
+      // при равенстве модель из прайса выше модели по аналогии: «рх» — Lexus RX, а не Exeed RX
+      if (item.model?.like) best += 0.5;
       if (best < Infinity) found.push({ item, best });
     }
     return found;

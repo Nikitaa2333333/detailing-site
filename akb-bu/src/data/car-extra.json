@@ -1,0 +1,379 @@
+{
+  "_readme": "Модели, которых нет в листе «Классификация машин», — чтобы человек нашёл свою машину, а не «модели нет». Класс здесь не задаётся: like — ровно как в prices.json [марка, модель] той машины из прайса, на которую эта похожа размером и сегментом; класс берётся у неё. Сменит заказчик класс у аналога — сменится и здесь. Появится модель в самом прайсе — запись отсюда убрать (сборка напомнит). Ключи марок — как показывать на сайте; brands — только новые марки, которых нет в прайсе. Предложенные аналоги заказчик вычитывает: ВАРИАНТЫ_ПОИСКА.html, пометка «по аналогии».",
+  "brands": {
+    "Haval": ["хавал", "хавейл", "хавэйл", "хaвал"],
+    "Chery": ["чери", "черри", "чери тигго"],
+    "Omoda": ["омода"],
+    "Jaecoo": ["джейку", "джаеку", "джеку", "jaeco"],
+    "Exeed": ["эксид", "иксид", "exid"],
+    "Geely": ["джили", "жили", "гили"],
+    "Belgee": ["белджи", "белжи"],
+    "Tenet": ["тенет"],
+    "Changan": ["чанган", "чаньань", "чанан"],
+    "Tank": ["танк"],
+    "GAC": ["гак", "гац", "гак моторс"],
+    "Jetour": ["джетур", "жетур"],
+    "Great Wall": ["грейт вол", "грейт волл", "greatwall", "ховер"],
+    "Li Auto": ["лиси", "ли авто", "li", "lixiang", "li xiang", "лисян"],
+    "Zeekr": ["зикр", "зикер", "зекр"],
+    "Voyah": ["воя", "воях", "воя фри"],
+    "Hongqi": ["хончи", "хунчи", "хонгки"],
+    "BYD": ["бид", "бьюд", "би ай ди"],
+    "Dongfeng": ["донгфенг", "дунфэн", "донфенг"],
+    "Kaiyi": ["каи", "кайи", "каии"],
+    "Moskvich": ["москвич"],
+    "Genesis": ["генезис", "дженезис"],
+    "Tesla": ["тесла"],
+    "УАЗ": ["uaz", "уазик", "уаз патриот"],
+    "ГАЗ": ["gaz"],
+    "Datsun": ["датсун", "дацун"],
+    "Daewoo": ["дэу", "деу", "дейву", "дэо"],
+    "Ravon": ["равон"]
+  },
+  "models": {
+    "Haval": {
+      "Jolion": { "like": ["TOYOTA", "RAV-4"], "aliases": ["джолион", "жолион", "джулион"] },
+      "F7": { "like": ["TOYOTA", "RAV-4"], "aliases": ["ф7"] },
+      "F7x": { "like": ["TOYOTA", "RAV-4"], "aliases": ["ф7х", "f7 x"] },
+      "H6": { "like": ["TOYOTA", "RAV-4"], "aliases": ["аш6", "н6"] },
+      "M6": { "like": ["TOYOTA", "RAV-4"], "aliases": ["м6"] },
+      "Dargo": { "like": ["TOYOTA", "RAV-4"], "aliases": ["дарго", "dargo x", "дарго х"] },
+      "H5": { "like": ["MITSUBISHI", "Pajero"], "aliases": ["аш5"] },
+      "H9": { "like": ["TOYOTA", "LC Prado"], "aliases": ["аш9", "н9"] }
+    },
+    "Chery": {
+      "Tiggo 2": { "like": ["SUZUKI", "SX4"], "aliases": ["тигго 2", "тиго 2"] },
+      "Tiggo 4": { "like": ["NISSAN", "Juke"], "aliases": ["тигго 4", "тиго 4", "tiggo 4 pro", "тигго 4 про"] },
+      "Tiggo 7": { "like": ["NISSAN", "X-trail"], "aliases": ["тигго 7", "тиго 7", "tiggo 7 pro", "tiggo 7 pro max", "тигго 7 про", "тигго 7 про макс"] },
+      "Tiggo 8": { "like": ["MITSUBISHI", "Outlander"], "aliases": ["тигго 8", "тиго 8", "tiggo 8 pro", "tiggo 8 pro max", "тигго 8 про", "тигго 8 про макс"] },
+      "Tiggo 9": { "like": ["KIA", "Sorento"], "aliases": ["тигго 9", "тиго 9"] },
+      "Arrizo 5": { "like": ["KIA", "Cerato"], "aliases": ["арризо 5", "аризо 5", "arrizo 5 plus"] },
+      "Arrizo 8": { "like": ["TOYOTA", "Camry"], "aliases": ["арризо 8", "аризо 8"] }
+    },
+    "Omoda": {
+      "C5": { "like": ["NISSAN", "Juke"], "aliases": ["ц5", "с5"] },
+      "S5": { "like": ["HYUNDAI", "Elantra"], "aliases": ["с5 седан", "s5 gt"] },
+      "C7": { "like": ["NISSAN", "X-trail"], "aliases": ["ц7", "с7"] }
+    },
+    "Jaecoo": {
+      "J7": { "like": ["VOLKSWAGEN", "Tiguan"], "aliases": ["джей7", "дж7"] },
+      "J8": { "like": ["KIA", "Sorento"], "aliases": ["джей8", "дж8"] }
+    },
+    "Exeed": {
+      "LX": { "like": ["NISSAN", "X-trail"], "aliases": [] },
+      "TXL": { "like": ["HYUNDAI", "Santa Fe"], "aliases": ["тхл", "txl"] },
+      "RX": { "like": ["HYUNDAI", "Santa Fe"], "aliases": [] },
+      "VX": { "like": ["TOYOTA", "Highlander"], "aliases": ["вх"] }
+    },
+    "Geely": {
+      "Coolray": { "like": ["NISSAN", "Juke"], "aliases": ["кулрей", "кулрэй", "кул рей"] },
+      "Cityray": { "like": ["NISSAN", "Juke"], "aliases": ["ситирей", "сити рей"] },
+      "Atlas": { "like": ["KIA", "Sportage"], "aliases": ["атлас", "atlas pro", "атлас про"] },
+      "Okavango": { "like": ["MITSUBISHI", "Outlander"], "aliases": ["окаванго"] },
+      "Monjaro": { "like": ["MITSUBISHI", "Outlander"], "aliases": ["монжаро", "монджаро", "манжаро"] },
+      "Tugella": { "like": ["NISSAN", "X-trail"], "aliases": ["тугелла", "тугела"] },
+      "Emgrand": { "like": ["HYUNDAI", "Elantra"], "aliases": ["эмгранд", "емгранд"] },
+      "Preface": { "like": ["TOYOTA", "Camry"], "aliases": ["префейс"] },
+      "EX5": { "like": ["NISSAN", "X-trail"], "aliases": ["ех5", "ex 5"] }
+    },
+    "Belgee": {
+      "X50": { "like": ["NISSAN", "Juke"], "aliases": ["х50"] },
+      "X70": { "like": ["KIA", "Sportage"], "aliases": ["х70"] }
+    },
+    "Tenet": {
+      "T4": { "like": ["NISSAN", "Juke"], "aliases": ["т4"] },
+      "T7": { "like": ["NISSAN", "X-trail"], "aliases": ["т7"] },
+      "T8": { "like": ["MITSUBISHI", "Outlander"], "aliases": ["т8"] }
+    },
+    "Changan": {
+      "CS35 Plus": { "like": ["NISSAN", "Juke"], "aliases": ["cs35", "цс35", "сс35"] },
+      "CS55 Plus": { "like": ["KIA", "Sportage"], "aliases": ["cs55", "цс55", "сс55"] },
+      "CS75 Plus": { "like": ["MITSUBISHI", "Outlander"], "aliases": ["cs75", "цс75", "сс75"] },
+      "X5 Plus": { "like": ["NISSAN", "Juke"], "aliases": ["changan x5"] },
+      "UNI-K": { "like": ["KIA", "Sorento"], "aliases": ["uni k", "юни к", "уни к"] },
+      "UNI-S": { "like": ["KIA", "Sportage"], "aliases": ["uni s", "юни с"] },
+      "UNI-V": { "like": ["KIA", "Optima"], "aliases": ["uni v", "юни в"] },
+      "Alsvin": { "like": ["HYUNDAI", "Solaris"], "aliases": ["алсвин", "альсвин"] },
+      "Eado": { "like": ["HYUNDAI", "Elantra"], "aliases": ["эадо", "идо"] },
+      "Hunter": { "like": ["MITSUBISHI", "L200"], "aliases": ["хантер", "hunter plus"] }
+    },
+    "Tank": {
+      "300": { "like": ["JEEP", "Wrangler Unlimited"], "aliases": ["танк 300", "tank300"] },
+      "400": { "like": ["TOYOTA", "LC Prado"], "aliases": ["танк 400", "tank400"] },
+      "500": { "like": ["TOYOTA", "LC 200"], "aliases": ["танк 500", "tank500"] },
+      "700": { "like": ["TOYOTA", "LC 200"], "aliases": ["танк 700", "tank700"] }
+    },
+    "GAC": {
+      "GS3": { "like": ["NISSAN", "Juke"], "aliases": ["гс3"] },
+      "GS4": { "like": ["KIA", "Sportage"], "aliases": ["гс4"] },
+      "GS8": { "like": ["TOYOTA", "Highlander"], "aliases": ["гс8"] },
+      "Emkoo": { "like": ["KIA", "Sportage"], "aliases": ["эмку", "емку"] },
+      "M8": { "like": ["TOYOTA", "Alphard"], "aliases": ["м8"] }
+    },
+    "Jetour": {
+      "X50": { "like": ["NISSAN", "Juke"], "aliases": ["х50"] },
+      "X70": { "like": ["MITSUBISHI", "Outlander"], "aliases": ["х70", "x70 plus"] },
+      "X90": { "like": ["TOYOTA", "Highlander"], "aliases": ["х90", "x90 plus"] },
+      "Dashing": { "like": ["KIA", "Sportage"], "aliases": ["дашинг", "дэшинг"] },
+      "T2": { "like": ["TOYOTA", "LC Prado"], "aliases": ["т2"] }
+    },
+    "Great Wall": {
+      "Hover H3": { "like": ["SUZUKI", "Grand Vitara"], "aliases": ["ховер н3", "hover h3", "h3 hover"] },
+      "Hover H5": { "like": ["SUZUKI", "Grand Vitara"], "aliases": ["ховер н5", "hover h5", "h5 hover"] },
+      "Poer": { "like": ["MITSUBISHI", "L200"], "aliases": ["поер", "пауэр", "poer kingkong", "wingle", "вингл", "wingle 7"] }
+    },
+    "Li Auto": {
+      "L6": { "like": ["BMW", "X5"], "aliases": ["л6", "li l6", "лисян л6"] },
+      "L7": { "like": ["BMW", "X5"], "aliases": ["л7", "li l7", "лисян л7"] },
+      "L8": { "like": ["BMW", "X5"], "aliases": ["л8", "li l8", "лисян л8"] },
+      "L9": { "like": ["TOYOTA", "LC 200"], "aliases": ["л9", "li l9", "лисян л9"] },
+      "Mega": { "like": ["TOYOTA", "Alphard"], "aliases": ["мега", "li mega"] }
+    },
+    "Zeekr": {
+      "001": { "like": ["PORSHE", "Panamera"], "aliases": ["зикр 001", "zeekr 1"] },
+      "7X": { "like": ["BMW", "X5"], "aliases": ["7 х", "zeekr 7x"] },
+      "X": { "like": ["NISSAN", "Juke"], "aliases": ["zeekr x"] },
+      "009": { "like": ["TOYOTA", "Alphard"], "aliases": ["зикр 009"] },
+      "9X": { "like": ["TOYOTA", "LC 200"], "aliases": ["zeekr 9x"] }
+    },
+    "Voyah": {
+      "Free": { "like": ["BMW", "X5"], "aliases": ["фри"] },
+      "Passion": { "like": ["MERCEDES", "S"], "aliases": ["пэшн", "пешн", "пэшен"] },
+      "Dream": { "like": ["TOYOTA", "Alphard"], "aliases": ["дрим", "дрём"] }
+    },
+    "Hongqi": {
+      "H5": { "like": ["TOYOTA", "Camry"], "aliases": ["аш5", "н5"] },
+      "H9": { "like": ["MERCEDES", "S"], "aliases": ["аш9", "н9"] },
+      "HS5": { "like": ["NISSAN", "X-trail"], "aliases": ["хс5", "hs 5"] },
+      "E-HS9": { "like": ["CADILLAC", "Escalade ESV"], "aliases": ["ehs9", "e hs9", "hs9"] }
+    },
+    "BYD": {
+      "Qin Plus": { "like": ["HYUNDAI", "Elantra"], "aliases": ["цинь", "qin"] },
+      "Han": { "like": ["TOYOTA", "Camry"], "aliases": ["хан"] },
+      "Seal": { "like": ["TOYOTA", "Camry"], "aliases": ["сил"] },
+      "Atto 3": { "like": ["NISSAN", "X-trail"], "aliases": ["атто 3", "atto3", "yuan plus"] },
+      "Song Plus": { "like": ["NISSAN", "X-trail"], "aliases": ["сонг", "song", "сон плюс"] },
+      "Tang": { "like": ["TOYOTA", "Highlander"], "aliases": ["танг"] }
+    },
+    "Dongfeng": {
+      "Shine Max": { "like": ["TOYOTA", "Camry"], "aliases": ["шайн макс", "shine"] },
+      "580": { "like": ["MITSUBISHI", "Outlander"], "aliases": ["dongfeng 580", "ix580"] },
+      "Huge": { "like": ["NISSAN", "X-trail"], "aliases": ["хьюдж", "хьюж"] }
+    },
+    "Kaiyi": {
+      "E5": { "like": ["HYUNDAI", "Solaris"], "aliases": ["е5"] },
+      "X3": { "like": ["NISSAN", "Juke"], "aliases": ["х3", "x3 pro"] }
+    },
+    "Moskvich": {
+      "3": { "like": ["NISSAN", "Juke"], "aliases": ["москвич 3", "3e", "3е"] },
+      "6": { "like": ["KIA", "Optima"], "aliases": ["москвич 6"] }
+    },
+    "Genesis": {
+      "G70": { "like": ["LEXUS", "IS"], "aliases": ["г70", "genesis g70"] },
+      "G80": { "like": ["LEXUS", "GS"], "aliases": ["г80", "genesis g80"] },
+      "G90": { "like": ["HYUNDAI", "Equus"], "aliases": ["г90", "genesis g90"] },
+      "GV70": { "like": ["BMW", "X3"], "aliases": ["гв70", "gv 70"] },
+      "GV80": { "like": ["BMW", "X5"], "aliases": ["гв80", "gv 80"] }
+    },
+    "Tesla": {
+      "Model 3": { "like": ["BMW", "3"], "aliases": ["модел 3", "модель 3", "model3"] },
+      "Model Y": { "like": ["BMW", "X3"], "aliases": ["модел у", "модель игрек"] },
+      "Model S": { "like": ["PORSHE", "Panamera"], "aliases": ["модел с", "модель эс"] },
+      "Model X": { "like": ["BMW", "X5"], "aliases": ["модел х", "модель икс"] },
+      "Cybertruck": { "like": ["TOYOTA", "Tundra"], "aliases": ["кибертрак", "cyber truck"] }
+    },
+    "УАЗ": {
+      "Патриот": { "like": ["MITSUBISHI", "Pajero"], "aliases": ["patriot", "патриот"] },
+      "Хантер": { "like": ["MITSUBISHI", "Pajero"], "aliases": ["hunter", "469", "козлик"] },
+      "Пикап": { "like": ["MITSUBISHI", "L200"], "aliases": ["pickup", "profi", "профи"] },
+      "Буханка": { "like": ["TOYOTA", "Hiace"], "aliases": ["буханка", "2206", "452", "сгр", "таблетка"] }
+    },
+    "ГАЗ": {
+      "Газель": { "like": ["PEUGEOT", "Boxer"], "aliases": ["gazelle", "газель некст", "gazelle next", "некст"] },
+      "Соболь": { "like": ["PEUGEOT", "Boxer"], "aliases": ["sobol", "соболь бизнес"] }
+    },
+    "Datsun": {
+      "on-DO": { "like": ["Лада", "Гранта"], "aliases": ["он до", "ondo", "on do"] },
+      "mi-DO": { "like": ["Лада", "Калина"], "aliases": ["ми до", "mido", "mi do"] }
+    },
+    "Daewoo": {
+      "Nexia": { "like": ["CHEVROLET", "Lanos"], "aliases": ["нексия", "нэксия"] },
+      "Matiz": { "like": ["CHEVROLET", "Spark"], "aliases": ["матиз"] },
+      "Gentra": { "like": ["CHEVROLET", "Lacetti"], "aliases": ["джентра", "гентра"] }
+    },
+    "Ravon": {
+      "Nexia R3": { "like": ["CHEVROLET", "Aveo"], "aliases": ["нексия р3", "r3"] },
+      "R2": { "like": ["CHEVROLET", "Spark"], "aliases": ["р2"] },
+      "R4": { "like": ["CHEVROLET", "Cobalt"], "aliases": ["р4"] },
+      "Gentra": { "like": ["CHEVROLET", "Lacetti"], "aliases": ["джентра"] }
+    },
+    "Toyota": {
+      "Land Cruiser 300": { "like": ["TOYOTA", "LC 200"], "aliases": ["lc300", "lc 300", "лк300", "лк 300", "ленд крузер 300", "land cruiser 300", "крузак 300", "крузер 300", "трехсотый", "трехсотка"] },
+      "Land Cruiser 100": { "like": ["TOYOTA", "LC 200"], "aliases": ["lc100", "lc105", "лк100", "ленд крузер 100", "land cruiser 100", "крузак 100", "сотка", "сотый"] },
+      "Fortuner": { "like": ["TOYOTA", "LC Prado"], "aliases": ["фортунер"] },
+      "4Runner": { "like": ["TOYOTA", "LC Prado"], "aliases": ["форанер", "4 runner", "фор раннер"] },
+      "Hilux": { "like": ["MITSUBISHI", "L200"], "aliases": ["хайлюкс", "хайлакс", "хилюкс"] },
+      "C-HR": { "like": ["NISSAN", "Juke"], "aliases": ["чхр", "сhr", "c hr", "си эйч ар"] },
+      "Corolla Cross": { "like": ["TOYOTA", "RAV-4"], "aliases": ["королла кросс"] },
+      "Harrier": { "like": ["TOYOTA", "RAV-4"], "aliases": ["харриер", "харьер"] },
+      "bZ4X": { "like": ["TOYOTA", "RAV-4"], "aliases": ["bz4x", "бз4х"] },
+      "Crown": { "like": ["TOYOTA", "Camry"], "aliases": ["краун", "кроун"] },
+      "Sienna": { "like": ["TOYOTA", "Alphard"], "aliases": ["сиенна", "сиена"] },
+      "Vellfire": { "like": ["TOYOTA", "Alphard"], "aliases": ["велфаер", "вельфаер", "веллфайр"] }
+    },
+    "Lexus": {
+      "NX": { "like": ["AUDI", "Q5"], "aliases": ["нх", "nx200", "nx200t", "nx250", "nx300", "nx300h", "nx350h"] },
+      "UX": { "like": ["AUDI", "Q3"], "aliases": ["юх", "ux200", "ux250h"] },
+      "LM": { "like": ["TOYOTA", "Alphard"], "aliases": ["лм", "lm350", "lm300h"] }
+    },
+    "Hyundai": {
+      "Creta": { "like": ["NISSAN", "Juke"], "aliases": ["крета"] },
+      "Tucson": { "like": ["HYUNDAI", "IX35"], "aliases": ["туссан", "тусан", "туксон"] },
+      "Kona": { "like": ["NISSAN", "Juke"], "aliases": ["кона"] },
+      "i30": { "like": ["HYUNDAI", "Elantra"], "aliases": ["ай30"] },
+      "Palisade": { "like": ["KIA", "Mohave"], "aliases": ["палисад", "палисейд"] },
+      "Staria": { "like": ["HYUNDAI", "H-1"], "aliases": ["стария"] }
+    },
+    "Kia": {
+      "K5": { "like": ["KIA", "Optima"], "aliases": ["к5"] },
+      "K8": { "like": ["KIA", "Optima"], "aliases": ["к8", "cadenza", "каденза"] },
+      "K9": { "like": ["KIA", "Quoris"], "aliases": ["к9", "k900"] },
+      "Stinger": { "like": ["KIA", "Optima"], "aliases": ["стингер"] },
+      "Seltos": { "like": ["NISSAN", "Juke"], "aliases": ["селтос"] },
+      "XCeed": { "like": ["KIA", "Ceed"], "aliases": ["икссид", "х сид"] },
+      "Stonic": { "like": ["KIA", "Rio"], "aliases": ["стоник", "rio x", "рио х", "rio x line"] },
+      "Carnival": { "like": ["CHRYSLER", "Voyager"], "aliases": ["карнивал", "sedona", "седона"] }
+    },
+    "Nissan": {
+      "Terrano": { "like": ["RENAULT", "Duster"], "aliases": ["террано", "терано"] },
+      "Leaf": { "like": ["NISSAN", "Tiida"], "aliases": ["лиф"] }
+    },
+    "Mitsubishi": {
+      "Eclipse Cross": { "like": ["MITSUBISHI", "ASX"], "aliases": ["эклипс кросс", "эклипс"] }
+    },
+    "Mazda": {
+      "CX-30": { "like": ["MAZDA", "CX-5"], "aliases": ["сх30", "цх30", "cx30"] },
+      "CX-3": { "like": ["NISSAN", "Juke"], "aliases": ["сх3", "цх3", "cx3"] },
+      "CX-60": { "like": ["MAZDA", "CX-5"], "aliases": ["сх60", "цх60", "cx60"] },
+      "CX-90": { "like": ["MAZDA", "CX-9"], "aliases": ["сх90", "цх90", "cx90"] }
+    },
+    "Honda": {
+      "HR-V": { "like": ["NISSAN", "Juke"], "aliases": ["хрв", "hrv", "vezel", "везел"] }
+    },
+    "Suzuki": {
+      "Vitara": { "like": ["SUZUKI", "Grand Vitara"], "aliases": ["витара 2015", "new vitara"] },
+      "Jimny": { "like": ["Ваз", "Нива"], "aliases": ["джимни", "жимни"] }
+    },
+    "Skoda": {
+      "Rapid": { "like": ["VOLKSWAGEN", "Polo"], "aliases": ["рапид"] },
+      "Kodiaq": { "like": ["VOLKSWAGEN", "Tiguan"], "aliases": ["кодиак", "кодиаk"] },
+      "Karoq": { "like": ["SKODA", "Yeti"], "aliases": ["карок"] },
+      "Kamiq": { "like": ["SKODA", "Yeti"], "aliases": ["камик"] }
+    },
+    "Volkswagen": {
+      "Teramont": { "like": ["VOLKSWAGEN", "Toureg"], "aliases": ["терамонт"] },
+      "Taos": { "like": ["VOLKSWAGEN", "Tiguan"], "aliases": ["таос"] },
+      "Arteon": { "like": ["VOLKSWAGEN", "CC"], "aliases": ["артеон"] },
+      "ID.4": { "like": ["VOLKSWAGEN", "Tiguan"], "aliases": ["id4", "ид4"] },
+      "ID.6": { "like": ["VOLKSWAGEN", "Toureg"], "aliases": ["id6", "ид6"] },
+      "Transporter": { "like": ["VOLKSWAGEN", "Multivan"], "aliases": ["транспортер", "транспортёр", "caravelle", "каравелла"] },
+      "Crafter": { "like": ["PEUGEOT", "Boxer"], "aliases": ["крафтер"] }
+    },
+    "Audi": {
+      "Q2": { "like": ["AUDI", "Q3"], "aliases": ["ку2"] },
+      "Q8": { "like": ["AUDI", "Q7"], "aliases": ["ку8", "sq8", "rsq8", "rs q8"] },
+      "e-tron": { "like": ["AUDI", "Q7"], "aliases": ["етрон", "этрон", "e tron", "q8 e-tron"] },
+      "e-tron GT": { "like": ["AUDI", "A7"], "aliases": ["етрон гт", "этрон гт"] }
+    },
+    "BMW": {
+      "2 серии": { "like": ["BMW", "1"], "aliases": ["2", "2 series", "двойка", "218", "220", "225", "230", "m2", "f22", "f23", "f44", "f45", "f46", "g42", "active tourer", "gran coupe"] },
+      "8 серии": { "like": ["BMW", "6"], "aliases": ["8", "8 series", "840", "850", "m8", "g14", "g15", "g16"] },
+      "X2": { "like": ["BMW", "X1"], "aliases": ["икс2", "f39", "u10"] },
+      "X4": { "like": ["BMW", "X3"], "aliases": ["икс4", "x4m", "f26", "g02"] },
+      "X7": { "like": ["MERCEDES", "GL"], "aliases": ["икс7", "g07", "x7m"] },
+      "XM": { "like": ["BMW", "X6"], "aliases": ["хм", "икс эм"] },
+      "i3": { "like": ["BMW", "1"], "aliases": ["ай3"] },
+      "i4": { "like": ["BMW", "4"], "aliases": ["ай4"] },
+      "i5": { "like": ["BMW", "5"], "aliases": ["ай5"] },
+      "i7": { "like": ["BMW", "7"], "aliases": ["ай7"] },
+      "iX": { "like": ["BMW", "X5"], "aliases": ["айикс", "ix xdrive"] },
+      "iX3": { "like": ["BMW", "X3"], "aliases": ["айикс3"] }
+    },
+    "Mercedes-Benz": {
+      "GLA": { "like": ["MERCEDES", "GLK"], "aliases": ["гла", "gla200", "gla250", "gla35", "gla45", "x156", "h247"] },
+      "GLB": { "like": ["MERCEDES", "GLK"], "aliases": ["глб", "glb200", "glb250", "x247"] },
+      "GLC": { "like": ["MERCEDES", "GLK"], "aliases": ["глц", "glc200", "glc250", "glc300", "glc43", "glc63", "x253", "c253", "x254", "glc coupe", "glc купе"] },
+      "GLE": { "like": ["MERCEDES", "M"], "aliases": ["гле", "gle300", "gle350", "gle400", "gle450", "gle53", "gle63", "v167", "c167", "c292", "gle coupe", "gle купе"] },
+      "GLS": { "like": ["MERCEDES", "GL"], "aliases": ["gls350", "gls400", "gls450", "gls580", "gls63", "x167", "maybach gls", "майбах глс"] },
+      "V-класс": { "like": ["MERCEDES", "Viano"], "aliases": ["v класс", "в класс", "v250", "v220", "v300", "w447", "v class"] },
+      "Sprinter": { "like": ["PEUGEOT", "Boxer"], "aliases": ["спринтер"] },
+      "CLK": { "like": ["MERCEDES", "E"], "aliases": ["цлк", "клк", "clk200", "clk320", "clk500", "w208", "w209"] },
+      "CL": { "like": ["MERCEDES", "S"], "aliases": ["цл", "cl500", "cl63", "c216"] },
+      "AMG GT": { "like": ["MERCEDES", "SLS"], "aliases": ["амг гт", "amg gt", "gt63", "gt 4 door"] },
+      "EQE": { "like": ["MERCEDES", "E"], "aliases": ["eqe suv", "eqe350"] },
+      "EQS": { "like": ["MERCEDES", "S"], "aliases": ["eqs suv", "eqs450", "eqs580"] },
+      "X-класс": { "like": ["NISSAN", "Navara"], "aliases": ["x класс", "х класс", "x250d", "x350d"] }
+    },
+    "Porsche": {
+      "Taycan": { "like": ["PORSHE", "Panamera"], "aliases": ["тайкан", "тэйкан"] }
+    },
+    "Volvo": {
+      "XC40": { "like": ["VOLVO", "XC60"], "aliases": ["хс40", "иксси40"] },
+      "S90": { "like": ["VOLVO", "S80"], "aliases": ["с90"] },
+      "V60": { "like": ["VOLVO", "S60"], "aliases": ["в60"] },
+      "V90": { "like": ["VOLVO", "S80"], "aliases": ["в90", "v90 cross country"] }
+    },
+    "Land Rover": {
+      "Discovery Sport": { "like": ["LAND ROVER", "Freelander"], "aliases": ["дискавери спорт", "disco sport"] },
+      "Velar": { "like": ["LAND ROVER", "RR Sport"], "aliases": ["велар", "range rover velar", "рендж ровер велар"] }
+    },
+    "Cadillac": {
+      "XT4": { "like": ["AUDI", "Q3"], "aliases": ["хт4"] },
+      "XT5": { "like": ["CADILLAC", "SRX"], "aliases": ["хт5"] },
+      "XT6": { "like": ["CADILLAC", "SRX"], "aliases": ["хт6"] },
+      "CT6": { "like": ["MERCEDES", "S"], "aliases": ["цт6"] }
+    },
+    "Ford": {
+      "EcoSport": { "like": ["NISSAN", "Juke"], "aliases": ["экоспорт", "эко спорт"] },
+      "Edge": { "like": ["NISSAN", "Murano"], "aliases": ["эдж", "едж"] },
+      "Ranger": { "like": ["MITSUBISHI", "L200"], "aliases": ["рейнджер", "ренджер"] },
+      "Transit": { "like": ["PEUGEOT", "Boxer"], "aliases": ["транзит", "tourneo", "турнео"] }
+    },
+    "Chevrolet": {
+      "Tracker": { "like": ["NISSAN", "Juke"], "aliases": ["трекер", "треккер"] },
+      "Equinox": { "like": ["VOLKSWAGEN", "Tiguan"], "aliases": ["эквинокс"] },
+      "Traverse": { "like": ["FORD", "Explorer"], "aliases": ["траверс"] }
+    },
+    "Dodge": {
+      "Durango": { "like": ["JEEP", "Grand Cherokee"], "aliases": ["дуранго"] },
+      "Ram": { "like": ["TOYOTA", "Tundra"], "aliases": ["рам", "ram 1500", "рэм"] }
+    },
+    "Infiniti": {
+      "QX55": { "like": ["INFINITI", "QX50 (EX)"], "aliases": ["кх55", "qx 55"] }
+    },
+    "Renault": {
+      "Kaptur": { "like": ["RENAULT", "Duster"], "aliases": ["каптур", "captur"] },
+      "Arkana": { "like": ["RENAULT", "Duster"], "aliases": ["аркана"] }
+    },
+    "Peugeot": {
+      "2008": { "like": ["PEUGEOT", "3008"], "aliases": ["пежо 2008"] },
+      "5008": { "like": ["PEUGEOT", "3008"], "aliases": ["пежо 5008"] },
+      "Traveller": { "like": ["CITROEN", "Jumpi Multispace"], "aliases": ["травеллер", "expert", "эксперт"] }
+    },
+    "Citroen": {
+      "C5 Aircross": { "like": ["CITROEN", "C-crosser"], "aliases": ["c5 аиркросс", "ц5 аиркросс"] },
+      "SpaceTourer": { "like": ["CITROEN", "Jumpi Multispace"], "aliases": ["спейстурер", "space tourer", "jumpy", "джампи"] },
+      "Jumper": { "like": ["PEUGEOT", "Boxer"], "aliases": ["джампер"] }
+    },
+    "Opel": {
+      "Mokka": { "like": ["NISSAN", "Juke"], "aliases": ["мокка", "мока"] }
+    },
+    "Mini": {
+      "Clubman": { "like": ["MINI", "Cooper"], "aliases": ["клабмен", "клабмэн"] }
+    },
+    "Lada (ВАЗ)": {
+      "Iskra": { "like": ["Лада", "Веста"], "aliases": ["искра"] },
+      "Aura": { "like": ["Лада", "Веста"], "aliases": ["аура"] }
+    }
+  }
+}

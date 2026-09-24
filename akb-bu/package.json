@@ -10,7 +10,8 @@
     "build": "node scripts/test-search.mjs && astro build",
     "test:search": "node scripts/test-search.mjs",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "variants": "node scripts/export-search-variants.mjs"
   },
   "dependencies": {
     "@fontsource-variable/onest": "^5.2.11",
