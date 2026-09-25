@@ -52,9 +52,13 @@ const CARS = [
   ['альфард', 'Toyota Alphard'],
   ['мультивен', 'Volkswagen Multivan'],
   ['амарок', 'Volkswagen Amarok'],
-  ['веста', 'Lada (ВАЗ) Веста'],
-  ['х рей', 'Lada (ВАЗ) XRAY'],
-  ['ваз 2107', 'Lada (ВАЗ) 2110 и другие модели'],
+  // российские марки в поиске не показываем (car-base-rules.json → hidePriceBrands, skipCountries)
+  ['веста', null],
+  ['ваз 2107', null],
+  ['лада', null],
+  ['уаз хантер', null],
+  ['тенет т7', null],
+  ['газель', null],
   ['нива', ['Chevrolet Niva', 'Lada (ВАЗ) Нива']],
   // марка + модель, в любом порядке и раскладке
   ['toyota camry', 'Toyota Camry'],
@@ -105,7 +109,23 @@ const CARS = [
   // при равенстве модель из прайса выше модели по аналогии
   ['рх', 'Lexus RX'],
   ['lx', 'Lexus LX (с 2008 г.)'],
-  ['H7', null],
+  ['H7', 'Haval H7'],
+  // спорные: одно название у разных марок, короткие коды, номер кузова без буквы
+  ['мерс 212', 'Mercedes-Benz E-класс'],
+  ['мерседес 164', 'Mercedes-Benz M-класс (ML)'],
+  ['сх 30', 'Mazda CX-30'],
+  ['v класс', 'Mercedes-Benz V-класс'],
+  ['бмв г30', 'BMW 5 серии'],
+  ['хавал н9', 'Haval H9'],
+  ['хончи н9', 'Hongqi H9'],
+  ['чанган хантер', 'Changan Hunter'],
+  ['jetour x70', 'Jetour X70'],
+  ['белджи х70', 'Belgee X70'],
+  ['x7', 'BMW X7'],
+  ['лк 300', 'Toyota Land Cruiser 300'],
+  ['крузак 200', 'Toyota Land Cruiser 200'],
+  ['дискавери спорт', 'Land Rover Discovery Sport'],
+  ['нексия', ['Daewoo Nexia', 'Ravon Nexia R3']],
   // машины вне прайса — класс по аналогии (car-extra.json)
   ['Хавал', '[Haval]'],
   ['джолион', 'Haval Jolion'],
@@ -127,10 +147,43 @@ const CARS = [
   ['рапид', 'Skoda Rapid'],
   ['глс', ['Mercedes-Benz GLS', 'Mercedes-Benz GLC']],
   ['gle 350', 'Mercedes-Benz GLE'],
-  ['патриот', 'УАЗ Патриот'],
-  ['газель', 'ГАЗ Газель'],
+  ['патриот', 'Jeep Liberty (Patriot)'],
   ['аркана', 'Renault Arkana'],
   ['тесла модел 3', 'Tesla Model 3'],
+  // мировая база (cars-base.json): запросы из переписки с заказчиком 25.09
+  ['F25', 'BMW X3'],
+  ['G01', 'BMW X3'],
+  ['хавал н7', 'Haval H7'],
+  ['Мурси', 'Lamborghini Murcielago'],
+  ['Диабло', 'Lamborghini Diablo'],
+  ['Кулинан', 'Rolls-Royce Cullinan'],
+  ['Фер', '[Ferrari]'],
+  ['феррари', '[Ferrari]'],
+  ['маззерати', '[Maserati]'],
+  ['ламба', '[Lamborghini]'],
+  ['урус', 'Lamborghini Urus'],
+  ['феррари пуросанге', 'Ferrari Purosangue'],
+  ['макларен 720', 'McLaren 720S'],
+  ['порше 911 gt3', 'Porsche 911 GT3'],
+  ['бентли бентайга', 'Bentley Bentayga'],
+  ['танк 500', 'Tank 500'],
+  // написания ходовых моделей мировой базы (car-base-aliases.json)
+  ['тигго 7 плюс', 'Chery Tiggo 7 Plus'],
+  ['ноах', 'Toyota Noah'],
+  ['степвагон', 'Honda Stepwgn'],
+  ['делика д5', 'Mitsubishi Delica D:5'],
+  ['рс6', 'Audi RS 6'],
+  ['эмгранд 7', 'Geely Emgrand 7'],
+  ['цс75 про', 'Changan CS75 Pro'],
+  ['тревеллер', 'Jetour Traveller'],
+  ['сонг про', 'BYD Song Pro'],
+  ['леопард 5', 'BYD FangChengBao Leopard 5'],
+  ['ионик 5', 'Hyundai IONIQ 5'],
+  ['ли уан', 'Li Auto One'],
+  // прайс и база не двоятся: «Q50 (G)» = Q50, «GL» = GL-Класс
+  ['q50', 'Infiniti Q50 / G'],
+  ['gl', 'Mercedes-Benz GL'],
+  ['мега', 'Renault Megane'],
   // неправильная раскладка и опечатки
   ['rfvhb', 'Toyota Camry'],
   ['ыщдфкшы', 'Hyundai Solaris'],
@@ -147,6 +200,31 @@ const CARS = [
   ['land rover', '[Land Rover]'],
   // год выпуска решает класс — должны найтись оба варианта, первым любой
   ['октавия', ['Skoda Octavia (до 2006 г.)', 'Skoda Octavia (с 2006 г.)']],
+  // …а код поколения выбирает нужный
+  ['октавия а7', 'Skoda Octavia (с 2006 г.)'],
+  ['octavia a5', 'Skoda Octavia (с 2006 г.)'],
+  ['октавия тур', 'Skoda Octavia (до 2006 г.)'],
+  ['шкода октавиа', ['Skoda Octavia (до 2006 г.)', 'Skoda Octavia (с 2006 г.)']],
+  // коды поколений и кузовов
+  ['a6 c7', 'Audi A6'],
+  ['а6 с8', 'Audi A6'],
+  ['a4 b9', 'Audi A4'],
+  ['q7 4m', 'Audi Q7'],
+  ['xa50', 'Toyota RAV4'],
+  ['xu70', 'Toyota Highlander'],
+  ['j150', 'Toyota Land Cruiser Prado'],
+  ['j200', 'Toyota Land Cruiser 200'],
+  ['кайен 958', 'Porsche Cayenne'],
+  ['971', 'Porsche Panamera'],
+  ['95b', 'Porsche Macan'],
+  ['l405', 'Land Rover Range Rover'],
+  ['l494', 'Land Rover Range Rover Sport'],
+  ['7p', 'Volkswagen Touareg'],
+  ['c6', 'Citroen C6'], // голый код — модель Citroen, не кузов Audi A6
+  // сленг
+  ['эска', 'Cadillac Escalade'],
+  ['рио х', 'Kia Rio'],
+  ['стоник', 'Kia Stonic'],
   // чего нет — пусто, а не случайная машина
   ['zzzz', null],
 ];
@@ -222,7 +300,9 @@ const server = await createServer({ root, configFile: false, logLevel: 'error', 
 const failures = [];
 
 try {
-  const { carIndex } = await server.ssrLoadModule('/src/lib/cars.js');
+  // ищем по тому, что получает браузер: справочник, прошедший упаковку в /cars-index.json
+  const { pack, unpack } = await server.ssrLoadModule('/src/lib/car-index-pack.js');
+  const carIndex = unpack(JSON.parse(JSON.stringify(pack((await server.ssrLoadModule('/src/lib/cars.js')).carIndex))));
   const { searchCars } = await server.ssrLoadModule('/src/lib/car-search.js');
   const { haystack, matches } = await server.ssrLoadModule('/src/lib/service-search.js');
   const { serviceText } = await server.ssrLoadModule('/src/lib/service-texts.js');

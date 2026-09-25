@@ -6,11 +6,11 @@
    После выбора модели подсвечивается нужный столбец прайса: виджет ставит
    data-active на блок с таблицей, дальше всё решает CSS.
 
-   Справочник приходит из prices.json (лист «Классификация машин»), руками
-   марки и классы не вписываются. Вариации написания — car-aliases.json,
-   поиск по ним — lib/car-search.js. Первое поле ищет и марку, и модель:
-   «камри» сразу даёт Toyota Camry и класс. */
-import { carIndex } from '../lib/cars.js';
+   Поле — то же, что в калькуляторе (CarCombo.astro + lib/car-combo.js): «камри» сразу
+   даёт Toyota Camry и класс, пустое поле — марки, клик по марке — её модели.
+   Справочник браузер догружает файлом /cars-index.json (lib/car-index-client.js),
+   в HTML его нет. */
+import CarCombo from './CarCombo.astro';
 
 const { target = 'price' } = Astro.props;
 ---
@@ -22,36 +22,7 @@ const { target = 'price' } = Astro.props;
   </div>
 
   <div class="widget-fields">
-    <div class="combo" data-combo="brand">
-      <label class="combo-label" for="class-brand">Марка или модель</label>
-      <input
-        class="field combo-input"
-        id="class-brand"
-        type="text"
-        autocomplete="off"
-        role="combobox"
-        aria-expanded="false"
-        aria-controls="class-brand-list"
-        placeholder="Например: Камри, Kia Rio, BMW X5"
-      />
-      <ul class="combo-list" id="class-brand-list" role="listbox" hidden></ul>
-    </div>
-
-    <div class="combo" data-combo="model">
-      <label class="combo-label" for="class-model">Модель</label>
-      <input
-        class="field combo-input"
-        id="class-model"
-        type="text"
-        autocomplete="off"
-        role="combobox"
-        aria-expanded="false"
-        aria-controls="class-model-list"
-        placeholder="Сначала выберите марку"
-        disabled
-      />
-      <ul class="combo-list" id="class-model-list" role="listbox" hidden></ul>
-    </div>
+    <CarCombo id="class-car" placeholder="Марка или модель: Камри, Kia Rio, BMW X5" label="Марка или модель" />
 
     <div class="widget-result" data-result hidden>
       <p class="result-label">Ваш класс</p>
@@ -63,180 +34,46 @@ const { target = 'price' } = Astro.props;
   <p class="widget-note">
     Не нашли модель в списке — <a href="#contacts">оставьте номер</a>, назовём класс и цену по телефону.
   </p>
-
-  <script type="application/json" data-class-index set:html={JSON.stringify(carIndex)} />
 </div>
 
 <script>
-  import { searchCars } from '../lib/car-search.js';
+  import { loadCars } from '../lib/car-index-client.js';
+  import { carCombo } from '../lib/car-combo.js';
 
   document.querySelectorAll('[data-class-widget]').forEach((widget) => {
-    const data = JSON.parse(widget.querySelector('[data-class-index]').textContent);
+    let data = [];
+    let car = null; // выбранная машина: { brand, model, cls, like? }
     const price = document.getElementById(widget.dataset.target);
     const result = widget.querySelector('[data-result]');
     const resultValue = widget.querySelector('[data-result-value]');
 
-    const combo = (name) => {
-      const root = widget.querySelector(`[data-combo="${name}"]`);
-      return { root, input: root.querySelector('input'), list: root.querySelector('.combo-list') };
-    };
-    const brand = combo('brand');
-    const model = combo('model');
-
-    let current = null; // выбранный бренд
-    let items = []; // что сейчас в открытом списке
-    let active = -1; // подсвеченный пункт для стрелок
-
-    const close = (c) => {
-      c.list.hidden = true;
-      c.input.setAttribute('aria-expanded', 'false');
-      active = -1;
-    };
-
-    /* Пункт списка: марка — просто название; модель — название и класс справа.
-       В первом поле модель показывается вместе с маркой: «Toyota Camry». */
-    const render = (c, list, onPick) => {
-      items = list;
-      active = list.length ? 0 : -1;
-      c.list.innerHTML = '';
-      if (!list.length) {
-        const li = document.createElement('li');
-        li.className = 'combo-empty';
-        li.textContent = 'Такой модели нет в списке';
-        c.list.append(li);
-      }
-      list.forEach((item, i) => {
-        const li = document.createElement('li');
-        li.className = 'combo-option';
-        li.setAttribute('role', 'option');
-        const name = document.createElement('span');
-        name.textContent =
-          item.type === 'brand'
-            ? item.brand.brand
-            : c === brand
-              ? `${item.brand.brand} ${item.model.model}`
-              : item.model.model;
-        li.append(name);
-        if (item.type === 'model') {
-          const cls = document.createElement('span');
-          cls.className = 'combo-class';
-          cls.textContent = item.model.label;
-          li.append(cls);
-        }
-        li.addEventListener('mousedown', (e) => {
-          e.preventDefault(); // не даём полю потерять фокус раньше выбора
-          onPick(item);
-        });
-        li.dataset.i = String(i);
-        c.list.append(li);
-      });
-      c.list.hidden = false;
-      c.input.setAttribute('aria-expanded', 'true');
-      highlight(c);
-    };
-
-    const highlight = (c) => {
-      c.list.querySelectorAll('.combo-option').forEach((el, i) => {
-        el.classList.toggle('is-active', i === active);
-      });
-    };
-
-    const selectBrand = (b) => {
-      current = b;
-      brand.input.value = b.brand;
-      model.input.disabled = false;
-      model.input.placeholder = 'Начните вводить модель';
-    };
-
-    const pickModel = (item) => {
-      selectBrand(item.brand);
-      close(brand);
-      model.input.value = item.model.model;
-      close(model);
-      resultValue.textContent = item.model.label;
-      result.hidden = false;
-      if (price) price.dataset.active = item.model.cls;
-      // Цель Метрики «использование виджета класса» подключится к этому событию
-      document.dispatchEvent(
-        new CustomEvent('carclass:selected', {
-          detail: { brand: item.brand.brand, model: item.model.model, cls: item.model.cls },
-        })
-      );
-    };
-
-    const pickBrand = (item) => {
-      if (item.type === 'model') return pickModel(item);
-      selectBrand(item.brand);
-      close(brand);
-      model.input.value = '';
-      model.input.focus();
-      render(model, searchCars(data, '', { brand: current }), pickModel);
-    };
-
-    /* Что искали и не нашли — на выходе из поля. По этим запросам дополняем
-       car-aliases.json; цель Метрики подключится к событию. */
-    let missed = '';
-    const showBrand = () => {
-      const found = searchCars(data, brand.input.value);
-      missed = found.length ? '' : brand.input.value.trim();
-      render(brand, found, pickBrand);
-    };
-    const showModel = () => {
-      if (!current) return;
-      const found = searchCars(data, model.input.value, { brand: current, limit: 40 });
-      missed = found.length ? '' : `${current.brand} ${model.input.value.trim()}`;
-      render(model, found, pickModel);
-    };
-    const reportMissed = () => {
-      if (missed.length < 3) return;
-      document.dispatchEvent(new CustomEvent('carclass:notfound', { detail: { query: missed } }));
-      missed = '';
-    };
-
-    brand.input.addEventListener('input', () => {
-      // марку переписали — выбранная модель больше не относится к ней
-      if (current && brand.input.value !== current.brand) {
-        current = null;
-        model.input.value = '';
-        model.input.disabled = true;
-        model.input.placeholder = 'Сначала выберите марку';
-      }
-      showBrand();
+    const combo = carCombo(widget.querySelector('[data-car-combo]'), {
+      cars: () => data,
+      car: () => car,
+      onPick(picked) {
+        car = picked;
+        combo.sync();
+        resultValue.textContent = `${picked.cls}-й класс`;
+        result.hidden = false;
+        if (price) price.dataset.active = picked.cls;
+      },
+      missText: (q) => `«${q}» нет в списке — оставьте номер, назовём класс по телефону`,
+      onMiss() {},
     });
-    brand.input.addEventListener('focus', showBrand);
-    model.input.addEventListener('input', showModel);
-    model.input.addEventListener('focus', showModel);
 
-    // Стрелки и Enter — список должен работать без мыши
-    [brand, model].forEach((c) => {
-      c.input.addEventListener('keydown', (e) => {
-        if (c.list.hidden) return;
-        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-          e.preventDefault();
-          active = Math.max(0, Math.min(items.length - 1, active + (e.key === 'ArrowDown' ? 1 : -1)));
-          highlight(c);
-        } else if (e.key === 'Enter' && active >= 0) {
-          e.preventDefault();
-          c.list.querySelectorAll('.combo-option')[active]?.dispatchEvent(new MouseEvent('mousedown'));
-        } else if (e.key === 'Escape') {
-          close(c);
-        }
-      });
-      c.input.addEventListener('blur', () => {
-        close(c);
-        reportMissed();
-      });
-    });
+    loadCars()
+      .then((index) => {
+        data = index;
+        combo.ready();
+      })
+      .catch(() => {});
 
     widget.querySelector('[data-reset]').addEventListener('click', () => {
-      current = null;
-      brand.input.value = '';
-      model.input.value = '';
-      model.input.disabled = true;
-      model.input.placeholder = 'Сначала выберите марку';
+      car = null;
+      combo.sync();
       result.hidden = true;
       if (price) delete price.dataset.active;
-      brand.input.focus();
+      combo.focus();
     });
   });
 </script>
@@ -253,55 +90,23 @@ const { target = 'price' } = Astro.props;
   .widget-title { font-size: var(--text-body-lg); }
   .widget-text { max-width: var(--measure-text); }
 
-  /* Два поля и результат в одну строку; на узком экране — друг под другом */
+  /* Поле и результат в одну строку; на узком экране — друг под другом */
   .widget-fields {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: var(--sp-16);
     align-items: end;
   }
-  .combo { position: relative; display: grid; gap: var(--sp-8); }
-  .combo-label { font-size: var(--text-caption); font-weight: var(--w-medium); }
-  .combo-input:disabled { cursor: not-allowed; }
-
-  /* Выпадающий список — поверх прайса, со своей прокруткой */
-  .combo-list {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 5;
-    margin: var(--sp-4) 0 0;
-    padding: var(--sp-8);
-    list-style: none;
-    max-height: 280px;
-    overflow-y: auto;
-    background: var(--color-tile-dark);
-    border-radius: var(--r-input);
-    display: grid;
-    gap: 2px;
+  /* Поле — components/CarCombo.astro, цвета — тёмной плашки */
+  .widget :global(.combo) {
+    --combo-fg: var(--color-white);
+    --combo-field: var(--veil-fill-soft);
+    --combo-field-hover: var(--veil-fill);
+    --combo-pop: var(--color-tile-back);
+    --combo-hover: var(--color-row-hover-dark);
+    --combo-line: var(--veil-line);
+    max-width: none;
   }
-  /* display: grid перебивает атрибут hidden — без этого закрытый список остаётся на экране */
-  .combo-list[hidden] { display: none; }
-
-  /* Пункты создаёт скрипт — scoped-стили до них не доходят, поэтому :global */
-  .combo-list :global(.combo-option) {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: var(--sp-12);
-    padding: 8px var(--sp-12);
-    border-radius: var(--r-row);
-    cursor: pointer;
-    transition: background-color var(--t-hover-out) var(--ease-out);
-  }
-  .combo-list :global(.combo-option:hover),
-  .combo-list :global(.combo-option.is-active) {
-    background: var(--color-row-hover-dark);
-    transition-duration: var(--t-hover-in);
-  }
-  .combo-list :global(.combo-class) { flex-shrink: 0; font-size: var(--text-caption); }
-  .combo-list :global(.combo-empty) { padding: 8px var(--sp-12); }
 
   .widget-result {
     display: grid;

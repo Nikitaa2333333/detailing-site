@@ -1,0 +1,176 @@
+---
+/* Поле выбора машины — одно на весь сайт: калькулятор и виджет класса на страницах услуг.
+
+   Одно поле вместо пары «Марка / Модель»: люди пишут «крузак», не вспоминая марку.
+   Но путь «марка → модель» тоже есть (прямое требование заказчика): пустое поле
+   показывает марки, клик по марке — рядом с полем плашка «Марка», и поле ищет только
+   её модели. Выбранная машина — две плашки «Марка | Модель», каждая меняется кликом.
+
+   Поведение — lib/car-combo.js (подключает родитель: у него своё «что делать с машиной»).
+   Цвета — переменные --combo-* ниже; родитель переопределяет их под свой фон. */
+interface Props {
+  id: string;
+  placeholder: string;
+  label: string; // для скринридера: у поля нет видимой подписи
+}
+const { id, placeholder, label } = Astro.props;
+---
+
+<div class="combo" data-car-combo>
+  <button class="combo-plate" type="button" hidden data-car-brand aria-label="Сменить марку">
+    <span class="combo-plate-label">Марка</span>
+    <span class="combo-plate-value" data-car-brand-name></span>
+  </button>
+  <div class="combo-field" data-car-field>
+    <svg class="combo-icon" viewBox="0 0 20 20" aria-hidden="true">
+      <circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="1.6"></circle>
+      <path d="m13.5 13.5 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+    </svg>
+    <input
+      class="field combo-input"
+      id={id}
+      type="text"
+      autocomplete="off"
+      role="combobox"
+      aria-expanded="false"
+      aria-controls={`${id}-list`}
+      aria-label={label}
+      placeholder={placeholder}
+      data-car-input
+    />
+  </div>
+  <button class="combo-plate combo-plate--model" type="button" hidden data-car-model aria-label="Сменить модель">
+    <span class="combo-plate-label">Модель</span>
+    <span class="combo-plate-value"><span data-car-model-name></span><span class="combo-class" data-car-model-class></span></span>
+  </button>
+  <ul class="combo-list" id={`${id}-list`} role="listbox" hidden data-car-list></ul>
+</div>
+
+<style>
+  /* Цвета поля. По умолчанию — светлый фон; тёмный родитель задаёт свои значения */
+  .combo {
+    --combo-fg: var(--color-ink);
+    --combo-field: var(--color-page);             /* поле и плашки */
+    --combo-field-hover: var(--color-tile);
+    --combo-pop: var(--color-white);              /* выпадающий список */
+    --combo-hover: var(--color-row-hover-light);  /* строка списка под курсором */
+    --combo-line: var(--color-line-ink);          /* обводка списка */
+
+    position: relative;
+    max-width: 720px;
+    display: flex;
+    gap: var(--sp-8);
+  }
+  .combo-field { position: relative; flex: 1; min-width: 0; }
+  .combo-field[hidden], .combo-plate[hidden] { display: none; }
+  .combo-icon {
+    position: absolute;
+    left: 22px;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    translate: 0 -50%;
+    color: var(--combo-fg);
+    pointer-events: none;
+  }
+  .combo-input {
+    padding: 20px 24px 20px 56px;
+    font-size: var(--text-body-lg);
+    background: var(--combo-field);
+    color: var(--combo-fg);
+  }
+  .combo-input:focus { border-color: var(--combo-fg); }
+
+  /* плашки «Марка» / «Модель» — того же размера и формы, что поле */
+  .combo-plate {
+    display: grid;
+    align-content: center;
+    gap: 2px;
+    flex: none;
+    max-width: 45%;
+    padding: 10px 24px;
+    border: 1.5px solid transparent;
+    border-radius: var(--r-pill);
+    background: var(--combo-field);
+    color: var(--combo-fg);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .combo-plate:hover { background: var(--combo-field-hover); transition-duration: var(--t-hover-in); }
+  .combo-plate:focus-visible { border-color: var(--combo-fg); outline: none; }
+  .combo-plate--model { flex: 1; max-width: none; }
+  .combo-plate-label { font-size: var(--text-caption); font-weight: var(--w-medium); }
+  .combo-plate-value {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--sp-12);
+    font-size: var(--text-body-lg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .combo-plate .combo-class { flex: none; font-size: var(--text-caption); font-weight: var(--w-medium); }
+
+  /* Выпадающий список — поверх соседей, со своей прокруткой */
+  .combo-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    margin: var(--sp-8) 0 0;
+    padding: var(--sp-8);
+    list-style: none;
+    display: grid;
+    gap: 2px;
+    max-height: 360px;
+    overflow-y: auto;
+    background: var(--combo-pop);
+    color: var(--combo-fg);
+    border-radius: var(--r-input);
+    box-shadow: 0 0 0 1px var(--combo-line), 0 16px 40px rgba(10, 10, 11, 0.12);
+  }
+  /* display: grid перебивает атрибут hidden */
+  .combo-list[hidden] { display: none; }
+
+  /* Строки создаёт скрипт — scoped-стили до них не доходят, поэтому :global */
+  .combo-list :global(.combo-option) {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--sp-12);
+    padding: 10px var(--sp-16);
+    border-radius: var(--r-row);
+    cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .combo-list :global(.combo-option:hover),
+  .combo-list :global(.combo-option.is-active) { background: var(--combo-hover); transition-duration: var(--t-hover-in); }
+  .combo-list :global(.combo-class) { flex: none; font-size: var(--text-caption); font-weight: var(--w-medium); }
+  /* годы выпуска — мелкой подписью после названия, как в каталогах auto.ru и drom */
+  .combo-list :global(.combo-era) { margin-left: var(--sp-8); font-size: var(--text-caption); white-space: nowrap; }
+  /* «не нашли» — одна фраза на всю ширину, без колонки класса */
+  .combo-list :global(.combo-miss) { display: block; }
+  /* заголовок марки над её моделями: мелкий кегль и вес, не капс */
+  .combo-list :global(.combo-head) {
+    padding: var(--sp-12) var(--sp-16) 4px;
+    font-size: var(--text-caption);
+    font-weight: var(--w-semibold);
+  }
+  .combo-list :global(.combo-head:first-child) { padding-top: 4px; }
+  /* пустое поле — марки колонками, заголовки и «Все марки» во всю ширину */
+  .combo-list.is-brands { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .combo-list.is-brands :global(.combo-head),
+  .combo-list.is-brands :global(.combo-more) { grid-column: 1 / -1; }
+  .combo-list :global(.combo-brand) { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .combo-list :global(.combo-more) { display: block; font-weight: var(--w-medium); text-decoration: underline; text-underline-offset: 3px; }
+
+  @media (max-width: 760px) {
+    .combo-input { font-size: var(--text-body); padding-block: 16px; }
+    .combo-plate { padding: 8px 18px; }
+    .combo-plate-value { font-size: var(--text-body); }
+    .combo-list.is-brands { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+</style>

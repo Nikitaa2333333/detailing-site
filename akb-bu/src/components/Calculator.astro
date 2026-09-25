@@ -7,15 +7,16 @@
 
    Всё — в готовом HTML: услуги, цены «от» и описания печатаются на сборке,
    скрипт переключает шаги и подставляет цену выбранного класса.
-   Цены — только из prices.json, машины — из lib/cars.js (прайс + вариации).
+   Цены — только из prices.json, машины — из lib/cars.js (прайс + вариации + мировая база);
+   справочник машин браузер догружает файлом /cars-index.json, в HTML его нет.
    Мототехника в расчёт не входит: у неё свои два класса, не пять. */
 import content from '../data/content.json';
 import prices from '../data/prices.json';
-import { carIndex } from '../lib/cars.js';
 import { rub, plural } from '../lib/catalog.js';
 import { sentence } from '../lib/typo.js';
 import { serviceText } from '../lib/service-texts.js';
 import { checkIntents } from '../lib/service-intents.js';
+import CarCombo from './CarCombo.astro';
 
 checkIntents(prices); // словарь «беда → услуги» ссылается только на то, что есть в прайсе
 
@@ -97,22 +98,7 @@ const searchIcon =
     <!-- 1. Машина -->
     <section class="wiz-panel" data-panel="1">
       <h3 class="wiz-title">{t.carTitle}</h3>
-      <div class="combo">
-        <svg class="icon-search" viewBox="0 0 20 20" aria-hidden="true" set:html={searchIcon} />
-        <input
-          class="field combo-input"
-          id="calc-car"
-          type="text"
-          autocomplete="off"
-          role="combobox"
-          aria-expanded="false"
-          aria-controls="calc-car-list"
-          aria-label={t.carTitle}
-          placeholder={t.carPlaceholder}
-          data-car-input
-        />
-        <ul class="combo-list" id="calc-car-list" role="listbox" hidden data-car-list></ul>
-      </div>
+      <CarCombo id="calc-car" placeholder={t.carPlaceholder} label={t.carTitle} />
       <div class="car-examples">
         {t.carExamples.map((q) => <button class="car-example" type="button" data-car-example={q}>{q}</button>)}
       </div>
@@ -240,14 +226,14 @@ const searchIcon =
     <p class="foot-total" data-foot-total hidden><span data-foot-count></span><span data-foot-sum></span></p>
     <button class="btn btn--primary foot-next" type="button" data-next hidden>{t.next}</button>
   </div>
-
-  <script type="application/json" data-car-index set:html={JSON.stringify(carIndex)} />
 </div>
 
 <script>
-  import { searchCars, normalize } from '../lib/car-search.js';
+  import { normalize } from '../lib/car-search.js';
   import { haystack, matches } from '../lib/service-search.js';
   import { matchIntents } from '../lib/service-intents.js';
+  import { loadCars } from '../lib/car-index-client.js';
+  import { carCombo } from '../lib/car-combo.js';
 
   const root = document.querySelector<HTMLElement>('[data-calc]');
   if (root) init(root);
@@ -255,7 +241,7 @@ const searchIcon =
   function init(root: HTMLElement) {
     const $ = <T extends Element = HTMLElement>(s: string, el: ParentNode = root) => el.querySelector<T>(s)!;
     const $$ = <T extends Element = HTMLElement>(s: string, el: ParentNode = root) => [...el.querySelectorAll<T>(s)];
-    const cars = JSON.parse($('[data-car-index]').textContent || '[]');
+    let cars: any[] = []; // справочник машин — отдельным файлом, догружается сразу после страницы
     const NBSP = ' ';
     const rub = (v: number) => `${String(v).replace(/\B(?=(\d{3})+(?!\d))/g, NBSP)}${NBSP}₽`;
     const plural = (n: number, f: [string, string, string]) => {
@@ -343,84 +329,33 @@ const searchIcon =
     $$('[data-go]').forEach((btn) => btn.addEventListener('click', () => go(Number(btn.dataset.go))));
 
     /* ---------- 1. Машина ---------- */
-    const carInput = $<HTMLInputElement>('[data-car-input]');
-    const carList = $('[data-car-list]');
-    let found: any[] = [];
-    let active = -1;
-    let missed = '';
+    // Поле — components/CarCombo.astro + lib/car-combo.js; здесь только что делать с машиной
     let missedCar = ''; // последняя ненайденная машина — менеджер увидит её в заявке
+    const combo = carCombo($('[data-car-combo]'), {
+      cars: () => cars,
+      car: () => state.car,
+      onPick: (car: Car) => {
+        missedCar = '';
+        setCar(car);
+      },
+      // не нашли — сама подсказка ведёт дальше: список закрывает ссылку «Без машины» под полем
+      missText: (q: string) => `«${q}» нет в списке — покажем цены «от», класс уточнит менеджер`,
+      onMiss: () => setCar(null),
+      onSearchMiss: (q: string) => (missedCar = q),
+    });
 
-    const closeList = () => {
-      carList.hidden = true;
-      carInput.setAttribute('aria-expanded', 'false');
-      active = -1;
-    };
-    const highlight = () =>
-      $$('.combo-option', carList).forEach((el, i) => el.classList.toggle('is-active', i === active));
-
-    const renderCars = () => {
-      const q = carInput.value.trim();
-      if (!q) return closeList();
-      // только модели: марка без модели класса не даёт
-      found = searchCars(cars, q, { limit: 30 })
-        .flatMap((item: any) =>
-          item.type === 'model' ? [item] : item.brand.models.map((model: any) => ({ type: 'model', brand: item.brand, model }))
-        )
-        .filter((item: any, i: number, all: any[]) => all.findIndex((x) => x.model === item.model) === i)
-        .slice(0, 8);
-      missed = found.length ? '' : q;
-      if (!found.length && q.length >= 3) missedCar = q;
-      active = found.length ? 0 : -1;
-      carList.innerHTML = '';
-      // Не нашли — сама подсказка ведёт дальше: список закрывает ссылку «Без машины» под полем
-      if (!found.length) {
-        const li = document.createElement('li');
-        li.className = 'combo-option combo-miss is-active';
-        li.setAttribute('role', 'option');
-        li.textContent = `«${q}» нет в списке — покажем цены «от», класс уточнит менеджер`;
-        li.addEventListener('mousedown', (e) => {
-          e.preventDefault();
-          skipCar();
-        });
-        carList.append(li);
-      }
-      found.forEach((item, i) => {
-        const li = document.createElement('li');
-        li.className = 'combo-option';
-        li.setAttribute('role', 'option');
-        const name = document.createElement('span');
-        name.textContent = `${item.brand.brand} ${item.model.model}`;
-        const cls = document.createElement('span');
-        cls.className = 'combo-class';
-        cls.textContent = item.model.label;
-        li.append(name, cls);
-        li.addEventListener('mousedown', (e) => {
-          e.preventDefault();
-          pickCar(i);
-        });
-        carList.append(li);
-      });
-      carList.hidden = false;
-      carInput.setAttribute('aria-expanded', 'true');
-      highlight();
-    };
-
-    const pickCar = (i: number) => {
-      const item = found[i];
-      if (!item) return;
-      missedCar = '';
-      closeList();
-      carInput.blur();
-      const car: Car = { brand: item.brand.brand, model: item.model.model, cls: item.model.cls };
-      if (item.model.like) car.like = item.model.like;
-      setCar(car);
-      document.dispatchEvent(new CustomEvent('carclass:selected', { detail: car }));
-    };
+    // человек начал печатать раньше, чем пришёл справочник, — показываем подсказки сразу по приходу
+    loadCars()
+      .then((index) => {
+        cars = index;
+        combo.ready();
+      })
+      .catch(() => {});
 
     function setCar(car: Car | null, { advance = true } = {}) {
       state.car = car;
       state.carSeen = true;
-      carInput.value = '';
+      combo.sync();
       rows.forEach((r) => {
         const c = cellOf(r);
         r.price.textContent = fmt(c);
@@ -440,39 +375,10 @@ const searchIcon =
       save();
     }
 
-    carInput.addEventListener('input', renderCars);
-    carInput.addEventListener('focus', renderCars);
-    carInput.addEventListener('keydown', (e) => {
-      if (carList.hidden) return;
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        active = Math.max(0, Math.min(found.length - 1, active + (e.key === 'ArrowDown' ? 1 : -1)));
-        highlight();
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (found.length) pickCar(active);
-        else skipCar();
-      } else if (e.key === 'Escape') closeList();
-    });
-    carInput.addEventListener('blur', () => {
-      closeList();
-      // что искали и не нашли — по этим запросам дополняем car-aliases.json
-      if (missed.length >= 3) {
-        document.dispatchEvent(new CustomEvent('carclass:notfound', { detail: { query: missed } }));
-        missed = '';
-      }
-    });
-    $$('[data-car-example]').forEach((btn) =>
-      btn.addEventListener('click', () => {
-        carInput.value = btn.dataset.carExample!;
-        renderCars();
-        pickCar(0);
-      })
-    );
+    $$('[data-car-example]').forEach((btn) => btn.addEventListener('click', () => combo.pickFirst(btn.dataset.carExample!)));
     // Без машины: цены «от», класс уточнит менеджер. Что искали — остаётся для заявки
     function skipCar() {
-      closeList();
-      carInput.blur();
+      combo.close();
       setCar(null);
     }
     $('[data-skip]').addEventListener('click', skipCar);
@@ -576,7 +482,7 @@ const searchIcon =
       if (!(e.target as HTMLElement)?.closest?.('[data-calc-open]')) return;
       e.preventDefault();
       if (state.step !== 1) go(1, { scroll: false });
-      carInput.focus({ preventScroll: true });
+      combo.focus({ preventScroll: true });
       root.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
     });
 
@@ -852,7 +758,7 @@ const searchIcon =
   .wiz-find { position: relative; flex: 1 1 280px; max-width: 400px; }
   .wiz-find-input { padding: 11px 18px 11px 46px; background: var(--wiz-field); font-size: var(--text-caption); }
   /* Поля мастера живут на его фоне: текст и рамка фокуса — цвета мастера, не глобального .field */
-  .wiz-find-input, .combo-input { color: var(--wiz-fg); }
+  .wiz-find-input { color: var(--wiz-fg); }
   /* Свой крестик очистки вместо синего браузерного: цвет текста поля, та же толщина линий, что у лупы */
   .wiz-find-input::-webkit-search-cancel-button {
     -webkit-appearance: none;
@@ -864,7 +770,7 @@ const searchIcon =
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 3.5l9 9M12.5 3.5l-9 9' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
     cursor: pointer;
   }
-  .wiz-find-input:focus, .combo-input:focus { border-color: var(--wiz-fg); }
+  .wiz-find-input:focus { border-color: var(--wiz-fg); }
 
   .icon-search {
     position: absolute;
@@ -896,42 +802,15 @@ const searchIcon =
   .wiz-link:hover { background: var(--wiz-hover); }
 
   /* ---------- 1. Машина ---------- */
-  .combo { position: relative; max-width: 720px; }
-  .combo .icon-search { left: 22px; width: 20px; height: 20px; }
-  .combo-input { padding: 20px 24px 20px 56px; font-size: var(--text-body-lg); background: var(--wiz-field); }
-  .combo-list {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 20;
-    margin: var(--sp-8) 0 0;
-    padding: var(--sp-8);
-    list-style: none;
-    display: grid;
-    gap: 2px;
-    max-height: 360px;
-    overflow-y: auto;
-    background: var(--wiz-pop);
-    border-radius: var(--r-input);
-    box-shadow: 0 0 0 1px var(--wiz-line), 0 16px 40px rgba(10, 10, 11, 0.12);
+  /* Поле — components/CarCombo.astro, цвета — калькулятора */
+  .wiz :global(.combo) {
+    --combo-fg: var(--wiz-fg);
+    --combo-field: var(--wiz-field);
+    --combo-field-hover: var(--wiz-field-hover);
+    --combo-pop: var(--wiz-pop);
+    --combo-hover: var(--wiz-hover);
+    --combo-line: var(--wiz-line);
   }
-  .combo-list :global(.combo-option) {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: var(--sp-12);
-    padding: 10px var(--sp-16);
-    border-radius: var(--r-row);
-    cursor: pointer;
-    transition: background-color var(--t-hover-out) var(--ease-out);
-  }
-  .combo-list :global(.combo-option:hover),
-  .combo-list :global(.combo-option.is-active) { background: var(--wiz-hover); transition-duration: var(--t-hover-in); }
-  .combo-list :global(.combo-class) { flex: none; font-size: var(--text-caption); font-weight: var(--w-medium); }
-  .combo-list :global(.combo-empty) { padding: 10px var(--sp-16); }
-  /* «не нашли» — одна фраза на всю ширину, без колонки класса */
-  .combo-list :global(.combo-miss) { display: block; }
 
   .car-examples { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
   .car-example {
@@ -1249,7 +1128,6 @@ const searchIcon =
     .wiz-step.is-current .wiz-step-label { display: inline; max-width: 16ch; }
     .wiz-find { flex-basis: 100%; max-width: none; }
     .wiz-body { padding: var(--sp-24) var(--sp-16) var(--sp-16); }
-    .combo-input { font-size: var(--text-body); padding-block: 16px; }
     .cat { min-height: 132px; padding: var(--sp-16); }
     .chips { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(var(--sp-16) * -1); padding-inline: var(--sp-16); scrollbar-width: none; }
     .chip-btn { flex: none; }

@@ -11,7 +11,9 @@
     "test:search": "node scripts/test-search.mjs",
     "preview": "astro preview",
     "astro": "astro",
-    "variants": "node scripts/export-search-variants.mjs"
+    "variants": "node scripts/export-search-variants.mjs",
+    "cars-base": "node scripts/import-cars-base.mjs",
+    "cars-table": "python scripts/cars-table.py"
   },
   "dependencies": {
     "@fontsource-variable/onest": "^5.2.11",

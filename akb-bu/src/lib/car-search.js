@@ -48,10 +48,14 @@ const latinize = (s, extra = {}) =>
     .map((w) => (/\d/.test(w) || w.length <= 2 ? swap(w, { ...LOOKALIKE, ...extra }) : w))
     .join(' ');
 
-/* Код с цифрой в другую раскладку не переводим: «f20» — это BMW F20, а не «а20»
-   (→ a20 → Mercedes A200), «х3» — X3, а не «[3» (→ «3» → BMW 3 серии).
+/* Что в другую раскладку не переводим:
+   - код с цифрой: «f20» — это BMW F20, а не «а20» (→ a20 → Mercedes A200);
+   - одну-две буквы: «v класс» — V-класс, а не «м класс»; «сх 30» — CX-30;
+   - слово с х, ъ, ж, э, б, ю, ё: на их месте в латинице знаки препинания, а не
+     буквы — латинское название так не набрать («х3» дало бы «[3» → BMW 3 серии).
    Кириллицу в кодах разбирает latinize */
-const swapWords = (s, map) => s.split(/(\s+)/).map((w) => (/\d/.test(w) ? w : swap(w, map))).join('');
+const keepLayout = (w) => /\d/.test(w) || w.length <= 2 || /[хъжэбюё]/.test(w);
+const swapWords = (s, map) => s.split(/(\s+)/).map((w) => (keepLayout(w) ? w : swap(w, map))).join('');
 
 /** Все прочтения запроса: как есть, в другой раскладке, с латиницей в кодах */
 function readings(query) {
@@ -128,17 +132,27 @@ function rank(list, qs, limit) {
     const found = [];
     for (const item of list) {
       let best = Infinity;
+      // мировая база — только с начала названия, опечатка одна и от шести букв: в 4000
+      // моделях вхождение в середину слова и лишние опечатки находят мусор («лада» →
+      // Honda Ballade, марки Adam и Radar; «веста» → Westfield; «уаз хантер» → JAC Hunter)
+      const own = (item.model ?? item.brand).base
+        ? (key, q) => {
+            if (fn === score) return score(key, q) === 3 ? Infinity : score(key, q);
+            const s = q.length < 6 ? Infinity : fn(key, q);
+            return s <= 5 ? s : Infinity;
+          }
+        : fn;
       for (const q of qs) {
         // при равной оценке выше тот, чей ключ ближе по длине к запросу
         for (const key of item.keys) {
-          const s = fn(key, q);
+          const s = own(key, q);
           if (s < Infinity) best = Math.min(best, s * 100 + Math.min(Math.abs(key.length - q.length), 49));
         }
         // «марка модель»: при наборе начала длину не сравниваем — модели марки идут по
         // порядку классов. Если набрано больше ключа («bmw 320d»), длиннее — точнее:
         // «bmw 320» должен обойти просто «bmw»
         for (const key of item.pairs ?? []) {
-          const s = fn(key, q);
+          const s = own(key, q);
           if (s < Infinity) best = Math.min(best, s * 100 + (s >= 2 ? Math.min(Math.abs(key.length - q.length), 49) : 50));
         }
       }
@@ -146,6 +160,11 @@ function rank(list, qs, limit) {
       if (item.type === 'brand' && Math.max(...qs.map((q) => q.length)) === 1) best -= 100;
       // при равенстве модель из прайса выше модели по аналогии: «рх» — Lexus RX, а не Exeed RX
       if (item.model?.like) best += 0.5;
+      // …а модель из мировой базы — ниже и тех, и марки: «фер» — Ferrari, а не Daihatsu Feroza
+      // (в пределах той же ступени оценки: длина ключа весит до 49, ступень — 100)
+      if (item.model?.base) best += 20;
+      // малоизвестная марка базы — на ступень ниже: «мега» — Renault Megane, а не марка Mega
+      if (item.type === 'brand' && item.brand.base) best += 150;
       if (best < Infinity) found.push({ item, best });
     }
     return found;
