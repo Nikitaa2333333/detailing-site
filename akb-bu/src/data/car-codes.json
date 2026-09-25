@@ -1,0 +1,106 @@
+{
+  "_readme": "Кузовные коды и поколения: как владельцы называют свою машину («крузак 200 — это J200», «соренто UM»). Ключи — марка и модель так, как они показываются на сайте (после car-aliases.json). Код от трёх знаков ищется и сам по себе («y62» → Nissan Patrol), двухбуквенный — только рядом с моделью («санта фе tm», «соренто um»): иначе «re» нашёл бы Honda CR-V вместо Renault. Коды BMW и Mercedes, Camry XV и Passat B — исторически в car-aliases.json. Модели нет в справочнике — сборка падает и называет её.",
+
+  "Toyota": {
+    "Land Cruiser 200": ["j200", "uzj200", "urj200", "urj202", "vdj200"],
+    "Land Cruiser 300": ["j300", "fja300", "vja300"],
+    "Land Cruiser 100": ["j100", "uzj100", "hdj100", "fzj100"],
+    "Land Cruiser Prado": ["j90", "j95", "j120", "j150", "j250", "grj120", "trj150", "grj150"],
+    "Camry": ["xv30", "xv40", "xv50", "xv55", "xv70", "xv80"],
+    "Corolla": ["e120", "e150", "e180", "e210"],
+    "RAV4": ["xa20", "xa30", "xa40", "xa50"],
+    "Highlander": ["xu20", "xu40", "xu50", "xu70"],
+    "Alphard": ["ah10", "ah20", "ah30", "ah40"],
+    "Hilux": ["an120", "an130"],
+    "Mark II": ["jzx81", "jzx90", "jzx100", "jzx110", "gx90", "gx100", "gx110"]
+  },
+  "Lexus": {
+    "LX (с 2008 г.)": ["urj201", "j310", "vja310"],
+    "RX": ["xu30", "al10", "al20", "ala10", "agl20", "ggl15"],
+    "LS": ["xf40", "xf50"],
+    "NX": ["az10", "az20"]
+  },
+  "Nissan": {
+    "Patrol": ["y61", "y62"],
+    "X-Trail": ["t30", "t31", "t32", "t33"],
+    "Qashqai": ["j10", "j11", "j12"],
+    "GT-R": ["r35"],
+    "Murano": ["z50", "z51", "z52"],
+    "Pathfinder": ["r51", "r52"],
+    "Teana": ["j31", "j32", "l33"]
+  },
+  "Infiniti": {
+    "QX80 / QX56": ["z62", "ja60"],
+    "QX70 / FX": ["s51"],
+    "QX60": ["l50"]
+  },
+  "Hyundai": {
+    "Santa Fe": ["sm", "cm", "dm", "tm"],
+    "Solaris": ["rb", "hc"],
+    "Sonata": ["yf", "lf", "dn8"],
+    "Elantra": ["hd", "md", "ad", "cn7"],
+    "Tucson": ["jm", "tl", "nx4"],
+    "Creta": ["gs", "su2"],
+    "Palisade": ["lx2"]
+  },
+  "Kia": {
+    "Sorento": ["bl", "xm", "um", "mq4"],
+    "Sportage": ["km", "sl", "ql", "nq5"],
+    "Optima": ["tf", "jf"],
+    "K5": ["dl3"],
+    "Rio": ["jb", "qb", "fb", "yb"],
+    "Cee'd": ["ed", "jd", "cd"],
+    "Cerato": ["ld", "td", "yd", "bd"],
+    "Mohave": ["hm"],
+    "Carnival": ["yp", "ka4"],
+    "Seltos": ["sp2"]
+  },
+  "Mazda": {
+    "CX-5": ["ke", "kf"],
+    "6": ["gg", "gh", "gj", "gl"],
+    "3": ["bk", "bl", "bm", "bn", "bp"],
+    "CX-9": ["tb", "tc"]
+  },
+  "Honda": {
+    "CR-V": ["rd", "re", "rm", "rw", "rs"],
+    "Accord": ["cl", "cu", "cr", "cv"],
+    "Pilot": ["yf"]
+  },
+  "Mitsubishi": {
+    "Pajero": ["v80", "v97", "v98"],
+    "Outlander": ["cw", "gf", "gn"],
+    "L200": ["kb", "kl"]
+  },
+  "Subaru": {
+    "Forester": ["sg", "sh", "sj", "sk"],
+    "Outback": ["bp", "br", "bs", "bt"]
+  },
+  "Volkswagen": {
+    "Golf": ["mk4", "mk5", "mk6", "mk7", "mk8", "1k", "5k", "5g", "cd"],
+    "Polo": ["9n", "6r", "6c", "aw"],
+    "Tiguan": ["5n", "ad1"],
+    "Jetta": ["a5", "a6"]
+  },
+  "Audi": {
+    "A3": ["8p", "8v", "8y"],
+    "A4": ["b7", "b8", "b9"],
+    "A6": ["c6", "c7", "c8"],
+    "A8": ["d3", "d4", "d5"],
+    "Q3": ["8u", "f3"],
+    "Q5": ["8r", "fy"],
+    "Q7": ["4l", "4m"]
+  },
+  "Skoda": {
+    "Octavia (с 2006 г.)": ["a5", "a7", "a8", "1z", "5e", "nx"],
+    "Superb": ["b6", "b8", "3t", "3v"],
+    "Kodiaq": ["ns7"]
+  },
+  "Porsche": {
+    "911": ["996", "997", "991", "992"]
+  },
+  "Land Rover": {
+    "Discovery": ["l319", "l462"],
+    "Defender": ["l663"],
+    "Evoque": ["l538", "l551"]
+  }
+}

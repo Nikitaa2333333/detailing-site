@@ -21,6 +21,7 @@ import extra from '../data/car-extra.json';
 import base from '../data/cars-base.json';
 import rules from '../data/car-base-rules.json';
 import spell from '../data/car-base-aliases.json';
+import codes from '../data/car-codes.json';
 import { normalize } from './car-search.js';
 
 const keysOf = (...lists) => [...new Set(lists.flat().map(normalize).filter(Boolean))];
@@ -213,5 +214,28 @@ for (const { b, entry: known } of baseBrands) {
   if (!known) byName.set(entry.brand, entry);
 }
 
-/** [{ brand, keys, models: [{ model, cls, label, keys, like?, years?: [с, по] }] }] — по алфавиту */
+/* ---------- Кузовные коды (car-codes.json) — поверх всех трёх источников ----------
+   Код от трёх знаков — обычный ключ поиска («y62»). Все коды — ещё и в codes: их
+   поиск засчитывает рядом с моделью («санта фе tm»), двухбуквенные — только так */
+const noCode = [];
+for (const [brandName, models] of Object.entries(codes)) {
+  if (brandName.startsWith('_')) continue;
+  const entry = byName.get(brandName);
+  if (!entry) {
+    noCode.push(`марка «${brandName}»`);
+    continue;
+  }
+  for (const [modelName, list] of Object.entries(models)) {
+    const model = entry.models.find((m) => m.model === modelName);
+    if (!model) {
+      noCode.push(`${brandName} «${modelName}»`);
+      continue;
+    }
+    model.codes = keysOf(list);
+    model.keys = keysOf(model.keys, list.filter((c) => c.length >= 3));
+  }
+}
+if (noCode.length) throw new Error(`car-codes.json ссылается на то, чего нет в справочнике: ${noCode.join(', ')}.`);
+
+/** [{ brand, keys, models: [{ model, cls, label, keys, like?, years?: [с, по], codes? }] }] — по алфавиту */
 export const carIndex = [...byName.values()].sort((a, b) => a.brand.localeCompare(b.brand, 'ru'));

@@ -55,20 +55,74 @@ const latinize = (s, extra = {}) =>
      буквы — латинское название так не набрать («х3» дало бы «[3» → BMW 3 серии).
    Кириллицу в кодах разбирает latinize */
 const keepLayout = (w) => /\d/.test(w) || w.length <= 2 || /[хъжэбюё]/.test(w);
-const swapWords = (s, map) => s.split(/(\s+)/).map((w) => (keepLayout(w) ? w : swap(w, map))).join('');
+// дефис делит слова: «v-класс» — это «v» и «класс», а не одно слово для другой раскладки («м-класс»)
+const swapWords = (s, map) => s.split(/(\s+|-)/).map((w) => (keepLayout(w) ? w : swap(w, map))).join('');
 
-/** Все прочтения запроса: как есть, в другой раскладке, с латиницей в кодах */
-function readings(query) {
+/** Все прочтения запроса: как есть, в другой раскладке, с латиницей в кодах — словами */
+/* Фраза целиком одной раскладкой, и в ней есть длинное слово — раскладку не переключили
+   на всю фразу: «fkmaf c5» — это «альфа с5», короткое «c5» тоже переводим (по одному слову
+   оно осталось бы C5). Смешанную фразу («v класс») человек набирал, переключаясь сам */
+const wholeLayout = (s) => {
+  const words = s.split(/\s+|-/).filter(Boolean);
+  return words.length >= 2 && words.some((w) => w.length >= 3 && !keepLayout(w));
+};
+
+function phrases(query) {
   const raw = String(query).toLowerCase();
   const out = new Set();
-  for (const v of [raw, swapWords(raw, toRu), swapWords(raw, toEn)]) {
+  const variants = [raw, swapWords(raw, toRu), swapWords(raw, toEn)];
+  if (wholeLayout(raw) && !/[а-яё]/.test(raw)) variants.push(swap(raw, toRu));
+  if (wholeLayout(raw) && !/[a-z]/.test(raw)) variants.push(swap(raw, toEn));
+  for (const v of variants) {
     const n = normalize(v);
     if (!n) continue;
     out.add(n);
     out.add(latinize(n));
     out.add(latinize(n, { в: 'w' }));
   }
-  return [...out].map(compact);
+  return [...out];
+}
+const readings = (query) => phrases(query).map(compact);
+
+/* «x5 g05», «бмв х5 f15», «gl x166»: каждое слово — марка, модель или код этой модели.
+   Слитно такое не ловится: «x5g05» начинается с «x5», но двухбуквенное название
+   «перебором после модели» не засчитываем — иначе «x5» нашёл бы и «x50», и «x55».
+   Последнее слово может быть недописанным. Хотя бы одно слово — от самой модели */
+// служебные слова между моделью и кодом: «s class w223», «3 серии f30», «камри кузов 70»
+const FILLER = new Set(['класс', 'class', 'klass', 'серии', 'серия', 'series', 'кузов', 'кузове', 'body']);
+
+/* 0 — не подошло, 1 — все слова совпали целиком, 2 — последнее недописано. Второе ниже
+   точного названия: «hyundai sonata» — это Sonata, а не NF («sonata nf»), «ferrari f8» — F8 */
+function wordHit(words, keys, brandKeys, codes = []) {
+  if (words.length < 2) return 0;
+  let own = false;
+  let partial = false;
+  let parts = 0;
+  for (let i = 0; i < words.length; i++) {
+    if (FILLER.has(words[i])) continue;
+    // название из нескольких слов («mark 2», «land cruiser 200») — берём самое длинное,
+    // что целиком совпало с ключом
+    let j = words.length;
+    let w = '';
+    for (; j > i; j--) {
+      w = words.slice(i, j).join('');
+      if (keys.includes(w) || codes.includes(w) || brandKeys.includes(w)) break;
+    }
+    if (j === i) {
+      // ничего не совпало целиком: последнее слово может быть недописанным
+      w = words[i];
+      if (i === words.length - 1 && w.length >= 2 && keys.some((k) => k.startsWith(w))) own = partial = true;
+      else return 0;
+      j = i + 1;
+    } else if (brandKeys.includes(w) && !keys.includes(w) && !codes.includes(w)) {
+      // марка — не довод в пользу модели
+    } else own = true;
+    parts++;
+    i = j - 1;
+  }
+  // одно название целиком («land cruiser 200») уже ловит обычный поиск; нужен код или марка рядом
+  if (!own || parts < 2) return 0;
+  return partial ? 2 : 1;
 }
 
 /* Точное совпадение, начало, «перебор» после модели, вхождение. Меньше — лучше. */
@@ -120,18 +174,26 @@ function entries(index) {
       const keys = model.keys.map(compact);
       const pairs = [];
       for (const b of brandKeys) for (const m of keys) pairs.push(b + m, m + b);
-      list.push({ type: 'model', brand, model, keys, pairs });
+      list.push({ type: 'model', brand, model, keys, pairs, brandKeys });
     }
   }
   entriesCache.set(index, list);
   return list;
 }
 
-function rank(list, qs, limit) {
+function rank(list, qs, limit, words = []) {
   const pass = (fn) => {
     const found = [];
     for (const item of list) {
       let best = Infinity;
+      // модель + её код словами («x5 g05») — как точное «марка модель» (оценка 50, см. ниже);
+      // недописанное последнее слово — ступенью ниже, как начало названия
+      if (fn === score && item.type === 'model') {
+        const hits = words.map((w) => wordHit(w, item.keys, item.brandKeys ?? [], item.model.codes)).filter(Boolean);
+        // 75 — выше любого начала названия (150), но ниже точного «марка модель» даже у модели
+        // базы (50 + 20): «volkswagen golf gti» — это Golf GTI, а не Golf с написанием «gti»
+        if (hits.length) best = Math.min(...hits) === 1 ? 75 : 150;
+      }
       // мировая база — только с начала названия, опечатка одна и от шести букв: в 4000
       // моделях вхождение в середину слова и лишние опечатки находят мусор («лада» →
       // Honda Ballade, марки Adam и Radar; «веста» → Westfield; «уаз хантер» → JAC Hunter)
@@ -182,11 +244,13 @@ function rank(list, qs, limit) {
  */
 export function searchCars(index, query, { brand = null, limit = 12 } = {}) {
   const qs = readings(query);
+  const words = phrases(query).map((p) => p.split(' '));
   if (brand) {
-    const list = brand.models.map((model) => ({ type: 'model', brand, model, keys: model.keys.map(compact) }));
+    const brandKeys = brand.keys.map(compact);
+    const list = brand.models.map((model) => ({ type: 'model', brand, model, keys: model.keys.map(compact), brandKeys }));
     if (!qs.length) return list;
-    return rank(list, qs, limit);
+    return rank(list, qs, limit, words);
   }
   if (!qs.length) return index.map((b) => ({ type: 'brand', brand: b }));
-  return rank(entries(index), qs, limit);
+  return rank(entries(index), qs, limit, words);
 }

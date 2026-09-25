@@ -23,6 +23,7 @@
 | `akb-bu/src/data/services.json` | карта ТЗ: 7 категорий → 39 услуг → URL, title/description, привязка к разделам прайса | руками, **ещё не создан** |
 | [akb-bu/src/data/service-texts.json](akb-bu/src/data/service-texts.json) | клиентские тексты услуг поверх прайса: название, суть, «что входит», условия | мы (редактура), заказчик вычитывает |
 | [akb-bu/src/data/car-aliases.json](akb-bu/src/data/car-aliases.json) | как люди пишут марки и модели (Камри, крузак), кузовные коды (F20, W164), исправленные названия | мы |
+| [akb-bu/src/data/car-codes.json](akb-bu/src/data/car-codes.json) | кузовные коды и поколения любых моделей (J200, Y62, «санта фе TM», MK7); от трёх знаков ищутся сами, двухбуквенные — только рядом с моделью | мы |
 | [akb-bu/src/data/car-extra.json](akb-bu/src/data/car-extra.json) | машины, которых нет в прайсе (китайцы, новые поколения: Haval, Tank, LC 300, GLC…) — класс берётся у похожей модели прайса (`like`) | мы, заказчик вычитывает аналоги |
 | [akb-bu/src/data/cars-base.json](akb-bu/src/data/cars-base.json) | мировой справочник марок и моделей (github.com/blanzh/carsBase, с auto.ru): ~345 марок, ~4200 моделей, русские написания, сегмент; без российских марок | генерируется `npm run cars-base` |
 | [akb-bu/src/data/car-base-rules.json](akb-bu/src/data/car-base-rules.json) | как считать класс моделям из мировой базы, какие страны и марки скрыть | мы |
@@ -293,6 +294,20 @@ noblefarm.ru и park-sever.ru). Push в `main` → GitHub Actions собирае
 ---
 
 ## Журнал
+
+**26.09.2026**
+- Поиск по кузову: «модель + код» словами («x5 g05», «s class w223», «mark 2 jzx100») —
+  разбор по словам в `car-search.js` (`wordHit`), служебные «класс / серии / кузов»
+  пропускаются. Коды японцев, корейцев и европейцев — новый `car-codes.json` (Toyota J/XV/
+  JZX, Lexus URJ, Nissan Y62/T32/J11, Hyundai TM/NX4, Kia UM/MQ4/NQ5, Mazda KF/GJ, Honda
+  RW, VW MK7, Audi 8V/D5/4M, Porsche 991, Discovery L462). Автотест: 281 проверка.
+- Полный прогон всех способов набрать каждую модель (~20 300 запросов: название, «марка
+  модель», написания, коды, неправильная раскладка): настоящих промахов было 649, стало ~350,
+  остаток — законная неоднозначность (DS 3 = Citroen DS3, Seres = Aito, «ф12» — BMW и Ferrari)
+  и «икс5» в неправильной раскладке. Исправлено: недописанное слово било точное название
+  («hyundai sonata» → NF, «ferrari f8» → F80); коды Pajero V60/V90 и Santa Fe MX5 перебивали
+  Volvo и Mazda; «V-класс» с дефисом уходил в раскладку как «м-класс»; фраза целиком в
+  неправильной раскладке («fkmaf c5») переводится вся. Автотест: 293 проверки.
 
 **25.09.2026**
 - Поле машины в калькуляторе по образцу auto.ru/drom: подсказки группами по маркам, пустое
