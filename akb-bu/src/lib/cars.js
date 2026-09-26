@@ -165,6 +165,9 @@ function ruleClass(brand, seg) {
   return { cls: String(id), label: label(id), like: `правило: ${why}` };
 }
 
+// одна машина, разные рынки и написания: без скобок, пробелов и дефисов; «+» различает (GO и GO+)
+const twinKey = (s) => String(s).toLowerCase().replace(/\(.*?\)/g, '').replace(/[\s-]/g, '');
+
 const baseBrands = base.brands.map((b) => ({ b, entry: findBrand(b) }));
 const baseAliases = spell.models;
 const orphan = Object.keys(spell.brands)
@@ -190,11 +193,26 @@ for (const { b, entry: known } of baseBrands) {
     // модель прайса или car-extra нашлась в базе — берёт у неё годы выпуска. Кроме тех, что
     // прайс сам делит по годам («Octavia (до 2006 г.)»): годы базы на них соврут
     if (same?.exact) {
+      same.model.paired = true; // есть в мировой базе — для проверки валидности в автотесте
       if (m.y && !same.model.model.includes('(')) {
         const [from, to] = m.y;
         const had = same.model.years;
         same.model.years = had ? [Math.min(had[0], from), Math.max(had[1] ?? 0, to ?? 0) || null] : [from, to];
       }
+      continue;
+    }
+    // снятые до minYear в детейлинг не приезжают — только шумят в поиске («02» → BMW 1966)
+    if (m.y?.[1] && m.y[1] < rules.minYear) continue;
+    // рыночная версия той же машины («Passat (North America)», «Sportage (China)», «X-Terra»
+    // рядом с «Xterra») — не отдельная строка, а ещё одно написание основной модели
+    // Две модели с разными скобками — разные машины: «Liberty (North America)» — это Cherokee,
+    // «Liberty (Patriot)» — Patriot. Склеиваем, только если хотя бы у одной скобок нет
+    const twin = [...entry.models, ...added].find(
+      (x) => twinKey(x.model) === twinKey(m.name) && !(x.model.includes('(') && m.name.includes('('))
+    );
+    if (twin) {
+      twin.keys = keysOf(twin.keys, m.name, m.ru ?? [], baseAliases[b.name]?.[m.name] ?? []);
+      if (!twin.base) twin.paired = true;
       continue;
     }
     // вариант модели из прайса («C-Класс AMG», «911 GT3») — класс основной, иначе правило
@@ -239,6 +257,24 @@ for (const [brandName, models] of Object.entries(codes)) {
   }
 }
 if (noCode.length) throw new Error(`car-codes.json ссылается на то, чего нет в справочнике: ${noCode.join(', ')}.`);
+
+/* ---------- Валидность: что в поиск не попадает ----------
+   hideModels — модели прайса, которых не существует или не той марки (Chevrolet Sebring —
+   это Chrysler, Mulsanne — Bentley); car-extra, снятые до minYear. Прайс не трогаем */
+const noHide = [];
+for (const [brandName, list] of Object.entries(rules.hideModels)) {
+  const entry = byName.get(brandName);
+  for (const modelName of list) {
+    const i = entry?.models.findIndex((m) => m.model === modelName) ?? -1;
+    if (i < 0) noHide.push(`${brandName} «${modelName}»`);
+    else entry.models.splice(i, 1);
+  }
+}
+if (noHide.length) throw new Error(`car-base-rules.json, hideModels: нет в справочнике — ${noHide.join(', ')}. Прайс мог убрать модель — уберите и отсюда.`);
+for (const entry of byName.values()) {
+  entry.models = entry.models.filter((m) => !(m.like && !m.base && m.years?.[1] && m.years[1] < rules.minYear));
+  if (!entry.models.length) byName.delete(entry.brand);
+}
 
 /** [{ brand, keys, models: [{ model, cls, label, keys, like?, base?, minor?, years?: [с, по], codes? }] }] — по алфавиту.
     base — из мировой базы, minor — из car-extra без top: оба во втором ярусе списка марки */

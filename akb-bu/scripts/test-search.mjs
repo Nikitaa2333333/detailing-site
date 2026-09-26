@@ -147,7 +147,7 @@ const CARS = [
   ['рапид', 'Skoda Rapid'],
   ['глс', ['Mercedes-Benz GLS', 'Mercedes-Benz GLC']],
   ['gle 350', 'Mercedes-Benz GLE'],
-  ['патриот', 'Jeep Liberty (Patriot)'],
+  ['патриот', 'Jeep Liberty'], // в России Patriot продавался как Liberty — склеены
   ['аркана', 'Renault Arkana'],
   ['тесла модел 3', 'Tesla Model 3'],
   // мировая база (cars-base.json): запросы из переписки с заказчиком 25.09
@@ -375,6 +375,31 @@ try {
     if (!ok) failures.push(`машина «${query}»: ждали ${JSON.stringify(expected)}, первым — ${first ?? 'ничего'} (${found.map(label).join(' | ')})`);
   }
 
+  /* ---------- Валидность справочника: без дублей, без старья, всё прайсовое — в мировой базе ---------- */
+  const rawIndex = (await server.ssrLoadModule('/src/lib/cars.js')).carIndex;
+  const rules = (await server.ssrLoadModule('/src/data/car-base-rules.json')).default;
+  const twinKey = (s) => String(s).toLowerCase().replace(/\(.*?\)/g, '').replace(/[\s-]/g, '');
+  const allowed = new Set(Object.entries(rules.noBasePair).flatMap(([b, ms]) => ms.map((m) => `${b}|${m}`)));
+  for (const b of rawIndex) {
+    const seen = new Map();
+    for (const m of b.models) {
+      const k = twinKey(m.model);
+      const own = !m.base; // прайс и car-extra
+      // прайс сам делит модель по годам («Octavia (до 2006 г.)» и «(с 2006 г.)») — это не дубль
+      if (seen.has(k) && !(own && !seen.get(k).base)) failures.push(`дубль у ${b.brand}: «${seen.get(k).model}» и «${m.model}» — склеить (twinKey в cars.js) или развести`);
+      else if (!seen.has(k)) seen.set(k, m);
+      if (m.years?.[1] && m.years[1] < rules.minYear && (m.base || m.like)) failures.push(`старьё: ${b.brand} ${m.model} (${m.years.join('–')}) — снята до ${rules.minYear}`);
+      if (!own || m.like?.startsWith('правило')) continue;
+      const key = `${b.brand}|${m.model}`;
+      if (!m.paired && !allowed.has(key)) failures.push(`нет в мировой базе: ${b.brand} «${m.model}» — скрыть (hideModels) или признать (noBasePair) в car-base-rules.json`);
+      if (m.paired && allowed.has(key)) failures.push(`noBasePair: ${b.brand} «${m.model}» уже нашлась в базе — убрать из списка`);
+    }
+  }
+  for (const key of allowed) {
+    const [brand, model] = key.split('|');
+    if (!rawIndex.some((b) => b.brand === brand && b.models.some((m) => m.model === model))) failures.push(`noBasePair: ${brand} «${model}» нет в справочнике — убрать из списка`);
+  }
+
   /* ---------- Список марки: сразу ходовые, редкое под «Ещё N моделей» ---------- */
   const { wholeBrand } = await server.ssrLoadModule('/src/lib/car-combo.js');
   for (const [brandName, top, more] of BRAND_TIERS) {
@@ -436,7 +461,7 @@ try {
     for (const f of failures) console.error(`  • ${f}`);
     console.error('');
   } else {
-    console.log(`✓ Поиск: ${total} проверок (машины ${CARS.length}, списки марок ${BRAND_TIERS.length}, услуги ${SERVICES.length}, задачи ${INTENTS.length}) — всё находится`);
+    console.log(`✓ Поиск: ${total} проверок (машины ${CARS.length}, списки марок ${BRAND_TIERS.length}, услуги ${SERVICES.length}, задачи ${INTENTS.length}) — всё находится; справочник машин без дублей и старья до ${rules.minYear}`);
   }
 } finally {
   await server.close();
