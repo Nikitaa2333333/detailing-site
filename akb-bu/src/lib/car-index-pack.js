@@ -4,7 +4,8 @@
 
    Упаковка: без ключа, равного названию (восстанавливается normalize), подписи класса —
    таблицей, повторяющиеся «по аналогии с …» — номерами.
-   { labels: { cls: label }, likes: [str], brands: [[name, keys, base, [[model, cls, keys, like, base, era?, codes?]]]] } */
+   { labels: { cls: label }, likes: [str], brands: [[name, keys, base, [[model, cls, keys, like, tier, era?, codes?]]]] }
+   tier: 0 — прайс и ходовые из car-extra, 1 — мировая база, 2 — car-extra без top */
 import { normalize } from './car-search.js';
 
 const rest = (name, keys) => keys.filter((k) => k !== normalize(name));
@@ -37,7 +38,8 @@ export function pack(index) {
       const e = era(m.years);
       // хвост необязательный: годы, затем кузовные коды (car-codes.json)
       const tail = m.codes ? [e, m.codes] : e ? [e] : [];
-      return [m.model, m.cls, rest(m.model, m.keys), id(m.like), m.base ? 1 : 0, ...tail];
+      // ярус: 0 — сразу в списке марки, 1 — мировая база, 2 — car-extra без top
+      return [m.model, m.cls, rest(m.model, m.keys), id(m.like), m.base ? 1 : m.minor ? 2 : 0, ...tail];
     }),
   ]);
   return { labels, likes, brands };
@@ -49,13 +51,13 @@ export function unpack({ labels, likes, brands }) {
     brand,
     keys: keys(brand, bKeys),
     ...(bBase ? { base: 1 } : {}),
-    models: models.map(([model, cls, mKeys, like, base, era, codes]) => ({
+    models: models.map(([model, cls, mKeys, like, tier, era, codes]) => ({
       model,
       cls,
       label: labels[cls],
       keys: keys(model, mKeys),
       ...(like >= 0 ? { like: likes[like] } : {}),
-      ...(base ? { base: 1 } : {}),
+      ...(tier === 1 ? { base: 1 } : tier === 2 ? { minor: 1 } : {}),
       ...(era ? { era } : {}),
       ...(codes ? { codes } : {}),
     })),

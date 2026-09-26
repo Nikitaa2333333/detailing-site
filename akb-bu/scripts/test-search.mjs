@@ -341,6 +341,15 @@ const INTENTS = [
   ['салон', null],
 ];
 
+/* Список марки целиком (клик по марке или «бмв»): [марка, сразу видны, под «Ещё»].
+   Сразу — прайс и car-extra с top; под «Ещё» — мировая база и car-extra без top */
+const BRAND_TIERS = [
+  ['BMW', ['X5', 'X7', 'X4'], ['i3', 'XM', 'iX']],
+  ['Toyota', ['Camry', 'Land Cruiser 300', 'Land Cruiser 100'], ['bZ4X', 'Sienna']],
+  ['Mercedes-Benz', ['GLE', 'GLC'], ['Sprinter', 'EQS']],
+  ['Haval', ['Jolion', 'H9'], []],
+];
+
 const root = fileURLToPath(new URL('..', import.meta.url));
 const server = await createServer({ root, configFile: false, logLevel: 'error', server: { middlewareMode: true } });
 const failures = [];
@@ -364,6 +373,20 @@ try {
     const first = found[0] ? label(found[0]) : null;
     const ok = expected === null ? !found.length : [expected].flat().includes(first);
     if (!ok) failures.push(`машина «${query}»: ждали ${JSON.stringify(expected)}, первым — ${first ?? 'ничего'} (${found.map(label).join(' | ')})`);
+  }
+
+  /* ---------- Список марки: сразу ходовые, редкое под «Ещё N моделей» ---------- */
+  const { wholeBrand } = await server.ssrLoadModule('/src/lib/car-combo.js');
+  for (const [brandName, top, more] of BRAND_TIERS) {
+    const brand = carIndex.find((b) => b.brand === brandName);
+    if (!brand) {
+      failures.push(`марка ${brandName}: нет в справочнике`);
+      continue;
+    }
+    const { shown, rest } = wholeBrand(brand);
+    const names = (list) => list.map((m) => m.model);
+    for (const m of top) if (!names(shown).includes(m)) failures.push(`марка ${brandName}: «${m}» ждали сразу в списке, а он ${names(rest).includes(m) ? 'под «Ещё»' : 'не найден'}`);
+    for (const m of more) if (!names(rest).includes(m)) failures.push(`марка ${brandName}: «${m}» ждали под «Ещё», а он ${names(shown).includes(m) ? 'сразу в списке' : 'не найден'}`);
   }
 
   /* ---------- Услуги: тот же текст карточки, что видит человек в калькуляторе ---------- */
@@ -407,13 +430,13 @@ try {
     if (!ok) failures.push(`задача «${query}»: ждали ${JSON.stringify(expected)}, первой — ${first ?? 'ничего'}`);
   }
 
-  const total = CARS.length + SERVICES.length + INTENTS.length;
+  const total = CARS.length + BRAND_TIERS.length + SERVICES.length + INTENTS.length;
   if (failures.length) {
     console.error(`\n✗ Поиск: ${failures.length} из ${total} проверок не прошли\n`);
     for (const f of failures) console.error(`  • ${f}`);
     console.error('');
   } else {
-    console.log(`✓ Поиск: ${total} проверок (машины ${CARS.length}, услуги ${SERVICES.length}, задачи ${INTENTS.length}) — всё находится`);
+    console.log(`✓ Поиск: ${total} проверок (машины ${CARS.length}, списки марок ${BRAND_TIERS.length}, услуги ${SERVICES.length}, задачи ${INTENTS.length}) — всё находится`);
   }
 } finally {
   await server.close();

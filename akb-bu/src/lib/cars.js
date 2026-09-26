@@ -86,7 +86,9 @@ for (const [brandName, models] of Object.entries(extra.models)) {
     byName.set(brandName, { brand: brandName, keys: keysOf(brandName, extra.brands[brandName] ?? []), models: [] });
   } else if (extra.brands[brandName]) lost.push(`марка «${brandName}» уже есть в прайсе — убрать из brands`);
   const entry = byName.get(brandName);
-  for (const [modelName, { like, aliases: modelAliases = [] }] of Object.entries(models)) {
+  // у марки из прайса модели отсюда без top — второй ярус, под «Ещё N моделей»
+  const priceBrand = !extra.brands[brandName];
+  for (const [modelName, { like, top, aliases: modelAliases = [] }] of Object.entries(models)) {
     const analog = byRaw.get(like.join('|'));
     if (!analog) {
       lost.push(`${brandName} ${modelName}: аналог «${like.join(' ')}»`);
@@ -104,6 +106,7 @@ for (const [brandName, models] of Object.entries(extra.models)) {
       label: analog.cls.label,
       keys: keysOf(modelName, modelAliases),
       like: `${analogBrand} ${analogName}`,
+      ...(priceBrand && !top ? { minor: 1 } : {}),
     });
   }
 }
@@ -237,5 +240,6 @@ for (const [brandName, models] of Object.entries(codes)) {
 }
 if (noCode.length) throw new Error(`car-codes.json ссылается на то, чего нет в справочнике: ${noCode.join(', ')}.`);
 
-/** [{ brand, keys, models: [{ model, cls, label, keys, like?, years?: [с, по], codes? }] }] — по алфавиту */
+/** [{ brand, keys, models: [{ model, cls, label, keys, like?, base?, minor?, years?: [с, по], codes? }] }] — по алфавиту.
+    base — из мировой базы, minor — из car-extra без top: оба во втором ярусе списка марки */
 export const carIndex = [...byName.values()].sort((a, b) => a.brand.localeCompare(b.brand, 'ru'));

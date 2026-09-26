@@ -1,5 +1,5 @@
 {
-  "_readme": "Модели, которых нет в листе «Классификация машин», — чтобы человек нашёл свою машину, а не «модели нет». Класс здесь не задаётся: like — ровно как в prices.json [марка, модель] той машины из прайса, на которую эта похожа размером и сегментом; класс берётся у неё. Сменит заказчик класс у аналога — сменится и здесь. Появится модель в самом прайсе — запись отсюда убрать (сборка напомнит). Ключи марок — как показывать на сайте; brands — только новые марки, которых нет в прайсе. Предложенные аналоги заказчик вычитывает: ВАРИАНТЫ_ПОИСКА.html, пометка «по аналогии».",
+  "_readme": "Модели, которых нет в листе «Классификация машин», — чтобы человек нашёл свою машину, а не «модели нет». Класс здесь не задаётся: like — ровно как в prices.json [марка, модель] той машины из прайса, на которую эта похожа размером и сегментом; класс берётся у неё. Сменит заказчик класс у аналога — сменится и здесь. Появится модель в самом прайсе — запись отсюда убрать (сборка напомнит). Ключи марок — как показывать на сайте; brands — только новые марки, которых нет в прайсе. Предложенные аналоги заказчик вычитывает: ВАРИАНТЫ_ПОИСКА.html, пометка «по аналогии». top: true — ходовая модель: у марки из прайса стоит в списке марки сразу, рядом с моделями прайса; без top уходит под «Ещё N моделей». У марок, которых нет в прайсе (Haval, Chery…), сразу видны все их модели отсюда.",
   "brands": {
     "Haval": ["хавал", "хавейл", "хавэйл", "хaвал"],
     "Chery": ["чери", "черри", "чери тигго"],
@@ -186,12 +186,12 @@
       "Gentra": { "like": ["CHEVROLET", "Lacetti"], "aliases": ["джентра"] }
     },
     "Toyota": {
-      "Land Cruiser 300": { "like": ["TOYOTA", "LC 200"], "aliases": ["lc300", "lc 300", "лк300", "лк 300", "ленд крузер 300", "land cruiser 300", "крузак 300", "крузер 300", "трехсотый", "трехсотка"] },
-      "Land Cruiser 100": { "like": ["TOYOTA", "LC 200"], "aliases": ["lc100", "lc105", "лк100", "ленд крузер 100", "land cruiser 100", "крузак 100", "сотка", "сотый"] },
-      "Fortuner": { "like": ["TOYOTA", "LC Prado"], "aliases": ["фортунер"] },
+      "Land Cruiser 300": { "top": true, "like": ["TOYOTA", "LC 200"], "aliases": ["lc300", "lc 300", "лк300", "лк 300", "ленд крузер 300", "land cruiser 300", "крузак 300", "крузер 300", "трехсотый", "трехсотка"] },
+      "Land Cruiser 100": { "top": true, "like": ["TOYOTA", "LC 200"], "aliases": ["lc100", "lc105", "лк100", "ленд крузер 100", "land cruiser 100", "крузак 100", "сотка", "сотый"] },
+      "Fortuner": { "top": true, "like": ["TOYOTA", "LC Prado"], "aliases": ["фортунер"] },
       "4Runner": { "like": ["TOYOTA", "LC Prado"], "aliases": ["форанер", "4 runner", "фор раннер"] },
-      "Hilux": { "like": ["MITSUBISHI", "L200"], "aliases": ["хайлюкс", "хайлакс", "хилюкс"] },
-      "C-HR": { "like": ["NISSAN", "Juke"], "aliases": ["чхр", "сhr", "c hr", "си эйч ар"] },
+      "Hilux": { "top": true, "like": ["MITSUBISHI", "L200"], "aliases": ["хайлюкс", "хайлакс", "хилюкс"] },
+      "C-HR": { "top": true, "like": ["NISSAN", "Juke"], "aliases": ["чхр", "сhr", "c hr", "си эйч ар"] },
       "Corolla Cross": { "like": ["TOYOTA", "RAV-4"], "aliases": ["королла кросс"] },
       "Harrier": { "like": ["TOYOTA", "RAV-4"], "aliases": ["харриер", "харьер"] },
       "bZ4X": { "like": ["TOYOTA", "RAV-4"], "aliases": ["bz4x", "бз4х"] },
@@ -200,37 +200,37 @@
       "Vellfire": { "like": ["TOYOTA", "Alphard"], "aliases": ["велфаер", "вельфаер", "веллфайр"] }
     },
     "Lexus": {
-      "NX": { "like": ["AUDI", "Q5"], "aliases": ["нх", "nx200", "nx200t", "nx250", "nx300", "nx300h", "nx350h"] },
-      "UX": { "like": ["AUDI", "Q3"], "aliases": ["юх", "ux200", "ux250h"] },
-      "LM": { "like": ["TOYOTA", "Alphard"], "aliases": ["лм", "lm350", "lm300h"] }
+      "NX": { "top": true, "like": ["AUDI", "Q5"], "aliases": ["нх", "nx200", "nx200t", "nx250", "nx300", "nx300h", "nx350h"] },
+      "UX": { "top": true, "like": ["AUDI", "Q3"], "aliases": ["юх", "ux200", "ux250h"] },
+      "LM": { "top": true, "like": ["TOYOTA", "Alphard"], "aliases": ["лм", "lm350", "lm300h"] }
     },
     "Hyundai": {
-      "Creta": { "like": ["NISSAN", "Juke"], "aliases": ["крета"] },
-      "Tucson": { "like": ["HYUNDAI", "IX35"], "aliases": ["туссан", "тусан", "туксон"] },
+      "Creta": { "top": true, "like": ["NISSAN", "Juke"], "aliases": ["крета"] },
+      "Tucson": { "top": true, "like": ["HYUNDAI", "IX35"], "aliases": ["туссан", "тусан", "туксон"] },
       "Kona": { "like": ["NISSAN", "Juke"], "aliases": ["кона"] },
       "i30": { "like": ["HYUNDAI", "Elantra"], "aliases": ["ай30"] },
-      "Palisade": { "like": ["KIA", "Mohave"], "aliases": ["палисад", "палисейд"] },
-      "Staria": { "like": ["HYUNDAI", "H-1"], "aliases": ["стария"] }
+      "Palisade": { "top": true, "like": ["KIA", "Mohave"], "aliases": ["палисад", "палисейд"] },
+      "Staria": { "top": true, "like": ["HYUNDAI", "H-1"], "aliases": ["стария"] }
     },
     "Kia": {
-      "K5": { "like": ["KIA", "Optima"], "aliases": ["к5"] },
+      "K5": { "top": true, "like": ["KIA", "Optima"], "aliases": ["к5"] },
       "K8": { "like": ["KIA", "Optima"], "aliases": ["к8", "cadenza", "каденза"] },
       "K9": { "like": ["KIA", "Quoris"], "aliases": ["к9", "k900"] },
       "Stinger": { "like": ["KIA", "Optima"], "aliases": ["стингер"] },
-      "Seltos": { "like": ["NISSAN", "Juke"], "aliases": ["селтос"] },
+      "Seltos": { "top": true, "like": ["NISSAN", "Juke"], "aliases": ["селтос"] },
       "XCeed": { "like": ["KIA", "Ceed"], "aliases": ["икссид", "х сид"] },
       "Stonic": { "like": ["KIA", "Rio"], "aliases": ["стоник"] },
-      "Carnival": { "like": ["CHRYSLER", "Voyager"], "aliases": ["карнивал", "sedona", "седона"] }
+      "Carnival": { "top": true, "like": ["CHRYSLER", "Voyager"], "aliases": ["карнивал", "sedona", "седона"] }
     },
     "Nissan": {
-      "Terrano": { "like": ["RENAULT", "Duster"], "aliases": ["террано", "терано"] },
+      "Terrano": { "top": true, "like": ["RENAULT", "Duster"], "aliases": ["террано", "терано"] },
       "Leaf": { "like": ["NISSAN", "Tiida"], "aliases": ["лиф"] }
     },
     "Mitsubishi": {
-      "Eclipse Cross": { "like": ["MITSUBISHI", "ASX"], "aliases": ["эклипс кросс", "эклипс"] }
+      "Eclipse Cross": { "top": true, "like": ["MITSUBISHI", "ASX"], "aliases": ["эклипс кросс", "эклипс"] }
     },
     "Mazda": {
-      "CX-30": { "like": ["MAZDA", "CX-5"], "aliases": ["сх30", "цх30", "cx30"] },
+      "CX-30": { "top": true, "like": ["MAZDA", "CX-5"], "aliases": ["сх30", "цх30", "cx30"] },
       "CX-3": { "like": ["NISSAN", "Juke"], "aliases": ["сх3", "цх3", "cx3"] },
       "CX-60": { "like": ["MAZDA", "CX-5"], "aliases": ["сх60", "цх60", "cx60"] },
       "CX-90": { "like": ["MAZDA", "CX-9"], "aliases": ["сх90", "цх90", "cx90"] }
@@ -239,17 +239,17 @@
       "HR-V": { "like": ["NISSAN", "Juke"], "aliases": ["хрв", "hrv", "vezel", "везел"] }
     },
     "Suzuki": {
-      "Vitara": { "like": ["SUZUKI", "Grand Vitara"], "aliases": ["витара 2015", "new vitara"] },
-      "Jimny": { "like": ["Ваз", "Нива"], "aliases": ["джимни", "жимни"] }
+      "Vitara": { "top": true, "like": ["SUZUKI", "Grand Vitara"], "aliases": ["витара 2015", "new vitara"] },
+      "Jimny": { "top": true, "like": ["Ваз", "Нива"], "aliases": ["джимни", "жимни"] }
     },
     "Skoda": {
-      "Rapid": { "like": ["VOLKSWAGEN", "Polo"], "aliases": ["рапид"] },
-      "Kodiaq": { "like": ["VOLKSWAGEN", "Tiguan"], "aliases": ["кодиак", "кодиаk"] },
-      "Karoq": { "like": ["SKODA", "Yeti"], "aliases": ["карок"] },
+      "Rapid": { "top": true, "like": ["VOLKSWAGEN", "Polo"], "aliases": ["рапид"] },
+      "Kodiaq": { "top": true, "like": ["VOLKSWAGEN", "Tiguan"], "aliases": ["кодиак", "кодиаk"] },
+      "Karoq": { "top": true, "like": ["SKODA", "Yeti"], "aliases": ["карок"] },
       "Kamiq": { "like": ["SKODA", "Yeti"], "aliases": ["камик"] }
     },
     "Volkswagen": {
-      "Teramont": { "like": ["VOLKSWAGEN", "Toureg"], "aliases": ["терамонт"] },
+      "Teramont": { "top": true, "like": ["VOLKSWAGEN", "Toureg"], "aliases": ["терамонт"] },
       "Taos": { "like": ["VOLKSWAGEN", "Tiguan"], "aliases": ["таос"] },
       "Arteon": { "like": ["VOLKSWAGEN", "CC"], "aliases": ["артеон"] },
       "ID.4": { "like": ["VOLKSWAGEN", "Tiguan"], "aliases": ["id4", "ид4"] },
@@ -259,16 +259,16 @@
     },
     "Audi": {
       "Q2": { "like": ["AUDI", "Q3"], "aliases": ["ку2"] },
-      "Q8": { "like": ["AUDI", "Q7"], "aliases": ["ку8", "sq8", "rsq8", "rs q8"] },
-      "e-tron": { "like": ["AUDI", "Q7"], "aliases": ["етрон", "этрон", "e tron", "q8 e-tron"] },
+      "Q8": { "top": true, "like": ["AUDI", "Q7"], "aliases": ["ку8", "sq8", "rsq8", "rs q8"] },
+      "e-tron": { "top": true, "like": ["AUDI", "Q7"], "aliases": ["етрон", "этрон", "e tron", "q8 e-tron"] },
       "e-tron GT": { "like": ["AUDI", "A7"], "aliases": ["етрон гт", "этрон гт"] }
     },
     "BMW": {
       "2 серии": { "like": ["BMW", "1"], "aliases": ["2", "2 series", "двойка", "218", "220", "225", "230", "m2", "f22", "f23", "f44", "f45", "f46", "g42", "active tourer", "gran coupe"] },
       "8 серии": { "like": ["BMW", "6"], "aliases": ["8", "8 series", "840", "850", "m8", "g14", "g15", "g16"] },
       "X2": { "like": ["BMW", "X1"], "aliases": ["икс2", "f39", "u10"] },
-      "X4": { "like": ["BMW", "X3"], "aliases": ["икс4", "x4m", "f26", "g02"] },
-      "X7": { "like": ["MERCEDES", "GL"], "aliases": ["икс7", "g07", "x7m"] },
+      "X4": { "top": true, "like": ["BMW", "X3"], "aliases": ["икс4", "x4m", "f26", "g02"] },
+      "X7": { "top": true, "like": ["MERCEDES", "GL"], "aliases": ["икс7", "g07", "x7m"] },
       "XM": { "like": ["BMW", "X6"], "aliases": ["хм", "икс эм"] },
       "i3": { "like": ["BMW", "1"], "aliases": ["ай3"] },
       "i4": { "like": ["BMW", "4"], "aliases": ["ай4"] },
@@ -278,12 +278,12 @@
       "iX3": { "like": ["BMW", "X3"], "aliases": ["айикс3"] }
     },
     "Mercedes-Benz": {
-      "GLA": { "like": ["MERCEDES", "GLK"], "aliases": ["гла", "gla200", "gla250", "gla35", "gla45", "x156", "h247"] },
-      "GLB": { "like": ["MERCEDES", "GLK"], "aliases": ["глб", "glb200", "glb250", "x247"] },
-      "GLC": { "like": ["MERCEDES", "GLK"], "aliases": ["глц", "glc200", "glc250", "glc300", "glc43", "glc63", "x253", "c253", "x254", "glc coupe", "glc купе"] },
-      "GLE": { "like": ["MERCEDES", "M"], "aliases": ["гле", "gle300", "gle350", "gle400", "gle450", "gle53", "gle63", "v167", "c167", "c292", "gle coupe", "gle купе"] },
-      "GLS": { "like": ["MERCEDES", "GL"], "aliases": ["gls350", "gls400", "gls450", "gls580", "gls63", "x167", "maybach gls", "майбах глс"] },
-      "V-класс": { "like": ["MERCEDES", "Viano"], "aliases": ["v класс", "в класс", "v250", "v220", "v300", "w447", "v class"] },
+      "GLA": { "top": true, "like": ["MERCEDES", "GLK"], "aliases": ["гла", "gla200", "gla250", "gla35", "gla45", "x156", "h247"] },
+      "GLB": { "top": true, "like": ["MERCEDES", "GLK"], "aliases": ["глб", "glb200", "glb250", "x247"] },
+      "GLC": { "top": true, "like": ["MERCEDES", "GLK"], "aliases": ["глц", "glc200", "glc250", "glc300", "glc43", "glc63", "x253", "c253", "x254", "glc coupe", "glc купе"] },
+      "GLE": { "top": true, "like": ["MERCEDES", "M"], "aliases": ["гле", "gle300", "gle350", "gle400", "gle450", "gle53", "gle63", "v167", "c167", "c292", "gle coupe", "gle купе"] },
+      "GLS": { "top": true, "like": ["MERCEDES", "GL"], "aliases": ["gls350", "gls400", "gls450", "gls580", "gls63", "x167", "maybach gls", "майбах глс"] },
+      "V-класс": { "top": true, "like": ["MERCEDES", "Viano"], "aliases": ["v класс", "в класс", "v250", "v220", "v300", "w447", "v class"] },
       "Sprinter": { "like": ["PEUGEOT", "Boxer"], "aliases": ["спринтер"] },
       "CLK": { "like": ["MERCEDES", "E"], "aliases": ["цлк", "клк", "clk200", "clk320", "clk500", "w208", "w209"] },
       "CL": { "like": ["MERCEDES", "S"], "aliases": ["цл", "cl500", "cl63", "c216"] },
@@ -293,17 +293,17 @@
       "X-класс": { "like": ["NISSAN", "Navara"], "aliases": ["x класс", "х класс", "x250d", "x350d"] }
     },
     "Porsche": {
-      "Taycan": { "like": ["PORSHE", "Panamera"], "aliases": ["тайкан", "тэйкан"] }
+      "Taycan": { "top": true, "like": ["PORSHE", "Panamera"], "aliases": ["тайкан", "тэйкан"] }
     },
     "Volvo": {
-      "XC40": { "like": ["VOLVO", "XC60"], "aliases": ["хс40", "иксси40"] },
+      "XC40": { "top": true, "like": ["VOLVO", "XC60"], "aliases": ["хс40", "иксси40"] },
       "S90": { "like": ["VOLVO", "S80"], "aliases": ["с90"] },
       "V60": { "like": ["VOLVO", "S60"], "aliases": ["в60"] },
       "V90": { "like": ["VOLVO", "S80"], "aliases": ["в90", "v90 cross country"] }
     },
     "Land Rover": {
-      "Discovery Sport": { "like": ["LAND ROVER", "Freelander"], "aliases": ["дискавери спорт", "disco sport"] },
-      "Velar": { "like": ["LAND ROVER", "RR Sport"], "aliases": ["велар", "range rover velar", "рендж ровер велар"] }
+      "Discovery Sport": { "top": true, "like": ["LAND ROVER", "Freelander"], "aliases": ["дискавери спорт", "disco sport"] },
+      "Velar": { "top": true, "like": ["LAND ROVER", "RR Sport"], "aliases": ["велар", "range rover velar", "рендж ровер велар"] }
     },
     "Cadillac": {
       "XT4": { "like": ["AUDI", "Q3"], "aliases": ["хт4"] },
@@ -318,7 +318,7 @@
       "Transit": { "like": ["PEUGEOT", "Boxer"], "aliases": ["транзит", "tourneo", "турнео"] }
     },
     "Chevrolet": {
-      "Tracker": { "like": ["NISSAN", "Juke"], "aliases": ["трекер", "треккер"] },
+      "Tracker": { "top": true, "like": ["NISSAN", "Juke"], "aliases": ["трекер", "треккер"] },
       "Equinox": { "like": ["VOLKSWAGEN", "Tiguan"], "aliases": ["эквинокс"] },
       "Traverse": { "like": ["FORD", "Explorer"], "aliases": ["траверс"] }
     },
@@ -330,8 +330,8 @@
       "QX55": { "like": ["INFINITI", "QX50 (EX)"], "aliases": ["кх55", "qx 55"] }
     },
     "Renault": {
-      "Kaptur": { "like": ["RENAULT", "Duster"], "aliases": ["каптур", "captur"] },
-      "Arkana": { "like": ["RENAULT", "Duster"], "aliases": ["аркана"] }
+      "Kaptur": { "top": true, "like": ["RENAULT", "Duster"], "aliases": ["каптур", "captur"] },
+      "Arkana": { "top": true, "like": ["RENAULT", "Duster"], "aliases": ["аркана"] }
     },
     "Peugeot": {
       "2008": { "like": ["PEUGEOT", "3008"], "aliases": ["пежо 2008"] },

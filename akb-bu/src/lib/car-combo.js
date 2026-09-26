@@ -27,12 +27,23 @@ const models = (n) => `${n}${NBSP}${plural(n, ['модель', 'модели', '
 const byName = (a, b) => a.model.localeCompare(b.model, 'en', { sensitivity: 'base' });
 const byBrand = (a, b) => a.brand.localeCompare(b.brand, 'en', { sensitivity: 'base' });
 
-// марка целиком: ходовые модели (прайс и car-extra) и остальные — каждые по алфавиту
-function wholeBrand(brand) {
+// марка целиком, два яруса — каждый по алфавиту: сразу прайс и ходовые из car-extra (top),
+// под «Ещё N моделей» мировая база и car-extra без top (электрички, фургоны, редкие версии)
+export function wholeBrand(brand) {
   const all = [...brand.models].sort(byName);
-  const top = all.filter((m) => !m.base);
+  const top = all.filter((m) => !m.base && !m.minor);
   const shown = top.length ? top : all.slice(0, 8);
   return { shown, rest: all.filter((m) => !shown.includes(m)) };
+}
+
+// в выдаче по тексту у марки не больше трёх моделей мировой базы — остальные под «Ещё»
+const BASE_SHOWN = 3;
+function splitFound(models) {
+  let base = 0;
+  const shown = [];
+  const rest = [];
+  for (const m of models) (m.base && ++base > BASE_SHOWN ? rest : shown).push(m);
+  return { shown, rest };
 }
 
 function carGroups(cars, q) {
@@ -45,7 +56,21 @@ function carGroups(cars, q) {
     if (item.type === 'brand') g.whole = !g.models.length;
     else if (!g.models.includes(item.model)) g.models.push(item.model);
   }
-  return [...groups.values()].map((g) => (g.whole ? { brand: g.brand, ...wholeBrand(g.brand) } : { brand: g.brand, shown: g.models, rest: [] }));
+  return [...groups.values()].map((g) => ({ brand: g.brand, ...(g.whole ? wholeBrand(g.brand) : splitFound(g.models)) }));
+}
+
+/* Подсветка набранного в названии модели: «x5» → X5, «кам» → Camry не подсветится
+   (совпадение по написанию, не по буквам) — это нормально, как у auto.ru.
+   Засчитываем слово запроса от двух знаков, совпавшее с началом слова в названии */
+function hit(name, q) {
+  const low = name.toLowerCase();
+  for (const word of q.toLowerCase().split(/\s+/).sort((a, b) => b.length - a.length)) {
+    if (word.length < 2) continue;
+    let at = low.indexOf(word);
+    while (at > 0 && /[\p{L}\p{N}]/u.test(low[at - 1])) at = low.indexOf(word, at + 1);
+    if (at >= 0) return [at, at + word.length];
+  }
+  return null;
 }
 
 export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMiss = () => {} }) {
@@ -55,7 +80,44 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
   const field = $('[data-car-field]');
   const brandPlate = $('[data-car-brand]');
   const modelPlate = $('[data-car-model]');
+  const closeBtn = $('[data-car-close]');
   const placeholder = input.placeholder;
+
+  // Телефон: поле раскрывается на весь экран (стили .is-sheet в CarCombo.astro).
+  // Высота листа — по visualViewport: клавиатура открылась — лист сжался, нижние строки
+  // не прячутся под ней. Клавиатуру убрали — лист остаётся, пока не закрыт крестиком
+  // или выбором модели.
+  const narrow = window.matchMedia('(max-width: 760px)');
+  const vv = window.visualViewport;
+  let sheet = false;
+  function fitSheet() {
+    if (!sheet || !vv) return;
+    root.style.setProperty('--sheet-h', `${Math.round(vv.height)}px`);
+    root.style.setProperty('--sheet-top', `${Math.round(vv.offsetTop)}px`);
+  }
+  function openSheet() {
+    if (sheet || !narrow.matches) return;
+    sheet = true;
+    root.classList.add('is-sheet');
+    document.documentElement.classList.add('has-car-sheet');
+    fitSheet();
+    vv?.addEventListener('resize', fitSheet);
+    vv?.addEventListener('scroll', fitSheet);
+  }
+  function closeSheet() {
+    if (!sheet) return;
+    sheet = false;
+    root.classList.remove('is-sheet');
+    document.documentElement.classList.remove('has-car-sheet');
+    root.style.removeProperty('--sheet-h');
+    root.style.removeProperty('--sheet-top');
+    vv?.removeEventListener('resize', fitSheet);
+    vv?.removeEventListener('scroll', fitSheet);
+  }
+  // повернули телефон в ширину ПК — обычный выпадающий список
+  narrow.addEventListener('change', (e) => {
+    if (!e.matches) closeSheet();
+  });
 
   let found = []; // строки, которые можно выбрать, — по порядку в списке
   let active = -1;
@@ -93,10 +155,16 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
     paint();
   }
 
+  // спрятать список (лист на телефоне остаётся: справочник ещё грузится — покажем, как придёт)
   function close() {
     list.hidden = true;
     input.setAttribute('aria-expanded', 'false');
     active = -1;
+  }
+  // закрыть совсем: и список, и лист на телефоне
+  function dismiss() {
+    closeSheet();
+    close();
   }
   function highlight() {
     [...list.querySelectorAll('.combo-option')].forEach((el, i) => {
@@ -173,7 +241,14 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
     if (item.type === 'brand') li.textContent = item.brand.brand;
     else if (item.type === 'model') {
       const name = document.createElement('span');
-      name.textContent = item.model.model;
+      const text = item.model.model;
+      const span = hit(text, input.value.trim());
+      if (span) {
+        const b = document.createElement('span');
+        b.className = 'combo-hit';
+        b.textContent = text.slice(span[0], span[1]);
+        name.append(text.slice(0, span[0]), b, text.slice(span[1]));
+      } else name.textContent = text;
       // годы выпуска — только у снятых и новых моделей (см. era в car-index-pack.js)
       if (item.model.era) {
         const era = document.createElement('span');
@@ -232,7 +307,7 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
   }
 
   function miss() {
-    close();
+    dismiss();
     input.blur();
     onMiss();
   }
@@ -260,7 +335,7 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
       return;
     }
     scope = item.brand;
-    close();
+    dismiss();
     input.blur();
     const picked = { brand: item.brand.brand, model: item.model.model, cls: item.model.cls };
     if (item.model.like) picked.like = item.model.like;
@@ -269,7 +344,10 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
   }
 
   input.addEventListener('input', render);
-  input.addEventListener('focus', render);
+  input.addEventListener('focus', () => {
+    openSheet();
+    render();
+  });
   input.addEventListener('keydown', (e) => {
     // стёрли всё и жмут дальше — снимаем марку, как чип
     if (e.key === 'Backspace' && !input.value && scope) {
@@ -288,11 +366,12 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
       e.preventDefault();
       if (found.length) pick(active);
       else miss();
-    } else if (e.key === 'Escape') close();
+    } else if (e.key === 'Escape') dismiss();
   });
-  input.addEventListener('blur', () => {
+  // ушли из поля, ничего не выбрав
+  function leave() {
     close();
-    // ушли, ничего не выбрав, — плашки снова показывают выбранную машину
+    // плашки снова показывают выбранную машину
     if (car()?.model && !input.value.trim()) sync();
     else editing = false;
     // что искали и не нашли — по этим запросам дополняем car-aliases.json
@@ -300,6 +379,16 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
       document.dispatchEvent(new CustomEvent('carclass:notfound', { detail: { query: missed } }));
       missed = '';
     }
+  }
+  input.addEventListener('blur', () => {
+    // на телефоне убрали клавиатуру — лист и список остаются, чтобы листать дальше
+    if (sheet) return;
+    leave();
+  });
+  closeBtn.addEventListener('click', () => {
+    closeSheet();
+    if (document.activeElement === input) input.blur(); // blur → leave()
+    else leave();
   });
   // плашка марки — выбрать другую марку, плашка модели — другую модель той же марки
   brandPlate.addEventListener('click', () => {
@@ -317,7 +406,7 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
 
   return {
     sync,
-    close,
+    close: dismiss,
     // машина уже выбрана — видны плашки, поле скрыто: фокус не нужен
     focus(options) {
       if (!field.hidden) input.focus(options);
