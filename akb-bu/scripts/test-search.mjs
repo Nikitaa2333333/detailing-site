@@ -250,6 +250,17 @@ const CARS = [
   ['q7 4m', 'Audi Q7'],
   ['991', 'Porsche 911'],
   ['дискавери l462', 'Land Rover Discovery'],
+  ['f56', 'Mini Cooper'],
+  ['мини r56', 'Mini Cooper'],
+  ['u25', 'Mini Countryman'],
+  ['g08', 'BMW iX3'],
+  ['g09', 'BMW XM'],
+  ['g07', 'BMW X7'],
+  ['g29', 'BMW Z4'],
+  // код совпал с названием чужой модели: один — модель, рядом с маркой — кузов
+  ['g70', 'Genesis G70'],
+  ['g90', 'Genesis G90'],
+  ['бмв g70', 'BMW 7 серии'],
   // точное название выше недописанного соседа (нашёл полный прогон всех запросов)
   ['hyundai sonata', 'Hyundai Sonata'],
   ['мерседес gl', 'Mercedes-Benz GL'],

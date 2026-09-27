@@ -237,7 +237,9 @@ for (const { b, entry: known } of baseBrands) {
 
 /* ---------- Кузовные коды (car-codes.json) — поверх всех трёх источников ----------
    Код от трёх знаков — обычный ключ поиска («y62»). Все коды — ещё и в codes: их
-   поиск засчитывает рядом с моделью («санта фе tm»), двухбуквенные — только так */
+   поиск засчитывает рядом с моделью («санта фе tm»), двухбуквенные — только так.
+   Код, совпавший с названием чужой модели (BMW G70 — Genesis G70), тоже только рядом с моделью */
+const modelNames = new Set([...byName.values()].flatMap((e) => e.models.map((m) => normalize(m.model))));
 const noCode = [];
 for (const [brandName, models] of Object.entries(codes)) {
   if (brandName.startsWith('_')) continue;
@@ -253,7 +255,7 @@ for (const [brandName, models] of Object.entries(codes)) {
       continue;
     }
     model.codes = keysOf(list);
-    model.keys = keysOf(model.keys, list.filter((c) => c.length >= 3));
+    model.keys = keysOf(model.keys, list.filter((c) => c.length >= 3 && !modelNames.has(normalize(c))));
   }
 }
 if (noCode.length) throw new Error(`car-codes.json ссылается на то, чего нет в справочнике: ${noCode.join(', ')}.`);
