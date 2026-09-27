@@ -1,0 +1,54 @@
+# DS SEVER — Apache на Reg.ru. Файл едет в dist как есть и лежит в корне сайта.
+# Цель: статика отдаётся с долгим кэшем и в gzip, HTML — с коротким, чтобы правки
+# появлялись сразу после деплоя. Проверено на том же хостинге у park-sever.ru.
+#
+# Проверено на живом сервере 22.09.2026: css/js/картинки отдаёт nginx ПЕРЕД Apache,
+# поэтому блоки ниже на них не действуют — nginx сам ставит max-age=3888000 (45 дней)
+# и gzip. До Apache доходит только HTML, там правила работают. Менять кэш статики —
+# через поддержку Reg.ru, правкой этого файла не получится.
+
+# --- Долгий кэш для статики ---
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/avif             "access plus 1 year"
+  ExpiresByType image/webp             "access plus 1 year"
+  ExpiresByType image/jpeg             "access plus 1 year"
+  ExpiresByType image/png              "access plus 1 year"
+  ExpiresByType image/svg+xml          "access plus 1 year"
+  ExpiresByType font/woff2             "access plus 1 year"
+  ExpiresByType text/css               "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType video/mp4              "access plus 1 month"
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Ассеты с хешем в имени (/_astro/*) и локальные шрифты — immutable на год:
+  # при изменении меняется имя файла, устаревший кэш не всплывёт.
+  <FilesMatch "\.(avif|webp|jpe?g|png|svg|woff2|css|js)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.mp4$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+  # HTML — короткий кэш, чтобы правки сайта появлялись сразу.
+  <FilesMatch "\.html$">
+    Header set Cache-Control "public, max-age=600, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+# --- Сжатие текстовых ресурсов ---
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml application/javascript application/json image/svg+xml
+</IfModule>
+
+# --- Один адрес у страницы: без www ---
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^(.*)$ https://dssever.ru/$1 [R=301,L]
+
+  # Принудительный https включаем ТОЛЬКО после выпуска сертификата в панели Reg.ru:
+  # без сертификата этот редирект уводит на неоткрывающийся адрес и сайт ложится целиком.
+  # RewriteCond %{HTTPS} !=on
+  # RewriteRule ^(.*)$ https://dssever.ru/$1 [R=301,L]
+</IfModule>
