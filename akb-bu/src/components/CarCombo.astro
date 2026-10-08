@@ -119,8 +119,12 @@ const { id, placeholder, label } = Astro.props;
   @media (prefers-reduced-motion: reduce) {
     .combo-plate { animation: none; }
   }
-  /* модель — по содержимому, класс сразу за названием; длинное название сожмётся с многоточием */
-  .combo-plate--model { flex: 0 1 auto; min-width: 0; max-width: none; }
+  /* модель — по содержимому, класс сразу за названием. Не влезает рядом с маркой — уходит
+     целиком на вторую строку, а не режется («Continental GT · цена после осмотра») */
+  .combo:has(.combo-field[hidden]) { flex-wrap: wrap; }
+  .combo-plate--model { flex: 0 1 auto; min-width: 0; max-width: 100%; }
+  .combo-plate--model .combo-plate-value { overflow: visible; }
+  .combo-plate--model [data-car-model-name] { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .combo-plate-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .combo-plate-value {
     display: flex;
