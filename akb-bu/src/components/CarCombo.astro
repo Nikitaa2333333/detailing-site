@@ -229,7 +229,9 @@ const { id, placeholder, label } = Astro.props;
       color: var(--combo-fg);
       touch-action: none; /* жест по шапке листа не крутит страницу под ним */
     }
-    .combo.is-sheet .combo-plate { grid-row: 1; grid-column: 1; }
+    /* ширина — по названию марки: проценты в колонке auto не считаются, и плашка схлопывалась
+       в пустой овал. Длинную марку ограничиваем долей экрана — дальше многоточие */
+    .combo.is-sheet .combo-plate { grid-row: 1; grid-column: 1; width: max-content; max-width: 45vw; }
     .combo.is-sheet .combo-field { grid-row: 1; grid-column: 2; }
     /* марка не выбрана — поле занимает и её место */
     .combo.is-sheet .combo-plate[hidden] + .combo-field { grid-column: 1 / 3; }
