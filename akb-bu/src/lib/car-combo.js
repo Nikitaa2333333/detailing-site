@@ -1,7 +1,7 @@
 /* Поведение поля выбора машины (разметка — components/CarCombo.astro).
 
    Выдача группами по маркам, как в каталогах auto.ru и drom:
-   - пустое поле — 30 популярных марок и «Все марки»;
+   - пустое поле — 30 популярных марок;
    - выбрали марку — поле ищет только её модели: ходовые (прайс и car-extra) по алфавиту,
      остальные из мировой базы свёрнуты в «Ещё N моделей»;
    - набрали текст — совпадения под заголовками своих марок, марки сверх трёх свёрнуты
@@ -94,6 +94,27 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
   const narrow = window.matchMedia('(max-width: 760px)');
   const vv = window.visualViewport;
   let sheet = false;
+  // iPhone при фокусе в поле прокручивает страницу к нему (и ещё раз при снятии фокуса) —
+  // запоминаем, где человек был до листа, и возвращаем туда после закрытия
+  // Только по касанию самого поля: если лист открыли кнопкой с первого экрана, страница
+  // как раз едет к калькулятору — возвращать её назад не нужно
+  let savedY = null;
+  const rememberY = () => {
+    if (sheet || !narrow.matches) return;
+    savedY = window.scrollY;
+    setTimeout(() => {
+      if (!sheet) savedY = null; // коснулись, но лист не открылся — позиция устарела
+    }, 1000);
+  };
+  function restoreY() {
+    if (savedY == null) return;
+    const y = savedY;
+    savedY = null;
+    window.scrollTo(0, y);
+    // после blur Safari докручивает ещё раз — повторяем, когда клавиатура уже уехала
+    requestAnimationFrame(() => window.scrollTo(0, y));
+    setTimeout(() => window.scrollTo(0, y), 250);
+  }
   function fitSheet() {
     if (!sheet || !vv) return;
     root.style.setProperty('--sheet-h', `${Math.round(vv.height)}px`);
@@ -117,6 +138,7 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
     root.style.removeProperty('--sheet-top');
     vv?.removeEventListener('resize', fitSheet);
     vv?.removeEventListener('scroll', fitSheet);
+    restoreY();
   }
   // повернули телефон в ширину ПК — обычный выпадающий список
   narrow.addEventListener('change', (e) => {
@@ -131,7 +153,6 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
   let editing = false; // человек меняет модель — вместо плашки поле
   let openBrands = new Set();
   let openOthers = false;
-  let openAllBrands = false;
   let lastQuery = '';
   let topBrands = [];
 
@@ -188,12 +209,9 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
       const known = (b) => b.models.filter((m) => !m.base).length;
       topBrands = all.filter(known).sort((a, b) => known(b) - known(a)).slice(0, 30).sort(byBrand);
     }
+    // только популярные: остальные марки находит само поле, длинный алфавитный список не нужен
     const lines = [{ type: 'head', text: 'Популярные марки' }];
     topBrands.forEach((brand) => lines.push({ type: 'brand', brand }));
-    if (openAllBrands) {
-      lines.push({ type: 'head', text: 'Все марки' });
-      [...all].sort(byBrand).forEach((brand) => lines.push({ type: 'brand', brand }));
-    } else lines.push({ type: 'allbrands', text: `Все марки — ${all.length}` });
     return lines;
   }
 
@@ -294,7 +312,6 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
     if (key !== lastQuery) {
       openBrands = new Set();
       openOthers = false;
-      openAllBrands = false;
       lastQuery = key;
       list.scrollTop = 0;
     }
@@ -334,10 +351,9 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
     const item = found[i];
     if (!item) return;
     // «ещё» раскрывает список на месте, фокус остаётся на той же строке
-    if (['more', 'others', 'allbrands'].includes(item.type)) {
+    if (['more', 'others'].includes(item.type)) {
       if (item.type === 'more') openBrands.add(item.brand);
-      else if (item.type === 'others') openOthers = true;
-      else openAllBrands = true;
+      else openOthers = true;
       render();
       active = Math.min(i, found.length - 1);
       highlight();
@@ -361,6 +377,8 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
     document.dispatchEvent(new CustomEvent('carclass:selected', { detail: picked }));
   }
 
+  // позицию берём до фокуса: к событию focus Safari уже успевает прокрутить страницу
+  [input, brandPlate, modelPlate].forEach((el) => el.addEventListener('pointerdown', rememberY));
   input.addEventListener('input', render);
   input.addEventListener('focus', () => {
     openSheet();

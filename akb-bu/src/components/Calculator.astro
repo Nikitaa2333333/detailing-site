@@ -2,8 +2,8 @@
 /* Калькулятор-мастер: машина → направление → услуги → заявка.
 
    Одна карточка, четыре шага. На экране всегда только текущий шаг, высота
-   карточки плавно подстраивается под него. Внизу карточки прилипает полоса:
-   машина, сколько выбрано и на какую сумму, кнопка следующего шага.
+   карточки плавно подстраивается под него. Внизу прилипает док на растворении:
+   поиск услуги и белая капсула «что выбрано + кнопка дальше».
 
    Всё — в готовом HTML: услуги, цены «от» и описания печатаются на сборке,
    скрипт переключает шаги и подставляет цену выбранного класса.
@@ -82,16 +82,12 @@ const searchIcon =
       {t.steps.map((label, i) => (
         <li>
           <button class="wiz-step" type="button" data-go={i + 1} disabled={i > 0}>
-            <span class="wiz-step-num">{i + 1}</span>
+            <span class="wiz-step-num"><span class="wiz-step-digit">{i + 1}</span></span>
             <span class="wiz-step-label" data-step-label={i + 1}>{label}</span>
           </button>
         </li>
       ))}
     </ol>
-    <div class="wiz-find" data-find-box hidden>
-      <svg class="icon-search" viewBox="0 0 20 20" aria-hidden="true" set:html={searchIcon} />
-      <input class="field wiz-find-input" type="search" placeholder={t.searchPlaceholder} aria-label="Поиск услуги" data-find />
-    </div>
   </div>
 
   <div class="wiz-body" data-body>
@@ -99,14 +95,17 @@ const searchIcon =
     <section class="wiz-panel" data-panel="1">
       <h3 class="wiz-title">{t.carTitle}</h3>
       <CarCombo id="calc-car" placeholder={t.carPlaceholder} label={t.carTitle} />
-      <div class="car-examples">
-        {t.carExamples.map((q) => <button class="car-example" type="button" data-car-example={q}>{q}</button>)}
-      </div>
-      <button class="wiz-link" type="button" data-skip>{t.skip}</button>
     </section>
 
-    <!-- 2. Направление -->
+    <!-- 2. Направление. Сверху крупно — выбранная машина: цены ниже посчитаны для неё -->
     <section class="wiz-panel" data-panel="2" hidden>
+      <div class="wiz-car">
+        <p class="wiz-car-name" data-car-head></p>
+        <p class="wiz-car-meta">
+          <span data-car-head-class></span>
+          <button class="wiz-car-change" type="button" data-go="1" data-car-head-change>изменить</button>
+        </p>
+      </div>
       <h3 class="wiz-title">{t.catsTitle}</h3>
       <p class="wiz-lead">{t.catsNote}</p>
       <div class="cats">
@@ -217,14 +216,21 @@ const searchIcon =
     </section>
   </div>
 
-  <!-- Полоса итога: прилипает к низу экрана, пока карточка на виду -->
-  <div class="wiz-foot" data-foot>
-    <button class="foot-car" type="button" data-go="1">
-      <span class="foot-car-name" data-foot-car>{t.noCar}</span>
-      <span class="foot-car-change">изменить</span>
-    </button>
-    <p class="foot-total" data-foot-total hidden><span data-foot-count></span><span data-foot-sum></span></p>
-    <button class="btn btn--primary foot-next" type="button" data-next hidden>{t.next}</button>
+  <!-- Нижний док: прибит к низу экрана, пока калькулятор на виду; ушёл калькулятор — уезжает.
+       Стоит на растворении (контент под ним уходит в цвет полосы), не на блюре.
+       В нём поиск услуги (шаги 2–3) и кнопка дальше: «Продолжить» с машиной на шаге 1,
+       сумма и «К заявке», когда услуги отмечены -->
+  <div class="wiz-dock" data-dock hidden>
+    <div class="dock-inner" data-dock-inner>
+      <div class="wiz-find" data-find-box hidden>
+        <svg class="icon-search" viewBox="0 0 20 20" aria-hidden="true" set:html={searchIcon} />
+        <input class="field wiz-find-input" type="search" placeholder={t.searchPlaceholder} aria-label="Поиск услуги" data-find />
+      </div>
+      <div class="wiz-foot" data-foot hidden>
+        <p class="foot-info"><span class="foot-small" data-foot-small></span><span class="foot-main" data-foot-main></span></p>
+        <button class="btn btn--primary foot-next" type="button" data-next data-label-next={t.next} data-label-continue={t.continue}>{t.next}</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -300,34 +306,59 @@ const searchIcon =
     const findBox = $('[data-find-box]');
     const findInput = $<HTMLInputElement>('[data-find]');
 
-    function go(step: number, { scroll = true } = {}) {
-      const from = body.offsetHeight;
+    /* Смена шага читается как движение: текущий шаг уезжает и гаснет, новый въезжает с другой
+       стороны (вперёд — справа, назад — слева), высота карточки перетекает. Мгновенная подмена
+       контента сбивала с толку: «нажал — бам, где я?» */
+    let goSeq = 0;
+    // instant — без ухода старого шага: нужно, когда сразу за переходом ставим фокус в поле
+    function go(step: number, { scroll = true, instant = false } = {}) {
+      const prev = state.step;
       state.step = step;
       root.dataset.step = String(step);
-      panels.forEach((p) => (p.hidden = p.dataset.panel !== String(step)));
       findBox.hidden = step !== 2 && step !== 3;
       if (step !== 3 && findInput.value) {
         findInput.value = '';
         filter();
       }
-      if (!reduced) {
+      update();
+      // верх карточки ушёл за экран — возвращаем к началу шага
+      if (scroll && root.getBoundingClientRect().top < 0) root.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+
+      const seq = ++goSeq;
+      const dir = step >= prev ? 1 : -1;
+      const out = panels.find((p) => !p.hidden);
+      const swap = () => {
+        if (seq !== goSeq) return; // пока уезжал старый шаг, человек нажал что-то ещё
+        const from = body.offsetHeight;
+        panels.forEach((p) => (p.hidden = p.dataset.panel !== String(state.step)));
+        if (reduced) return;
         const to = body.offsetHeight;
         if (from !== to) {
           body.style.overflow = 'hidden';
           body
-            .animate([{ height: `${from}px` }, { height: `${to}px` }], { duration: 320, easing: 'cubic-bezier(0.2, 0, 0, 1)' })
-            .finished.then(() => (body.style.overflow = ''));
+            .animate([{ height: `${from}px` }, { height: `${to}px` }], { duration: 360, easing: 'cubic-bezier(0.2, 0, 0, 1)' })
+            .finished.then(() => (body.style.overflow = ''))
+            .catch(() => {});
         }
         panels
           .find((p) => !p.hidden)
-          ?.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], {
-            duration: 280,
+          ?.animate([{ opacity: 0, transform: `translateX(${32 * dir}px)` }, { opacity: 1, transform: 'none' }], {
+            duration: 360,
             easing: 'cubic-bezier(0.2, 0, 0, 1)',
           });
-      }
-      // верх карточки ушёл за экран — возвращаем к началу шага
-      if (scroll && root.getBoundingClientRect().top < 0) root.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
-      update();
+      };
+      if (reduced || instant || !out || out.dataset.panel === String(step)) return swap();
+      const leave = out.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: `translateX(${-24 * dir}px)` }], {
+        duration: 180,
+        easing: 'cubic-bezier(0.4, 0, 1, 1)',
+        fill: 'forwards',
+      });
+      leave.finished
+        .then(() => {
+          swap();
+          leave.cancel(); // старый шаг уже спрятан — снимаем застывшую прозрачность
+        })
+        .catch(() => {});
     }
     $$('[data-go]').forEach((btn) => btn.addEventListener('click', () => go(Number(btn.dataset.go))));
 
@@ -337,13 +368,15 @@ const searchIcon =
     const combo = carCombo($('[data-car-combo]'), {
       cars: () => cars,
       car: () => state.car,
+      // Выбрали — остаёмся на шаге: машина встаёт белыми плашками, снизу выезжает «Продолжить».
+      // Сразу перебрасывать на направления нельзя — человек не успевает увидеть, что выбрал
       onPick: (car: Car) => {
         missedCar = '';
-        setCar(car);
+        setCar(car, { advance: false });
       },
-      // не нашли — сама подсказка ведёт дальше: список закрывает ссылку «Без машины» под полем
+      // не нашли — сама подсказка ведёт дальше: цены «от», машину запишем в заявку
       missText: (q: string) => `«${q}» нет в списке — покажем цены «от», класс уточнит менеджер`,
-      onMiss: () => setCar(null),
+      onMiss: () => setCar(null, { advance: false }),
       onSearchMiss: (q: string) => (missedCar = q),
     });
 
@@ -377,14 +410,6 @@ const searchIcon =
       else update();
       save();
     }
-
-    $$('[data-car-example]').forEach((btn) => btn.addEventListener('click', () => combo.pickFirst(btn.dataset.carExample!)));
-    // Без машины: цены «от», класс уточнит менеджер. Что искали — остаётся для заявки
-    function skipCar() {
-      combo.close();
-      setCar(null);
-    }
-    $('[data-skip]').addEventListener('click', skipCar);
 
     /* ---------- 2–3. Направление и его разделы ---------- */
     function openCat(cat: string, sheet?: string) {
@@ -484,7 +509,7 @@ const searchIcon =
     document.addEventListener('click', (e) => {
       if (!(e.target as HTMLElement)?.closest?.('[data-calc-open]')) return;
       e.preventDefault();
-      if (state.step !== 1) go(1, { scroll: false });
+      if (state.step !== 1) go(1, { scroll: false, instant: true });
       combo.focus({ preventScroll: true });
       root.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
     });
@@ -530,13 +555,22 @@ const searchIcon =
         badge.hidden = !n;
       });
 
-      // полоса снизу
-      $('[data-foot-car]').textContent = carName(state.car);
-      $('[data-foot-total]').hidden = !list.length;
-      $('[data-foot-count]').textContent = services(list.length);
-      $('[data-foot-sum]').textContent = totalText;
-      $('[data-next]').hidden = !list.length || state.step === 4;
-      root.classList.toggle('has-picked', list.length > 0);
+      // шаг 2: машина крупно — цены на плитках посчитаны для неё
+      const model = state.car?.model ? `${state.car.brand} ${state.car.model}` : '';
+      const cls = state.car ? classText(state.car.cls) : '';
+      $('[data-car-head]').textContent = model || cls || 'Машина не выбрана';
+      $('[data-car-head-class]').textContent = model ? cls : state.car ? '' : 'показываем цены «от»';
+      $('[data-car-head-change]').textContent = state.car ? 'изменить' : 'указать машину';
+
+      // нижний док: шаг 1 — машина и «Продолжить», шаги 2–3 — поиск, сумма и «К заявке»
+      const first = state.step === 1;
+      const foot = $('[data-foot]');
+      const next = $('[data-next]');
+      foot.hidden = first ? !state.carSeen : state.step === 4 || !list.length;
+      $('[data-foot-small]').textContent = first ? (model ? cls : state.car ? '' : 'цены «от»') : services(list.length);
+      $('[data-foot-main]').textContent = first ? model || cls || 'Без машины' : totalText;
+      next.textContent = first ? next.dataset.labelContinue! : next.dataset.labelNext!;
+      $('[data-dock]').hidden = foot.hidden && findBox.hidden;
 
       // шаг 4
       $('[data-order-car]').textContent = carName(state.car);
@@ -585,7 +619,8 @@ const searchIcon =
         save();
       })
     );
-    $('[data-next]').addEventListener('click', () => go(4));
+    // шаг 1 — туда, где человек остановился; дальше — к заявке
+    $('[data-next]').addEventListener('click', () => go(state.step === 1 ? (state.cat && picked().length ? 3 : 2) : 4));
 
     /* ---------- Сохранение: вернулся на сайт — расчёт на месте ---------- */
     const STORE = 'ds-calc-v1';
@@ -692,6 +727,7 @@ const searchIcon =
     --wiz-pop: var(--color-white);                /* выпадающий список марок */
     --wiz-form: var(--color-ink);                 /* плашка заявки */
     --wiz-foot-btn-hover: var(--color-tile);      /* кнопка в полосе итога — инверсия полосы */
+    --wiz-page: var(--color-page);                /* фон полосы вокруг карточки — в него уходит док на телефоне */
   }
   :global(.on-dark) .wiz {
     --wiz-bg: var(--color-tile-dark);
@@ -707,6 +743,7 @@ const searchIcon =
     --wiz-pop: var(--color-tile-back);
     --wiz-form: transparent;                      /* карточка уже тёмная — вторая плашка не нужна */
     --wiz-foot-btn-hover: var(--color-ink-hover);
+    --wiz-page: var(--color-ink);
   }
   :global(.on-dark) .wiz ::selection { background: var(--color-white); color: var(--color-ink); }
 
@@ -757,14 +794,24 @@ const searchIcon =
     border-radius: 50%;
     box-shadow: inset 0 0 0 1.5px var(--wiz-line);
     font-weight: var(--w-semibold);
+    font-variant-numeric: tabular-nums;
   }
+  /* Цифру центрируем по её собственной высоте (линия прописных — базовая линия), а не по
+     строке шрифта: у Onest нижний вынос больше верхнего, и по строке цифра стоит выше центра */
+  .wiz-step-digit { line-height: 1; text-box: trim-both cap alphabetic; }
   .wiz-step.is-done .wiz-step-num { background: var(--wiz-field-hover); box-shadow: none; }
   .wiz-step.is-current .wiz-step-num { background: var(--wiz-sel-bg); color: var(--wiz-sel-fg); box-shadow: none; }
   .wiz-step-label { max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .wiz-step:disabled:not(.is-current) .wiz-step-label { text-decoration: none; }
 
-  .wiz-find { position: relative; flex: 1 1 280px; max-width: 400px; }
-  .wiz-find-input { padding: 11px 18px 11px 46px; background: var(--wiz-field); font-size: var(--text-caption); }
+  .wiz-find { position: relative; flex: 1 1 320px; min-width: 0; }
+  /* В доке поле стоит на сплошном фоне растворения — заливка и обводка, чтобы читалось полем */
+  .wiz-find-input {
+    padding: 15px 20px 15px 50px;
+    background: var(--wiz-field);
+    border-color: var(--wiz-line);
+    font-size: var(--text-body);
+  }
   /* Поля мастера живут на его фоне: текст и рамка фокуса — цвета мастера, не глобального .field */
   .wiz-find-input { color: var(--wiz-fg); }
   /* Свой крестик очистки вместо синего браузерного: цвет текста поля, та же толщина линий, что у лупы */
@@ -782,7 +829,7 @@ const searchIcon =
 
   .icon-search {
     position: absolute;
-    left: 18px;
+    left: 20px;
     top: 50%;
     width: 18px;
     height: 18px;
@@ -818,23 +865,36 @@ const searchIcon =
     --combo-pop: var(--wiz-pop);
     --combo-hover: var(--wiz-hover);
     --combo-line: var(--wiz-line);
+    --combo-sel-bg: var(--wiz-sel-bg);
+    --combo-sel-fg: var(--wiz-sel-fg);
+    --combo-sel-hover: var(--wiz-sel-hover);
   }
 
-  .car-examples { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
-  .car-example {
-    padding: 6px 14px;
+  /* ---------- 2. Направления — шесть плиток ---------- */
+  /* Машина над плитками — крупно, как заголовок: человек сразу видит, для чего цены */
+  .wiz-car { display: grid; gap: var(--sp-4); padding-bottom: var(--sp-8); }
+  .wiz-car-name {
+    font-size: var(--text-heading);
+    font-weight: var(--w-semibold);
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+  }
+  .wiz-car-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-4) var(--sp-12); font-weight: var(--w-medium); }
+  .wiz-car-meta span:empty { display: none; }
+  .wiz-car-change {
+    padding: 2px 0;
     border: none;
-    border-radius: var(--r-pill);
-    background: var(--wiz-field);
+    background: transparent;
     color: inherit;
     font-size: var(--text-caption);
     font-weight: var(--w-medium);
+    text-decoration: underline;
+    text-underline-offset: 3px;
     cursor: pointer;
-    transition: background-color var(--t-hover-out) var(--ease-out);
   }
-  .car-example:hover { background: var(--wiz-field-hover); transition-duration: var(--t-hover-in); }
+  .wiz-car-change:hover { text-decoration-thickness: 2px; }
 
-  /* ---------- 2. Направления — шесть плиток ---------- */
   .cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-12); padding-top: var(--sp-8); }
   .cat {
     display: grid;
@@ -1086,46 +1146,74 @@ const searchIcon =
   }
   .consent input:checked::before { transform: scale(1); }
 
-  /* ---------- Полоса итога: прилипает к низу экрана ---------- */
-  .wiz-foot {
+  /* ---------- Нижний док ----------
+     Прилипает к низу экрана, пока карточка на виду. Дошли до конца калькулятора — встаёт на
+     своё место внизу карточки и уезжает вместе с ней: дальше по странице не висит.
+     Стоит на растворении, а не на блюре (приём сайта клиники и WetSecrets): контент под доком
+     уходит в цвет карточки по плавной кривой, поле и кнопка — уже на сплошном фоне.
+     backdrop-filter на постоянно висящем элементе съедает прокрутку на телефоне. */
+  .wiz { --dock-fade: 56px; } /* высота растворения над доком: 40–72px */
+  .wiz:has(.wiz-dock:not([hidden])) .wiz-body { padding-bottom: var(--dock-fade); }
+  .wiz-dock {
     position: sticky;
-    bottom: max(var(--sp-12), env(safe-area-inset-bottom));
+    bottom: 0;
     z-index: 10;
+    margin-top: calc(var(--dock-fade) * -1); /* растворение ложится на низ карточки, места не занимает */
+    padding: var(--dock-fade) var(--sp-24) max(var(--sp-16), env(safe-area-inset-bottom));
+    border-radius: 0 0 var(--r-panel) var(--r-panel);
+    /* Один градиент на весь док: растворение по кривой ease-in-out (прямая даёт видимые края
+       полосы) и дальше сплошной цвет. Двумя слоями нельзя — на стыке проступает линия */
+    --f: var(--dock-fade);
+    --c: var(--dock-bg, var(--wiz-bg));
+    background: linear-gradient(
+      to bottom,
+      transparent 0,
+      color-mix(in srgb, var(--c) 1.3%, transparent) calc(var(--f) * 0.08),
+      color-mix(in srgb, var(--c) 4.9%, transparent) calc(var(--f) * 0.155),
+      color-mix(in srgb, var(--c) 10.4%, transparent) calc(var(--f) * 0.225),
+      color-mix(in srgb, var(--c) 17.5%, transparent) calc(var(--f) * 0.29),
+      color-mix(in srgb, var(--c) 25.9%, transparent) calc(var(--f) * 0.352),
+      color-mix(in srgb, var(--c) 35.2%, transparent) calc(var(--f) * 0.411),
+      color-mix(in srgb, var(--c) 45%, transparent) calc(var(--f) * 0.47),
+      color-mix(in srgb, var(--c) 55%, transparent) calc(var(--f) * 0.53),
+      color-mix(in srgb, var(--c) 64.8%, transparent) calc(var(--f) * 0.589),
+      color-mix(in srgb, var(--c) 74.1%, transparent) calc(var(--f) * 0.648),
+      color-mix(in srgb, var(--c) 82.5%, transparent) calc(var(--f) * 0.71),
+      color-mix(in srgb, var(--c) 89.6%, transparent) calc(var(--f) * 0.775),
+      color-mix(in srgb, var(--c) 95.1%, transparent) calc(var(--f) * 0.845),
+      color-mix(in srgb, var(--c) 98.7%, transparent) calc(var(--f) * 0.919),
+      var(--c) var(--f)
+    );
+    pointer-events: none;
+  }
+  .dock-inner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--sp-12);
+    max-width: 880px;
+    margin-inline: auto;
+    pointer-events: auto;
+  }
+
+  /* Кнопка дальше — белая капсула: слева что выбрано, справа действие */
+  .wiz-foot {
+    flex: none;
     display: flex;
     align-items: center;
     gap: var(--sp-16);
-    margin: 0 var(--sp-12) var(--sp-12);
-    padding: 8px 8px 8px var(--sp-12);
+    min-width: 0;
+    padding: 6px 6px 6px var(--sp-24);
     border-radius: var(--r-pill);
     background: var(--wiz-sel-bg);
     color: var(--wiz-sel-fg);
   }
-  .foot-car {
-    display: inline-flex;
-    align-items: baseline;
-    gap: var(--sp-8);
-    min-width: 0;
-    padding: 8px 12px;
-    border: none;
-    border-radius: var(--r-pill);
-    background: transparent;
-    color: inherit;
-    font-weight: var(--w-medium);
-    cursor: pointer;
-    transition: background-color var(--t-hover-out) var(--ease-out);
-  }
-  .foot-car:hover { background: var(--wiz-sel-row-hover); transition-duration: var(--t-hover-in); }
-  .foot-car-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .foot-car-change { flex: none; font-size: var(--text-caption); text-decoration: underline; text-underline-offset: 3px; }
-  [data-step='1'] .foot-car { pointer-events: none; }
-  [data-step='1'] .foot-car-change { display: none; }
-  .foot-total { display: flex; align-items: baseline; gap: var(--sp-12); margin-left: auto; white-space: nowrap; }
-  .foot-total span:first-child { font-size: var(--text-caption); font-weight: var(--w-medium); }
-  .foot-total span:last-child { font-size: var(--text-body-lg); font-weight: var(--w-semibold); }
-  .foot-next { flex: none; }
+  .foot-info { display: grid; min-width: 0; line-height: 1.2; }
+  .foot-small { font-size: var(--text-caption); font-weight: var(--w-medium); }
+  .foot-main { font-size: var(--text-body-lg); font-weight: var(--w-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .foot-next { flex: none; margin-left: auto; }
   .wiz-foot .btn--primary { background: var(--wiz-sel-fg); color: var(--wiz-sel-bg); }
   .wiz-foot .btn--primary:hover { background: var(--wiz-foot-btn-hover); }
-  .wiz:not(.has-picked) .wiz-foot { padding-right: var(--sp-12); }
 
   @media (max-width: 1024px) {
     .cats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1134,7 +1222,6 @@ const searchIcon =
     .wiz-head { padding: var(--sp-16) var(--sp-16) 0; }
     .wiz-step-label { display: none; }
     .wiz-step.is-current .wiz-step-label { display: inline; max-width: 16ch; }
-    .wiz-find { flex-basis: 100%; max-width: none; }
     .wiz-body { padding: var(--sp-24) var(--sp-16) var(--sp-16); }
     .cat { min-height: 132px; padding: var(--sp-16); }
     .chips { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(var(--sp-16) * -1); padding-inline: var(--sp-16); scrollbar-width: none; }
@@ -1144,11 +1231,20 @@ const searchIcon =
     .svc-more { padding: 0 var(--sp-16) var(--sp-16) calc(var(--sp-16) + 26px + var(--sp-12)); }
     .order { grid-template-columns: minmax(0, 1fr); }
     .order-form { padding: var(--sp-20); }
-    .wiz-foot { margin: 0 var(--sp-8) var(--sp-8); gap: var(--sp-8); }
-    .foot-car { display: none; }
-    .wiz:not(.has-picked) .foot-car { display: inline-flex; }
-    .foot-total { margin-left: var(--sp-8); display: grid; gap: 0; line-height: 1.2; }
-    .foot-next { margin-left: auto; padding: 12px 18px; }
+    /* Телефон: док во всю ширину экрана — выходит за поля страницы, растворяется в цвет полосы
+       (карточка на телефоне почти во всю ширину, своя плашка у дока не нужна).
+       Поиск и кнопка друг под другом, обе от края до края */
+    .wiz-dock {
+      --dock-bg: var(--wiz-page);
+      margin-inline: calc(var(--gutter) * -1);
+      padding-inline: var(--sp-12);
+      padding-bottom: max(var(--sp-12), env(safe-area-inset-bottom));
+      border-radius: 0;
+    }
+    .dock-inner { flex-direction: column; align-items: stretch; gap: var(--sp-8); }
+    .wiz-find { flex: none; }
+    .wiz-foot { padding-left: var(--sp-20); }
+    .foot-next { padding: 12px 18px; }
   }
   @media (max-width: 480px) {
     .cats { grid-template-columns: minmax(0, 1fr); }

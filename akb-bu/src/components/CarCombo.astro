@@ -3,8 +3,8 @@
 
    Одно поле вместо пары «Марка / Модель»: люди пишут «крузак», не вспоминая марку.
    Но путь «марка → модель» тоже есть (прямое требование заказчика): пустое поле
-   показывает марки, клик по марке — рядом с полем плашка «Марка», и поле ищет только
-   её модели. Выбранная машина — две плашки «Марка | Модель», каждая меняется кликом.
+   показывает марки, клик по марке — рядом с полем плашка марки, и поле ищет только
+   её модели. Выбранная машина — две плашки «BMW | X5», каждая меняется кликом.
 
    Поведение — lib/car-combo.js (подключает родитель: у него своё «что делать с машиной»).
    Цвета — переменные --combo-* ниже; родитель переопределяет их под свой фон. */
@@ -63,6 +63,9 @@ const { id, placeholder, label } = Astro.props;
     --combo-pop: var(--color-white);              /* выпадающий список */
     --combo-hover: var(--color-row-hover-light);  /* строка списка под курсором */
     --combo-line: var(--color-line-ink);          /* обводка списка */
+    --combo-sel-bg: var(--color-ink);             /* плашки выбранной машины — цвет «выбрано» */
+    --combo-sel-fg: var(--color-white);
+    --combo-sel-hover: var(--color-ink-hover);
 
     position: relative;
     max-width: 720px;
@@ -89,26 +92,36 @@ const { id, placeholder, label } = Astro.props;
   }
   .combo-input:focus { border-color: var(--combo-fg); }
 
-  /* плашки «Марка» / «Модель» — того же размера и формы, что поле */
+  /* плашки марки и модели — того же размера и формы, что поле. Внутри только значение:
+     подписи «Марка» / «Модель» не нужны, «BMW | X5» читается само (подпись — для скринридера) */
   .combo-plate {
     display: grid;
     align-content: center;
-    gap: 2px;
     flex: none;
     max-width: 45%;
     padding: 10px 24px;
     border: 1.5px solid transparent;
     border-radius: var(--r-pill);
-    background: var(--combo-field);
-    color: var(--combo-fg);
+    /* выбранное — инверсией, как отмеченная услуга и плитка: сразу видно, что машина выбрана */
+    background: var(--combo-sel-bg);
+    color: var(--combo-sel-fg);
     text-align: left;
     cursor: pointer;
     transition: background-color var(--t-hover-out) var(--ease-out);
+    animation: combo-plate-in 0.32s var(--ease-out);
   }
-  .combo-plate:hover { background: var(--combo-field-hover); transition-duration: var(--t-hover-in); }
-  .combo-plate:focus-visible { border-color: var(--combo-fg); outline: none; }
-  .combo-plate--model { flex: 1; max-width: none; }
-  .combo-plate-label { font-size: var(--text-caption); font-weight: var(--w-medium); }
+  .combo-plate:hover { background: var(--combo-sel-hover); transition-duration: var(--t-hover-in); }
+  .combo-plate:focus-visible { outline: 2px solid var(--combo-fg); outline-offset: 2px; }
+  /* плашка появляется, а не подменяет поле мгновенно (анимация срабатывает при каждом показе) */
+  @keyframes combo-plate-in {
+    from { opacity: 0; transform: scale(0.96); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .combo-plate { animation: none; }
+  }
+  /* модель — по содержимому, класс сразу за названием; длинное название сожмётся с многоточием */
+  .combo-plate--model { flex: 0 1 auto; min-width: 0; max-width: none; }
+  .combo-plate-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .combo-plate-value {
     display: flex;
     justify-content: space-between;
@@ -175,10 +188,9 @@ const { id, placeholder, label } = Astro.props;
     line-height: 1.2;
   }
   .combo-list :global(.combo-head:first-child) { padding-top: var(--sp-8); }
-  /* пустое поле — марки колонками, заголовки и «Все марки» во всю ширину */
+  /* пустое поле — популярные марки колонками, заголовок во всю ширину */
   .combo-list.is-brands { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .combo-list.is-brands :global(.combo-head),
-  .combo-list.is-brands :global(.combo-more) { grid-column: 1 / -1; }
+  .combo-list.is-brands :global(.combo-head) { grid-column: 1 / -1; }
   .combo-list :global(.combo-brand) { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .combo-list :global(.combo-more) { display: block; font-weight: var(--w-medium); text-decoration: underline; text-underline-offset: 3px; }
 
