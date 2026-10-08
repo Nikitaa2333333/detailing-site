@@ -841,20 +841,20 @@ const searchIcon =
   .wiz-panel { display: grid; gap: var(--sp-16); align-content: start; }
   .wiz-title { font-size: var(--text-tile); max-width: var(--measure-head); }
   .wiz-lead { max-width: var(--measure-lead); margin-top: calc(var(--sp-8) * -1); }
+  /* вторичное действие — кнопка в ободке, не подчёркнутая ссылка */
   .wiz-link {
     justify-self: start;
-    padding: 6px 12px;
-    margin-left: -12px;
+    padding: 8px 16px;
     border: none;
     border-radius: var(--r-pill);
     background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--wiz-line);
     color: inherit;
     font-weight: var(--w-medium);
-    text-decoration: underline;
-    text-underline-offset: 3px;
     cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out);
   }
-  .wiz-link:hover { background: var(--wiz-hover); }
+  .wiz-link:hover { background: var(--wiz-hover); transition-duration: var(--t-hover-in); }
 
   /* ---------- 1. Машина ---------- */
   /* Поле — components/CarCombo.astro, цвета — калькулятора */
@@ -880,20 +880,22 @@ const searchIcon =
     line-height: 1.05;
     overflow-wrap: anywhere;
   }
-  .wiz-car-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-4) var(--sp-12); font-weight: var(--w-medium); }
+  .wiz-car-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-8) var(--sp-12); font-weight: var(--w-medium); }
   .wiz-car-meta span:empty { display: none; }
+  /* действие внутри плашки — кнопка в ободке, не подчёркнутая ссылка (решение 22.09.2026) */
   .wiz-car-change {
-    padding: 2px 0;
+    padding: 6px 14px;
     border: none;
+    border-radius: var(--r-pill);
     background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--wiz-line);
     color: inherit;
     font-size: var(--text-caption);
     font-weight: var(--w-medium);
-    text-decoration: underline;
-    text-underline-offset: 3px;
     cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out);
   }
-  .wiz-car-change:hover { text-decoration-thickness: 2px; }
+  .wiz-car-change:hover { background: var(--wiz-hover); transition-duration: var(--t-hover-in); }
 
   .cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-12); padding-top: var(--sp-8); }
   .cat {
@@ -1212,6 +1214,14 @@ const searchIcon =
   .foot-small { font-size: var(--text-caption); font-weight: var(--w-medium); }
   .foot-main { font-size: var(--text-body-lg); font-weight: var(--w-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .foot-next { flex: none; margin-left: auto; }
+  /* капсула и поиск выезжают снизу при каждом появлении — видно, что появилось действие */
+  .wiz-foot, .wiz-find { animation: dock-in 0.4s var(--ease-out) both; }
+  @keyframes dock-in {
+    from { opacity: 0; transform: translateY(16px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wiz-foot, .wiz-find { animation: none; }
+  }
   .wiz-foot .btn--primary { background: var(--wiz-sel-fg); color: var(--wiz-sel-bg); }
   .wiz-foot .btn--primary:hover { background: var(--wiz-foot-btn-hover); }
 
