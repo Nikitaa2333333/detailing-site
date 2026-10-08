@@ -15,7 +15,7 @@
      missText(q), onMiss(),                // «не нашли» — строка списка и что по ней делать
      onSearchMiss(q),                      // запрос без единого совпадения (для заявки)
    }) → { sync, render, close, pickFirst(q) } */
-import { searchCars } from './car-search.js';
+import { searchCars, similarModels } from './car-search.js';
 
 const NBSP = ' ';
 const GROUPS = 3;
@@ -60,7 +60,7 @@ function carGroups(cars, q) {
     if (item.type === 'brand') g.whole = !g.models.length;
     else if (!g.models.includes(item.model)) g.models.push(item.model);
   }
-  return [...groups.values()].map((g) => ({ brand: g.brand, ...(g.whole ? wholeBrand(g.brand) : splitFound(g.models)) }));
+  return [...groups.values()].map((g) => ({ brand: g.brand, whole: g.whole, ...(g.whole ? wholeBrand(g.brand) : splitFound(g.models)) }));
 }
 
 /* Подсветка набранного в названии модели: «x5» → X5, «кам» → Camry не подсветится
@@ -208,8 +208,17 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
       return lines;
     }
     searchCars(cars(), q, { brand: scope, limit: 40 }).forEach((item) => lines.push({ type: 'model', brand: scope, model: item.model }));
-    // у этой марки не нашли — может, человек набирает другую машину
-    if (!lines.length) lines.push({ type: 'unscope', text: `У ${scope.brand} такой модели нет — искать «${q}» среди всех марок` });
+    if (lines.length) return lines;
+    // у этой марки не нашли: похожие модели марки — сверху, или человек набирает другую машину
+    const near = similarModels(scope, q);
+    if (near?.models.length) {
+      lines.push({ type: 'head', text: `Не нашли «${q}» — похожие модели ${scope.brand}` });
+      near.models.forEach((model) => lines.push({ type: 'model', brand: scope, model }));
+    }
+    lines.push({
+      type: 'unscope',
+      text: lines.length ? `Искать «${q}» среди всех марок` : `У ${scope.brand} такой модели нет — искать «${q}» среди всех марок`,
+    });
     return lines;
   }
 
@@ -219,9 +228,14 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
     const hidden = groups.slice(visible.length);
     const lines = [];
     for (const g of visible) {
-      lines.push({ type: 'head', text: g.brand.brand });
+      // марку узнали, модель — нет («ауди с44»): не тупик, а модели марки, похожие — сверху
+      const near = g.whole ? similarModels(g.brand, q) : null;
+      lines.push({ type: 'head', text: near ? `Не нашли «${near.rest}» — выберите из моделей ${g.brand.brand}` : g.brand.brand });
       const open = openBrands.has(g.brand);
-      (open ? [...g.shown, ...g.rest] : g.shown).forEach((model) => lines.push({ type: 'model', brand: g.brand, model }));
+      const first = near?.models ?? [];
+      [...first, ...(open ? [...g.shown, ...g.rest] : g.shown).filter((m) => !first.includes(m))].forEach((model) =>
+        lines.push({ type: 'model', brand: g.brand, model })
+      );
       if (g.rest.length && !open) lines.push({ type: 'more', brand: g.brand, text: `Ещё ${models(g.rest.length)} ${g.brand.brand}` });
     }
     if (hidden.length) {

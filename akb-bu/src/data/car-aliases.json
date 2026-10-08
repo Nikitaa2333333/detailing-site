@@ -391,7 +391,7 @@
     "JAGUAR": {
       "E-type": { "name": "E-Type", "aliases": [] },
       "F-type": { "name": "F-Type", "aliases": ["ф тайп"] },
-      "S-type": { "name": "S-Type", "aliases": [] }
+      "S-type": { "name": "S-Type", "aliases": ["эс тайп", "с тайп"] }
     },
     "PORSHE": {
       "Boxter": { "name": "Boxster", "aliases": ["бокстер", "boxter"] },

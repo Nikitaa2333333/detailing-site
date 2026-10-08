@@ -40,13 +40,36 @@ export function normalize(s) {
 const compact = (s) => s.replace(/ /g, '');
 const swap = (s, map) => [...s].map((c) => map[c] ?? c).join('');
 
-/* Код модели — слово с цифрой или из одной-двух букв: там кириллицу меняем на латиницу.
-   «в» в коде — и V (Volvo V40), и W (кузова Mercedes: «в212» = W212): второе прочтение */
-const latinize = (s, extra = {}) =>
-  s
-    .split(' ')
-    .map((w) => (/\d/.test(w) || w.length <= 2 ? swap(w, { ...LOOKALIKE, ...extra }) : w))
-    .join(' ');
+/* «в» в коде — и V (Volvo V40), и W (кузова Mercedes: «в212» = W212): оба прочтения сразу.
+   Остальные буквы по звуку — во втором заходе: «ауди с4» — S4, «инфинити кх80» — QX80,
+   «хаммер н2» — H2, «хонда нсх» — NSX, «ягуар хдж» — XJ */
+const BOTH = { в: ['w'] };
+const SOUND = { с: ['s'], к: ['q'], х: ['h'], н: ['n'], ж: ['j'] };
+
+/* Код модели кириллицей — меняем на латиницу. Первый заход (как было всегда): слово с
+   цифрой или из одной-двух букв, «на вид». Второй — если первый модель не нашёл: ещё
+   короткие слова («тсх», «брз», «атс») и каждое неоднозначное место обоими прочтениями */
+const narrowCode = (w) => /\d/.test(w) || w.length <= 2;
+const soundCode = (w) => narrowCode(w) || w.length <= 3 || (w.length <= 4 && !/[аеиоуыэюя]/.test(w));
+function codeReadings(w, sound) {
+  let out = [''];
+  for (const c of w.replace(/дж/g, 'ж')) {
+    const opts = [LOOKALIKE[c] ?? (c === 'ж' ? 'j' : c), ...(BOTH[c] ?? []), ...(sound ? SOUND[c] ?? [] : [])];
+    out = out.flatMap((s) => opts.map((o) => s + o));
+    if (out.length > 16) out = out.slice(0, 16); // предохранитель от перебора на длинном коде
+  }
+  return [...new Set(out)];
+}
+const CODE = { narrow: narrowCode, sound: soundCode };
+const latinize = (s, mode) => {
+  let out = [''];
+  for (const w of s.split(' ')) {
+    // длинный код («бмв», «тсх») может оказаться и словом — оставляем и его как есть
+    const opts = /[а-я]/.test(w) && CODE[mode](w) ? [...(narrowCode(w) ? [] : [w]), ...codeReadings(w, mode === 'sound')] : [w];
+    out = out.flatMap((p) => opts.map((o) => (p ? `${p} ${o}` : o))).slice(0, 32);
+  }
+  return out;
+};
 
 /* Что в другую раскладку не переводим:
    - код с цифрой: «f20» — это BMW F20, а не «а20» (→ a20 → Mercedes A200);
@@ -67,22 +90,32 @@ const wholeLayout = (s) => {
   return words.length >= 2 && words.some((w) => w.length >= 3 && !keepLayout(w));
 };
 
+/* Прочтения «по звуку» (с = S, к = Q) — запасные: при равном совпадении выше прочтение
+   «на вид» («к5» — Kia K5, а не Audi Q5). Здесь — какие прочтения дало не только звуком */
+let seen = new Set();
 function phrases(query) {
   const raw = String(query).toLowerCase();
   const out = new Set();
+  seen = new Set();
   const variants = [raw, swapWords(raw, toRu), swapWords(raw, toEn)];
   if (wholeLayout(raw) && !/[а-яё]/.test(raw)) variants.push(swap(raw, toRu));
   if (wholeLayout(raw) && !/[a-z]/.test(raw)) variants.push(swap(raw, toEn));
-  for (const v of variants) {
+  for (const [i, v] of variants.entries()) {
     const n = normalize(v);
     if (!n) continue;
     out.add(n);
-    out.add(latinize(n));
-    out.add(latinize(n, { в: 'w' }));
+    seen.add(compact(n));
+    // второй заход — только как набрано: в другой раскладке это не код, а случайные буквы
+    for (const l of latinize(n, 'narrow')) {
+      out.add(l);
+      seen.add(compact(l));
+    }
+    if (i === 0) for (const l of latinize(n, 'sound')) out.add(l);
   }
   return [...out];
 }
-const readings = (query) => phrases(query).map(compact);
+export const readings = (query) => [...new Set(phrases(query).map(compact))];
+const SOUND_PENALTY = 10; // меньше штрафа мировой базы (20) и ступени оценки (100)
 
 /* «x5 g05», «бмв х5 f15», «gl x166»: каждое слово — марка, модель или код этой модели.
    Слитно такое не ловится: «x5g05» начинается с «x5», но двухбуквенное название
@@ -181,7 +214,7 @@ function entries(index) {
   return list;
 }
 
-function rank(list, qs, limit, words = []) {
+function rank(list, qs, words = [], soundOnly = new Set(), typos = true) {
   const pass = (fn) => {
     const found = [];
     for (const item of list) {
@@ -205,17 +238,18 @@ function rank(list, qs, limit, words = []) {
           }
         : fn;
       for (const q of qs) {
+        const pen = soundOnly.has(q) ? SOUND_PENALTY : 0;
         // при равной оценке выше тот, чей ключ ближе по длине к запросу
         for (const key of item.keys) {
           const s = own(key, q);
-          if (s < Infinity) best = Math.min(best, s * 100 + Math.min(Math.abs(key.length - q.length), 49));
+          if (s < Infinity) best = Math.min(best, s * 100 + Math.min(Math.abs(key.length - q.length), 49) + pen);
         }
         // «марка модель»: при наборе начала длину не сравниваем — модели марки идут по
         // порядку классов. Если набрано больше ключа («bmw 320d»), длиннее — точнее:
         // «bmw 320» должен обойти просто «bmw»
         for (const key of item.pairs ?? []) {
           const s = own(key, q);
-          if (s < Infinity) best = Math.min(best, s * 100 + (s >= 2 ? Math.min(Math.abs(key.length - q.length), 49) : 50));
+          if (s < Infinity) best = Math.min(best, s * 100 + (s >= 2 ? Math.min(Math.abs(key.length - q.length), 49) : 50) + pen);
         }
       }
       // одна буква — это начало марки, а не код модели вроде TT
@@ -232,9 +266,38 @@ function rank(list, qs, limit, words = []) {
     return found;
   };
   let found = pass(score);
-  if (!found.length) found = pass(fuzzy);
+  if (!found.length && typos) found = pass(fuzzy);
   found.sort((a, b) => a.best - b.best);
-  return found.slice(0, limit).map((f) => f.item);
+  return found;
+}
+
+/**
+ * Подсказка, когда модель не нашлась: марку узнали, остаток запроса — нет («ауди с44»,
+ * «хаммер н22»). Модели марки, похожие на остаток, — ближайшие сверху; null — остатка нет.
+ */
+export function similarModels(brand, query, limit = 6) {
+  const brandKeys = new Set(brand.keys.map(compact));
+  const rest = normalize(query)
+    .split(' ')
+    .filter((w) => !brandKeys.has(w))
+    .join(' ');
+  if (!rest) return null;
+  const qs = readings(rest);
+  const near = brand.models
+    .map((model) => {
+      let d = Infinity;
+      let lead = 1; // при равном расстоянии выше та, что начинается с той же буквы: «х8» — X7, X5
+      for (const q of qs)
+        for (const key of model.keys.map(compact)) {
+          // начало ключа той же длины — «с4» ближе к S4 Avant, чем к Q5
+          d = Math.min(d, distance(q, key.slice(0, Math.max(q.length, 1))), distance(q, key));
+          if (key[0] === q[0]) lead = 0;
+        }
+      return { model, d, lead };
+    })
+    .filter((x) => x.d <= Math.max(1, Math.floor(rest.replace(/ /g, '').length / 2)))
+    .sort((a, b) => a.d - b.d || a.lead - b.lead);
+  return { rest, models: near.slice(0, limit).map((x) => x.model) };
 }
 
 /**
@@ -244,13 +307,24 @@ function rank(list, qs, limit, words = []) {
  */
 export function searchCars(index, query, { brand = null, limit = 12 } = {}) {
   const qs = readings(query);
+  const soundOnly = new Set(qs.filter((q) => !seen.has(q)));
   const words = phrases(query).map((p) => p.split(' '));
+  let list;
   if (brand) {
     const brandKeys = brand.keys.map(compact);
-    const list = brand.models.map((model) => ({ type: 'model', brand, model, keys: model.keys.map(compact), brandKeys }));
+    list = brand.models.map((model) => ({ type: 'model', brand, model, keys: model.keys.map(compact), brandKeys }));
     if (!qs.length) return list;
-    return rank(list, qs, limit, words);
+  } else {
+    if (!qs.length) return index.map((b) => ({ type: 'brand', brand: b }));
+    list = entries(index);
   }
-  if (!qs.length) return index.map((b) => ({ type: 'brand', brand: b }));
-  return rank(entries(index), qs, limit, words);
+  /* Сначала прочтения «на вид» — как раньше и быстро. Звуковые (с = S, к = Q) — вторым
+     заходом, только если модель не нашлась ни точно, ни по началу названия: «ауди с4».
+     Каждое прочтение — проход по ~4000 моделям, на телефоне это заметно */
+  const visual = qs.filter((q) => !soundOnly.has(q));
+  // опечатки — дорого: в первом заходе не ищем, если впереди второй
+  const first = rank(list, visual, words, new Set(), !soundOnly.size);
+  if (!soundOnly.size || first.some((f) => f.item.type === 'model' && f.best < 200)) return top(first, limit);
+  return top(rank(list, qs, words, soundOnly), limit);
 }
+const top = (found, limit) => found.slice(0, limit).map((f) => f.item);
