@@ -24,6 +24,8 @@ jobs:
       SITE_URL: https://dssever.ru
       BASE_PATH: /
       SITE_NOINDEX: '1'
+      # Чат-консультант: URL прокси Apps Script (akb-bu/chat-proxy/README.md). Пусто — чата нет.
+      CHAT_URL: ''
     steps:
       - uses: actions/checkout@v4
 

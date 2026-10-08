@@ -1,0 +1,13 @@
+---
+/* Чат-консультант в углу каждой страницы. Включается адресом прокси Apps Script
+   в переменной CHAT_URL (workflow деплоя или akb-bu/.env): пусто — чата на сайте нет,
+   код виджета не грузится. Как устроен — chat-proxy/README.md */
+const endpoint = process.env.CHAT_URL || import.meta.env.PUBLIC_CHAT_URL || '';
+---
+
+{endpoint && <div data-chat-endpoint={endpoint} hidden></div>}
+
+<script>
+  const el = document.querySelector<HTMLElement>('[data-chat-endpoint]');
+  if (el) import('../scripts/chat-widget.js').then((m) => m.mountChat(el.dataset.chatEndpoint));
+</script>
