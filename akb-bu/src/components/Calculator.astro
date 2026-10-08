@@ -233,7 +233,7 @@ const searchIcon =
   import { haystack, matches } from '../lib/service-search.js';
   import { matchIntents } from '../lib/service-intents.js';
   import { loadCars } from '../lib/car-index-client.js';
-  import { carCombo } from '../lib/car-combo.js';
+  import { carCombo, classText, PREMIUM } from '../lib/car-combo.js';
 
   const root = document.querySelector<HTMLElement>('[data-calc]');
   if (root) init(root);
@@ -282,14 +282,17 @@ const searchIcon =
     };
 
     /* ---------- Цена строки для выбранного класса ---------- */
+    // премиум (заказчик отметил «отдельно»): цен по классу нет — стоимость после осмотра
+    const premium = () => state.car?.cls === PREMIUM;
     const cellOf = (r: (typeof rows)[number]): Cell => {
+      if (premium()) return null;
       if (state.car) return r.cells[Number(state.car.cls) - 1];
       const known = r.cells.filter(Boolean) as [string, number][];
       return known.length ? ['f', Math.min(...known.map((c) => c[1]))] : null;
     };
-    const fmt = (c: Cell) => (c ? (c[0] === 'f' ? `от ${rub(c[1])}` : rub(c[1])) : 'по запросу');
+    const fmt = (c: Cell) => (c ? (c[0] === 'f' ? `от ${rub(c[1])}` : rub(c[1])) : premium() ? 'после осмотра' : 'по запросу');
     const carName = (car: Car | null) =>
-      car ? (car.model ? `${car.brand} ${car.model} · ${car.cls}-й класс` : `${car.cls}-й класс`) : root.dataset.noCar!;
+      car ? (car.model ? `${car.brand} ${car.model} · ${classText(car.cls)}` : classText(car.cls)) : root.dataset.noCar!;
 
     /* ---------- Переход между шагами: высота карточки перетекает ---------- */
     const body = $('[data-body]');
@@ -368,7 +371,7 @@ const searchIcon =
           .map(cellOf)
           .filter(Boolean)
           .map((c) => c![1]);
-        $('[data-cat-price]', tile).textContent = vals.length ? `от ${rub(Math.min(...vals))}` : 'по запросу';
+        $('[data-cat-price]', tile).textContent = vals.length ? `от ${rub(Math.min(...vals))}` : fmt(null);
       });
       if (advance) go(state.cat && picked().length ? 3 : 2);
       else update();
@@ -500,7 +503,7 @@ const searchIcon =
           if (c[0] === 'f') from = true;
         } else request += 1;
       }
-      totalText = sum ? `${from ? 'от ' : ''}${rub(sum)}` : 'по запросу';
+      totalText = sum ? `${from ? 'от ' : ''}${rub(sum)}` : fmt(null);
 
       // шаги сверху: пройденные открываются, у первого — имя машины
       const reach = state.carSeen ? 4 : 1;
@@ -510,7 +513,7 @@ const searchIcon =
         b.classList.toggle('is-current', n === state.step);
         b.classList.toggle('is-done', n < state.step || (n === 1 && state.carSeen));
       });
-      $('[data-step-label="1"]').textContent = state.car?.model ? `${state.car.brand} ${state.car.model}` : state.car ? `${state.car.cls}-й класс` : 'Машина';
+      $('[data-step-label="1"]').textContent = state.car?.model ? `${state.car.brand} ${state.car.model}` : state.car ? classText(state.car.cls) : 'Машина';
 
       // счётчики на плитках направлений и чипах разделов
       $$('[data-cat]').forEach((tile) => {
@@ -566,9 +569,12 @@ const searchIcon =
       $('[data-order-count]').textContent = services(list.length);
       $('[data-order-value]').textContent = totalText;
       const notes: string[] = [];
-      if (from && state.car) notes.push(root.dataset.noteFrom!);
-      if (!state.car) notes.push('Укажите машину — сумма станет точной.');
-      if (request) notes.push(`${services(request)} ${root.dataset.noteRequest}`);
+      if (premium()) notes.push('Для этой машины стоимость считаем индивидуально — назовём после осмотра.');
+      else {
+        if (from && state.car) notes.push(root.dataset.noteFrom!);
+        if (!state.car) notes.push('Укажите машину — сумма станет точной.');
+        if (request) notes.push(`${services(request)} ${root.dataset.noteRequest}`);
+      }
       $('[data-order-note]').textContent = notes.join(' ');
       $('[data-order-note]').hidden = !notes.length;
     }
@@ -646,6 +652,8 @@ const searchIcon =
         name: (form.elements.namedItem('name') as HTMLInputElement).value.trim(),
         phone: phone.value,
         car: state.car,
+        // менеджеру сразу видно: премиум, цену называем после осмотра
+        ...(premium() ? { premium: 'цена после осмотра' } : {}),
         services: list.map((r) => ({ name: r.name, price: fmt(cellOf(r)) })),
         total: list.length ? totalText : '',
         // чего не нашёл в справочниках: менеджеру — какая машина, нам — что дописать

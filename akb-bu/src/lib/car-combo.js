@@ -29,6 +29,10 @@ const byBrand = (a, b) => a.brand.localeCompare(b.brand, 'en', { sensitivity: 'b
 
 // марка целиком, два яруса — каждый по алфавиту: сразу прайс и ходовые из car-extra (top),
 // под «Ещё N моделей» мировая база и car-extra без top (электрички, фургоны, редкие версии)
+/** Подпись класса: «3-й класс»; премиум (класс p, заказчик отметил «отдельно») — «цена после осмотра» */
+export const PREMIUM = 'p';
+export const classText = (cls) => (cls === PREMIUM ? 'цена после осмотра' : `${cls}-й класс`);
+
 export function wholeBrand(brand) {
   const all = [...brand.models].sort(byName);
   const top = all.filter((m) => !m.base && !m.minor);
@@ -142,7 +146,7 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
     field.hidden = !!chosen;
     if (chosen) {
       $('[data-car-model-name]').textContent = c.model;
-      $('[data-car-model-class]').textContent = `${c.cls}-й класс`;
+      $('[data-car-model-class]').textContent = classText(c.cls);
     }
     input.placeholder = scope ? `Модель ${scope.brand}` : placeholder;
   }

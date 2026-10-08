@@ -11,3 +11,9 @@
 node_modules/
 dist/
 .DS_Store
+
+# Выгрузки cars-base (платные, не публикуем)
+/cars-base-backup/
+
+# Блокировки открытых офисных файлов
+.~lock.*#

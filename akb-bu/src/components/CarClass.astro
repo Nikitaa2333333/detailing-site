@@ -38,7 +38,7 @@ const { target = 'price' } = Astro.props;
 
 <script>
   import { loadCars } from '../lib/car-index-client.js';
-  import { carCombo } from '../lib/car-combo.js';
+  import { carCombo, classText, PREMIUM } from '../lib/car-combo.js';
 
   document.querySelectorAll('[data-class-widget]').forEach((widget) => {
     let data = [];
@@ -53,9 +53,13 @@ const { target = 'price' } = Astro.props;
       onPick(picked) {
         car = picked;
         combo.sync();
-        resultValue.textContent = `${picked.cls}-й класс`;
+        resultValue.textContent = classText(picked.cls);
         result.hidden = false;
-        if (price) price.dataset.active = picked.cls;
+        // премиум — столбца в прайсе нет, подсветку снимаем
+        if (price) {
+          if (picked.cls === PREMIUM) delete price.dataset.active;
+          else price.dataset.active = picked.cls;
+        }
       },
       missText: (q) => `«${q}» нет в списке — оставьте номер, назовём класс по телефону`,
       onMiss() {},

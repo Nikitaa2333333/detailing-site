@@ -13,7 +13,7 @@ try {
     b.models.map((m) => ({
       brand: b.brand,
       model: m.model,
-      cls: Number(m.cls),
+      cls: m.cls === 'p' ? 'отдельно' : Number(m.cls),
       like: m.like ?? '',
       // как ещё ищут: без самого названия и без сырого написания из прайса
       alt: m.keys.filter((k) => k !== normalize(m.model) && !/\d.*\s.*\s/.test(k)),

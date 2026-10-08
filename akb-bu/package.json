@@ -12,8 +12,9 @@
     "preview": "astro preview",
     "astro": "astro",
     "variants": "node scripts/export-search-variants.mjs",
-    "cars-base": "node scripts/import-cars-base.mjs",
-    "cars-table": "python scripts/cars-table.py"
+    "cars-base": "node --env-file-if-exists=.env scripts/import-cars-base.mjs",
+    "cars-table": "python scripts/cars-table.py",
+    "cars-classes": "node scripts/check-size-classes.mjs"
   },
   "dependencies": {
     "@fontsource-variable/onest": "^5.2.11",

@@ -22,6 +22,7 @@ import base from '../data/cars-base.json';
 import rules from '../data/car-base-rules.json';
 import spell from '../data/car-base-aliases.json';
 import codes from '../data/car-codes.json';
+import overrides from '../data/car-overrides.json';
 import { normalize } from './car-search.js';
 
 const keysOf = (...lists) => [...new Set(lists.flat().map(normalize).filter(Boolean))];
@@ -113,9 +114,10 @@ for (const [brandName, models] of Object.entries(extra.models)) {
 if (lost.length) throw new Error(`car-extra.json: ${lost.join('; ')}.`);
 
 /* ---------- Мировой справочник (cars-base.json): всё, чего нет ни в прайсе, ни в car-extra ----------
-   Класса в базе нет — только сегмент. Класс — простым правилом из car-base-rules.json:
-   сегмент → класс, для элитных марок — не ниже заданного. Проверено на прайсе: таблица
-   угадывает класс заказчика точнее, чем «как у моделей той же марки» (57% против 44%). */
+   Класса в базе нет. Класс — правилом из car-base-rules.json: есть габариты поколений
+   (платный ключ) — по объёму и виду кузова (sizeClass), нет — по сегменту (segmentClass);
+   для элитных марок — не ниже заданного. На 39 моделях прайса габариты угадывают класс
+   заказчика в 82% случаев, сегмент — в 54% (npm run cars-classes). */
 const hidden = [];
 for (const raw of rules.hidePriceBrands) {
   if (!classes.some((c) => c.brands.some((b) => b.brand.trim() === raw))) hidden.push(raw);
@@ -157,12 +159,48 @@ for (const [brand, id] of Object.entries(rules.brandMinClass)) {
   if (!label(id)) badRule.push(`brandMinClass ${brand}: класса ${id} нет в прайсе`);
   if (!base.brands.some((x) => x.name === brand)) badRule.push(`brandMinClass: марки «${brand}» нет в базе`);
 }
-function ruleClass(brand, seg) {
+for (const [kind, steps] of Object.entries(rules.sizeClass.steps)) {
+  if (!rules.sizeClass.kindNames[kind]) badRule.push(`sizeClass.kindNames: нет названия вида ${kind}`);
+  for (const [, id] of steps) if (!label(id)) badRule.push(`sizeClass.steps ${kind}: класса ${id} нет в прайсе`);
+  if (steps.at(-1)[0] !== null) badRule.push(`sizeClass.steps ${kind}: последний порог должен быть [null, класс]`);
+}
+/* Габариты модели: вид кузова и объём Д×Ш×В, м³ (только с платным ключом cars-base).
+   Машины растут от поколения к поколению (5 серии G60 больше F10), а класс у модели один —
+   берём среднее по объёму поколение из выпущенных с sizeClass.fromYear; таких нет — новейшее */
+const volOf = (g) => g.size.reduce((a, b) => a * b, 1);
+export function sizeOf(m) {
+  const sized = m.gens?.filter((g) => g.size) ?? [];
+  if (!sized.length) return null;
+  const recent = sized.filter((g) => (g.y[1] ?? 9999) >= rules.sizeClass.fromYear).sort((a, b) => volOf(a) - volOf(b));
+  const gen = recent.length ? recent[Math.floor((recent.length - 1) / 2)] : sized.at(-1);
+  const kind =
+    Object.entries(rules.sizeClass.kinds).find(([, bodies]) => bodies.some((b) => gen.body?.startsWith(b)))?.[0] ?? 'car';
+  const vol = Math.round(volOf(gen) / 1e8) / 10;
+  return { kind, vol, gen };
+}
+/** Класс по размеру и марке (без прайса): число 1–5 или null, если габаритов нет */
+export function sizeClass(brand, size) {
+  if (!size) return null;
+  const id = rules.sizeClass.steps[size.kind].find(([max]) => max === null || size.vol < max)[1];
+  return Math.max(id, rules.brandMinClass[brand] ?? 0);
+}
+/** Словами, откуда размерный класс: «внедорожник 4,7×1,9×1,7 м» */
+export function sizeWhy(size) {
+  const [l, w, h] = size.gen.size.map((x) => (x / 1000).toFixed(1).replace('.', ','));
+  return `${rules.sizeClass.kindNames[size.kind]} ${l}×${w}×${h} м`;
+}
+function ruleClass(brand, m) {
+  const seg = m.seg;
   let id = rules.segmentClass[seg] ?? rules.segmentClass.default;
   let why = rules.segmentNames[seg] ?? 'сегмент неизвестен';
+  const size = sizeOf(m);
+  if (size) {
+    id = rules.sizeClass.steps[size.kind].find(([max]) => max === null || size.vol < max)[1];
+    why = sizeWhy(size);
+  }
   const min = rules.brandMinClass[brand];
   if (min && min > id) [id, why] = [min, `марка ${brand}`];
-  return { cls: String(id), label: label(id), like: `правило: ${why}` };
+  return { cls: String(id), label: label(id), like: `правило: ${why}`, size };
 }
 
 // одна машина, разные рынки и написания: без скобок, пробелов и дефисов; «+» различает (GO и GO+)
@@ -194,6 +232,7 @@ for (const { b, entry: known } of baseBrands) {
     // прайс сам делит по годам («Octavia (до 2006 г.)»): годы базы на них соврут
     if (same?.exact) {
       same.model.paired = true; // есть в мировой базе — для проверки валидности в автотесте
+      same.model.size ??= sizeOf(m); // габариты — сверить правило с классом прайса (npm run cars-classes)
       if (m.y && !same.model.model.includes('(')) {
         const [from, to] = m.y;
         const had = same.model.years;
@@ -219,7 +258,7 @@ for (const { b, entry: known } of baseBrands) {
     const variant = same;
     const cls = variant
       ? { cls: variant.model.cls, label: variant.model.label, like: variant.model.like ?? `${entry.brand} ${variant.model.model}` }
-      : ruleClass(b.name, m.seg);
+      : ruleClass(b.name, m);
     added.push({
       model: m.name,
       cls: cls.cls,
@@ -227,6 +266,7 @@ for (const { b, entry: known } of baseBrands) {
       keys: keysOf(m.name, m.ru ?? [], baseAliases[b.name]?.[m.name] ?? []),
       like: cls.like,
       base: 1, // из мировой базы: в выдаче ниже прайса и car-extra
+      ...(sizeOf(m) ? { size: sizeOf(m) } : {}), // габариты — для дашборда классов
       ...(m.y ? { years: m.y } : {}),
     });
   }
@@ -276,6 +316,39 @@ for (const entry of byName.values()) {
   if (!entry.models.length) byName.delete(entry.brand);
 }
 
-/** [{ brand, keys, models: [{ model, cls, label, keys, like?, base?, minor?, years?: [с, по], codes? }] }] — по алфавиту.
+/* ---------- Классы от заказчика (car-overrides.json, из его таблицы Классы_машин.xlsx) ----------
+   Таблица — источник правды по классам: в ней класс каждой модели, которую находит сайт,
+   включая модели прайса. Прайс, car-extra и правило по размеру работают только для машин,
+   которых в таблице ещё нет (новые в базе) — они уйдут в следующую таблицу заказчику.
+   «Отдельно» (premium) — класс p: цен по классу нет, на сайте «цена после осмотра».
+   auto — что было бы без таблицы. Модель пропала из справочника — сборка падает и называет её */
+export const PREMIUM = 'p';
+const noOverride = [];
+for (const [brandName, models] of Object.entries(overrides.models)) {
+  const entry = byName.get(brandName);
+  for (const [modelName, { cls, note }] of Object.entries(models)) {
+    const model = entry?.models.find((m) => m.model === modelName);
+    if (!model) {
+      noOverride.push(`${brandName} «${modelName}»`);
+      continue;
+    }
+    if (cls !== 'premium' && !label(cls)) {
+      noOverride.push(`${brandName} «${modelName}»: класса ${cls} нет в прайсе`);
+      continue;
+    }
+    model.auto = { cls: model.cls, ...(model.like ? { like: model.like } : {}) };
+    model.cls = cls === 'premium' ? PREMIUM : String(cls);
+    model.label = cls === 'premium' ? 'цена после осмотра' : label(cls);
+    model.client = 1; // класс из таблицы заказчика
+    // у модели прайса like нет и не появляется: в выдаче она остаётся выше
+    if (model.like) model.like = `класс от заказчика${note ? `: ${note}` : ''}`;
+  }
+}
+if (noOverride.length) {
+  throw new Error(`car-overrides.json (классы из таблицы заказчика): нет в справочнике — ${noOverride.join(', ')}. Модель переименовали — перенести строку в таблице и импортировать заново.`);
+}
+
+/** [{ brand, keys, models: [{ model, cls, label, keys, like?, base?, minor?, years?: [с, по], codes?, size?, auto?, client? }] }] — по алфавиту.
+    cls — '1'…'5' или PREMIUM ('p', «отдельно»); client — класс из таблицы заказчика.
     base — из мировой базы, minor — из car-extra без top: оба во втором ярусе списка марки */
 export const carIndex = [...byName.values()].sort((a, b) => a.brand.localeCompare(b.brand, 'ru'));
