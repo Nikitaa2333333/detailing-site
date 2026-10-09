@@ -14,7 +14,8 @@
     "variants": "node scripts/export-search-variants.mjs",
     "cars-base": "node --env-file-if-exists=.env scripts/import-cars-base.mjs",
     "cars-table": "python scripts/cars-table.py",
-    "cars-classes": "node scripts/check-size-classes.mjs"
+    "cars-classes": "node scripts/check-size-classes.mjs",
+    "services-table": "python scripts/export-services-table.py"
   },
   "dependencies": {
     "@fontsource-variable/onest": "^5.2.11",
