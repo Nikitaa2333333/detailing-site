@@ -261,11 +261,20 @@
       "Q2": { "like": ["AUDI", "Q3"], "aliases": ["ку2"] },
       "Q8": { "top": true, "like": ["AUDI", "Q7"], "aliases": ["ку8", "sq8", "rsq8", "rs q8"] },
       "e-tron": { "top": true, "like": ["AUDI", "Q7"], "aliases": ["етрон", "этрон", "e tron", "q8 e-tron"] },
-      "e-tron GT": { "like": ["AUDI", "A7"], "aliases": ["етрон гт", "этрон гт"] }
+      "e-tron GT": { "like": ["AUDI", "A7"], "aliases": ["етрон гт", "этрон гт"] },
+      "A3 (с 2020 г.)": { "top": true, "like": ["AUDI", "A3"], "aliases": ["a3", "а3"] }
     },
     "BMW": {
-      "2 серии": { "like": ["BMW", "1"], "aliases": ["2", "2 series", "двойка", "218", "220", "225", "230", "m2", "f22", "f23", "f44", "f45", "f46", "g42", "active tourer", "gran coupe"] },
-      "8 серии": { "like": ["BMW", "6"], "aliases": ["8", "8 series", "840", "850", "m8", "g14", "g15", "g16"] },
+      "2 серии": { "like": ["BMW", "1"], "aliases": ["2", "2 series", "двойка", "218", "220", "225", "230", "f22", "f23", "f44", "f45", "f46", "g42", "active tourer", "gran coupe"] },
+      "8 серии": { "like": ["BMW", "6"], "aliases": ["8", "8 series", "840", "850", "g14", "g15", "g16"] },
+      "M2": { "top": true, "like": ["BMW", "1"], "aliases": ["м2", "g87"] },
+      "M3": { "top": true, "like": ["BMW", "3"], "aliases": ["м3", "f80", "g80"] },
+      "M4": { "top": true, "like": ["BMW", "4"], "aliases": ["м4", "f82", "g82"] },
+      "M5": { "top": true, "like": ["BMW", "5"], "aliases": ["м5", "f90"] },
+      "M6": { "top": true, "like": ["BMW", "6"], "aliases": ["м6"] },
+      "M8": { "top": true, "like": ["BMW", "6"], "aliases": ["м8"] },
+      "X5 M": { "top": true, "like": ["BMW", "X5"], "aliases": ["x5m", "икс5 м", "f85", "f95"] },
+      "X6 M": { "top": true, "like": ["BMW", "X6"], "aliases": ["x6m", "икс6 м", "f86", "f96"] },
       "X2": { "like": ["BMW", "X1"], "aliases": ["икс2", "f39", "u10"] },
       "X4": { "top": true, "like": ["BMW", "X3"], "aliases": ["икс4", "x4m", "f26", "g02"] },
       "X7": { "top": true, "like": ["MERCEDES", "GL"], "aliases": ["икс7", "g07", "x7m"] },
