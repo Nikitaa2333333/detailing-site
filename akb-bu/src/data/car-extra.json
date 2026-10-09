@@ -112,7 +112,7 @@
     "Great Wall": {
       "Hover H3": { "like": ["SUZUKI", "Grand Vitara"], "aliases": ["ховер н3", "hover h3", "h3 hover"] },
       "Hover H5": { "like": ["SUZUKI", "Grand Vitara"], "aliases": ["ховер н5", "hover h5", "h5 hover"] },
-      "Poer": { "like": ["MITSUBISHI", "L200"], "aliases": ["поер", "пауэр", "poer kingkong", "wingle", "вингл", "wingle 7"] }
+      "Poer": { "like": ["MITSUBISHI", "L200"], "aliases": ["поер", "пауэр", "poer kingkong"] }
     },
     "Li Auto": {
       "L6": { "like": ["BMW", "X5"], "aliases": ["л6", "li l6", "лисян л6"] },
@@ -259,7 +259,7 @@
     },
     "Audi": {
       "Q2": { "like": ["AUDI", "Q3"], "aliases": ["ку2"] },
-      "Q8": { "top": true, "like": ["AUDI", "Q7"], "aliases": ["ку8", "sq8", "rsq8", "rs q8"] },
+      "Q8": { "top": true, "like": ["AUDI", "Q7"], "aliases": ["ку8"] },
       "e-tron": { "top": true, "like": ["AUDI", "Q7"], "aliases": ["етрон", "этрон", "e tron", "q8 e-tron"] },
       "e-tron GT": { "like": ["AUDI", "A7"], "aliases": ["етрон гт", "этрон гт"] },
       "A3 (с 2020 г.)": { "top": true, "like": ["AUDI", "A3"], "aliases": ["a3", "а3"] }
@@ -276,7 +276,7 @@
       "X5 M": { "top": true, "like": ["BMW", "X5"], "aliases": ["x5m", "икс5 м", "f85", "f95"] },
       "X6 M": { "top": true, "like": ["BMW", "X6"], "aliases": ["x6m", "икс6 м", "f86", "f96"] },
       "X2": { "like": ["BMW", "X1"], "aliases": ["икс2", "f39", "u10"] },
-      "X4": { "top": true, "like": ["BMW", "X3"], "aliases": ["икс4", "x4m", "f26", "g02"] },
+      "X4": { "top": true, "like": ["BMW", "X3"], "aliases": ["икс4", "f26", "g02"] },
       "X7": { "top": true, "like": ["MERCEDES", "GL"], "aliases": ["икс7", "g07", "x7m"] },
       "XM": { "like": ["BMW", "X6"], "aliases": ["хм", "икс эм"] },
       "i3": { "like": ["BMW", "1"], "aliases": ["ай3"] },
@@ -291,14 +291,14 @@
       "GLB": { "top": true, "like": ["MERCEDES", "GLK"], "aliases": ["глб", "glb200", "glb250", "x247"] },
       "GLC": { "top": true, "like": ["MERCEDES", "GLK"], "aliases": ["глц", "glc200", "glc250", "glc300", "glc43", "glc63", "x253", "c253", "x254", "glc coupe", "glc купе"] },
       "GLE": { "top": true, "like": ["MERCEDES", "M"], "aliases": ["гле", "gle300", "gle350", "gle400", "gle450", "gle53", "gle63", "v167", "c167", "c292", "gle coupe", "gle купе"] },
-      "GLS": { "top": true, "like": ["MERCEDES", "GL"], "aliases": ["gls350", "gls400", "gls450", "gls580", "gls63", "x167", "maybach gls", "майбах глс"] },
+      "GLS": { "top": true, "like": ["MERCEDES", "GL"], "aliases": ["gls350", "gls400", "gls450", "gls580", "gls63", "x167"] },
       "V-класс": { "top": true, "like": ["MERCEDES", "Viano"], "aliases": ["v класс", "в класс", "v250", "v220", "v300", "w447", "v class"] },
       "Sprinter": { "like": ["PEUGEOT", "Boxer"], "aliases": ["спринтер"] },
       "CLK": { "like": ["MERCEDES", "E"], "aliases": ["цлк", "клк", "clk200", "clk320", "clk500", "w208", "w209"] },
       "CL": { "like": ["MERCEDES", "S"], "aliases": ["цл", "cl500", "cl63", "c216"] },
       "AMG GT": { "like": ["MERCEDES", "SLS"], "aliases": ["амг гт", "amg gt", "gt63", "gt 4 door"] },
-      "EQE": { "like": ["MERCEDES", "E"], "aliases": ["eqe suv", "eqe350"] },
-      "EQS": { "like": ["MERCEDES", "S"], "aliases": ["eqs suv", "eqs450", "eqs580"] },
+      "EQE": { "like": ["MERCEDES", "E"], "aliases": ["eqe350"] },
+      "EQS": { "like": ["MERCEDES", "S"], "aliases": ["eqs450", "eqs580"] },
       "X-класс": { "like": ["NISSAN", "Navara"], "aliases": ["x класс", "х класс", "x250d", "x350d"] }
     },
     "Porsche": {

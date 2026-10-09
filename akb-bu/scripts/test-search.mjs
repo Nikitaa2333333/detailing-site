@@ -29,6 +29,20 @@ const CARS = [
   ['audi a3 8p', 'Audi A3 (до 2020 г.)'],
   ['ауди рс5', 'Audi RS 5'],
   ['майбах сл', 'Mercedes-Benz Maybach SL'],
+  // спортверсии и другой кузов — свои модели, не написания основной (09.10.2026)
+  ['ауди sq5', 'Audi SQ5'],
+  ['audi rs q8', 'Audi RS Q8'],
+  ['ауди ттс', 'Audi TTS'],
+  ['x3m', 'BMW X3 M'],
+  ['майбах s', 'Mercedes-Benz Maybach S-Класс'],
+  ['майбах глс', 'Mercedes-Benz Maybach GLS'],
+  ['eqe suv', 'Mercedes-Benz EQE SUV'],
+  ['паджеро спорт', 'Mitsubishi Pajero Sport'],
+  ['вингл', 'Great Wall Wingle'],
+  ['октавия рс', 'Skoda Octavia RS'],
+  ['субару wrx', 'Subaru WRX'],
+  ['golf r', 'Volkswagen Golf R'],
+  ['гольф', 'Volkswagen Golf'],
   // коды моделей кириллицей по звуку: с = S, к = Q, х = H, н = N, дж = J (08.10.2026)
   ['ауди с4', 'Audi S4'],
   // «ауди с6» законно двояк: S6 и A6 в кузове C6 — оба в выдаче, A6 первым
@@ -440,6 +454,31 @@ try {
     const [brand, model] = key.split('|');
     if (!rawIndex.some((b) => b.brand === brand && b.models.some((m) => m.model === model))) failures.push(`noBasePair: ${brand} «${model}» нет в справочнике — убрать из списка`);
   }
+
+  /* Склейка: модель мировой базы пропала из справочника, потому что её название записано
+     написанием другой модели («m5» у «5 серии»). Можно только для одной машины под разными
+     именами — список sameCar в car-base-rules.json. Спортверсия или другой кузов — своя
+     модель со своим классом: так M5 считался по классу «5 серии» (09.10.2026) */
+  const base = (await server.ssrLoadModule('/src/data/cars-base.json')).default;
+  const flat = (s) => String(s).toLowerCase().replace(/\(.*?\)/g, '').replace(/[\s.-]/g, '');
+  const sameSeen = new Set();
+  for (const bb of base.brands) {
+    const entry = rawIndex.find((b) => b.brand === bb.name);
+    if (!entry) continue;
+    const names = new Set(entry.models.map((m) => flat(m.model)));
+    for (const bm of bb.models) {
+      if (bm.y?.[1] && bm.y[1] < rules.minYear) continue;
+      const k = flat(bm.name);
+      if (names.has(k)) continue;
+      const host = entry.models.find((m) => m.keys.some((a) => flat(a) === k));
+      if (!host) continue;
+      if (rules.sameCar[bb.name]?.[bm.name] === host.model) sameSeen.add(`${bb.name}|${bm.name}`);
+      else failures.push(`склейка: ${bb.name} «${bm.name}» ушла в «${host.model}» через написание — разные машины разводить (убрать написание), одну машину под другим именем — в sameCar`);
+    }
+  }
+  for (const [brand, list] of Object.entries(rules.sameCar))
+    for (const model of Object.keys(list))
+      if (!sameSeen.has(`${brand}|${model}`)) failures.push(`sameCar: ${brand} «${model}» больше не склеена — убрать из списка`);
 
   /* ---------- Список марки: сразу ходовые, редкое под «Ещё N моделей» ---------- */
   const { wholeBrand } = await server.ssrLoadModule('/src/lib/car-combo.js');
