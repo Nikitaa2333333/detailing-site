@@ -16,6 +16,7 @@ import { rub, plural } from '../lib/catalog.js';
 import { sentence } from '../lib/typo.js';
 import { serviceText } from '../lib/service-texts.js';
 import { checkIntents } from '../lib/service-intents.js';
+import { siteCategories } from '../lib/sections.js';
 import CarCombo from './CarCombo.astro';
 
 checkIntents(prices); // словарь «беда → услуги» ссылается только на то, что есть в прайсе
@@ -23,7 +24,6 @@ checkIntents(prices); // словарь «беда → услуги» ссыла
 const t = content.calculator;
 const { contacts } = content;
 const classIds = prices.classes.map((c) => c.id);
-const sheetByName = new Map(prices.categories.map((s) => [s.sheet, s]));
 
 /* Ячейка цены для клиента: ['e', 790] — точная, ['f', 790] — «от», null — по запросу */
 const cell = (c) => {
@@ -31,25 +31,26 @@ const cell = (c) => {
   return v == null ? null : [c.kind === 'exact' ? 'e' : 'f', v];
 };
 
-const cats = content.services.categories
+/* Разделы — из lib/sections.js (скрытое, объединённые листы, переносы уже учтены).
+   sheets здесь — разделы сайта: id раздела ведёт чипы и ссылки с плиток главной */
+const cats = siteCategories
   .map((cat) => ({
     id: cat.id,
     title: cat.title,
-    sheets: cat.sheets
-      .map(({ sheet: name, title }) => ({ sheet: sheetByName.get(name), title }))
-      .filter(({ sheet }) => sheet && sheet.classLabels.length === classIds.length)
-      .map(({ sheet, title }) => ({
-        id: sheet.id,
-        title,
-        groups: sheet.groups.map((g) => ({
+    sheets: cat.sections
+      .filter((section) => section.classLabels.length === classIds.length)
+      .map((section) => ({
+        id: section.id,
+        title: section.title,
+        groups: section.groups.map((g) => ({
           title: g.title ? sentence(g.title) : '',
-          services: g.services.map((s) => {
+          services: g.services.map(({ key, sheet, service: s }) => {
             const cells = sheet.classLabels.map((label) => cell(s.prices[label]));
             const known = cells.filter(Boolean).map((c) => c[1]);
             // тексты — наша редактура из service-texts.json, иначе прайс как есть
             const text = serviceText(sheet.id, s);
             return {
-              key: `${sheet.id}:${s.id}`,
+              key,
               name: text.name,
               duration: (s.duration ?? '').trim(),
               desc: text.lead,
@@ -63,6 +64,10 @@ const cats = content.services.categories
       })),
   }))
   .filter((c) => c.sheets.length);
+
+// сколько первых плиток растянуть, чтобы ряд закрылся: в три колонки и в две
+const wide3 = (3 - (cats.length % 3)) % 3; // остаток 2 — одна плитка на две колонки, остаток 1 — две
+const wide2 = cats.length % 2;
 
 for (const c of cats) {
   const all = c.sheets.flatMap((s) => s.groups.flatMap((g) => g.services));
@@ -109,8 +114,8 @@ const searchIcon =
       <h3 class="wiz-title">{t.catsTitle}</h3>
       <p class="wiz-lead">{t.catsNote}</p>
       <div class="cats">
-        {cats.map((c) => (
-          <button class="cat" type="button" data-cat={c.id}>
+        {cats.map((c, i) => (
+          <button class:list={['cat', i < wide3 && 'cat--wide3', i < wide2 && 'cat--wide2']} type="button" data-cat={c.id}>
             <span class="cat-top">
               <span class="cat-count">{c.count} {plural(c.count)}</span>
               <span class="cat-picked" data-cat-picked hidden></span>
@@ -894,9 +899,9 @@ const searchIcon =
   .wiz-car-change:hover { background: var(--wiz-hover); transition-duration: var(--t-hover-in); }
 
   .cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-12); padding-top: var(--sp-8); }
-  /* семь направлений: первое («Мойка и уход») на две колонки — сетка закрывается без дыр
-     и в три колонки (2+1 / 3 / 3), и в две (2 / 2 / 2 / 2) */
-  .cat:first-child { grid-column: span 2; }
+  /* Сетка без дыр при любом числе направлений: первые плитки растягиваются на две колонки,
+     сколько нужно (wide3 / wide2 считаются во frontmatter из числа направлений) */
+  .cat--wide3 { grid-column: span 2; }
   .cat {
     display: grid;
     grid-template-rows: auto 1fr auto;
@@ -1226,6 +1231,8 @@ const searchIcon =
 
   @media (max-width: 1024px) {
     .cats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cat--wide3 { grid-column: auto; }
+    .cat--wide2 { grid-column: span 2; }
   }
   @media (max-width: 760px) {
     .wiz-head { padding: var(--sp-16) var(--sp-16) 0; }
@@ -1261,6 +1268,6 @@ const searchIcon =
   @media (max-width: 480px) {
     .cats { grid-template-columns: minmax(0, 1fr); }
     .cat { min-height: 0; }
-    .cat:first-child { grid-column: auto; }
+    .cat--wide3, .cat--wide2 { grid-column: auto; }
   }
 </style>

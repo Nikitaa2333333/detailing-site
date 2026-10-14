@@ -9,7 +9,7 @@ import { asset } from '../lib/paths.js';
 const { cta, more, href = '#contacts' } = Astro.props;
 ---
 
-<div class="tiles">
+<div class:list={['tiles', categories.length % 2 && 'tiles--odd']}>
   {categories.map((c) => (
     <article
       class:list={['tile', c.media && 'tile--media', c.wide && 'tile--wide']}
@@ -76,8 +76,8 @@ const { cta, more, href = '#contacts' } = Astro.props;
 </script>
 
 <style>
-  /* Плашки услуг: 3 колонки, высота у всех одна — квадрат узкой плашки. Семь категорий,
-     две широкие (wide в content.json, на две колонки): Ш+У / У+У+У / Ш+У = ровно 3 ряда.
+  /* Плашки услуг: 3 колонки, высота у всех одна — квадрат узкой плашки. Шесть категорий,
+     три широкие (wide в content.json, на две колонки): Ш+У / Ш+У / Ш+У = ровно 3 ряда.
      Сменилось число категорий — пересчитать wide: категорий + широких = кратно трём.
      В высоту плашки не растягиваем — только в ширину */
   .tiles {
@@ -243,8 +243,8 @@ const { cta, more, href = '#contacts' } = Astro.props;
     .tile.is-open .tile-front { opacity: 0; }
   }
 
-  /* Две колонки: первая плашка («Мойка и уход») во всю ширину, остальные шесть —
-     квадраты, три ряда по две, без дыр */
+  /* Две колонки: все плашки — квадраты по две в ряд; при нечётном числе категорий первая
+     («Мойка и уход») во всю ширину, чтобы не было дыры */
   @media (max-width: 1100px) {
     .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .tile--wide { grid-column: auto; aspect-ratio: var(--tile-ratio); }
@@ -252,7 +252,7 @@ const { cta, more, href = '#contacts' } = Astro.props;
     .tile--wide .tile-list li { font-size: var(--text-body); }
   }
   @media (min-width: 561px) and (max-width: 1100px) {
-    .tile:first-child { grid-column: span 2; --tile-ratio: 2 / 1; aspect-ratio: var(--tile-ratio); }
+    .tiles--odd .tile:first-child { grid-column: span 2; --tile-ratio: 2 / 1; aspect-ratio: var(--tile-ratio); }
   }
   /* Телефон: одна колонка в полях контейнера. Все плашки одного вида: лицо 5:4,
      по тапу оборот встаёт в поток и плашка вырастает под весь список — ничего не обрезается */

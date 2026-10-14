@@ -60,10 +60,10 @@ def service_text(sheet_id, s):
 sheets = {sh['sheet']: sh for sh in prices['categories']}
 foot = {f['marker']: f['text'] for f in prices.get('footnotes', [])}
 
-HEAD = ['Категория', 'Раздел', 'Группа', 'Услуга на сайте', 'Как в прайсе', 'Описание на сайте',
+HEAD = ['Категория', 'Раздел', 'Группа', 'На сайте', 'Услуга на сайте', 'Как в прайсе', 'Описание на сайте',
         'Что входит', 'Условия', 'Время', '1-й класс', '2-й класс', '3-й класс', '4-й класс', '5-й класс',
         'Примечание к цене', 'Комментарий', 'Код (не менять)']
-WIDTH = [16, 22, 22, 30, 30, 46, 52, 36, 11, 11, 11, 11, 11, 11, 30, 30, 26]
+WIDTH = [16, 22, 22, 11, 30, 30, 46, 52, 36, 11, 11, 11, 11, 11, 11, 30, 30, 26]
 PRICE_COL = HEAD.index('1-й класс') + 1
 
 wb = openpyxl.Workbook()
@@ -72,8 +72,9 @@ info.title = 'Как читать'
 rows = [
     ['Услуги и цены сайта'],
     [],
-    ['Категория — плитка на сайте (шесть штук), Раздел — лист вашего прайса под нашим названием,'],
+    ['Категория — плитка на сайте, Раздел — чип внутри неё (лист вашего прайса под нашим названием),'],
     ['Группа — подзаголовок внутри раздела, если он есть в прайсе.'],
+    ['«На сайте»: «да» — услуга видна, «скрыто» — по вашей просьбе не показываем (вернуть — напишите в комментарии).'],
     ['«Услуга на сайте» и «Описание на сайте», «Что входит», «Условия» — тексты сайта, мы их переписали из прайса понятнее; «Как в прайсе» — ваше название для сверки.'],
     ['Цены — из вашего прайса, по классу машины. «от» — цена от, уточняется после осмотра.'],
     ['Правки и замечания пишите в жёлтую колонку «Комментарий». Колонку «Код» не меняйте — по ней мы переносим правки на сайт.'],
@@ -96,48 +97,74 @@ for i, c in enumerate(ws[1], 1):
     c.alignment = Alignment(wrap_text=True, vertical='center')
     ws.column_dimensions[get_column_letter(i)].width = WIDTH[i - 1]
 
-total = 0
+# Разделы — как на сайте (lib/sections.js): объединённые листы, перенос услуг (only),
+# скрытое (hide / hidden). Скрытые услуги в таблице остаются с пометкой «скрыто»,
+# перенесённые — только там, где они на сайте
+
+
+def parts(ref):
+    return [sheets[n] for n in (ref.get('sheets') or [ref['sheet']])]
+
+
+def section_rows(ref, cat_hidden):
+    hide, only = set(ref.get('hide', [])), set(ref.get('only', [])) if 'only' in ref else None
+    for sh in parts(ref):
+        for g in sh['groups']:
+            for s in g['services']:
+                if only is not None and s['id'] not in only:
+                    continue  # эта часть листа живёт в другом разделе
+                key = f"{sh['id']}:{s['id']}"
+                if s['id'] in hide and key in moved:
+                    continue  # перенесена в другую категорию
+                visible = not (cat_hidden or ref.get('hidden') or s['id'] in hide)
+                yield sh, g, s, visible
+
+
+# услуги, которые раздел с only забирает к себе, — в исходном разделе их не повторяем
+moved = {f"{sh['id']}:{sid}" for cat in content['services']['categories'] for ref in cat['sheets']
+         if 'only' in ref for sh in parts(ref) for sid in ref['only']}
+
+total = shown = 0
 for cat in content['services']['categories']:
     # строка-заголовок категории — чтобы таблица читалась блоками
-    ws.append([cat['title']])
+    ws.append([cat['title'] + (' (скрыта)' if cat.get('hidden') else '')])
     for c in ws[ws.max_row]:
         c.fill = cat_fill
     ws.cell(ws.max_row, 1).font = Font(bold=True, size=12)
     for ref in cat['sheets']:
-        sh = sheets[ref['sheet']]
-        labels = sh['classLabels']
-        odd = len(labels) != 5  # мототехника: свои два класса
-        for g in sh['groups']:
-            for s in g['services']:
-                t = service_text(sh['id'], s)
-                notes = []
-                if odd:
-                    notes.append('Классы мото: ' + ', '.join(f'{i + 1} — {l}' for i, l in enumerate(labels)))
-                if s.get('footnote'):
-                    notes.append(foot.get(s['footnote'], s['footnote']))
-                row = [cat['title'], ref.get('title') or sh['title'], sentence(g.get('title') or ''), t['name'],
-                       sentence(s['name']), t['lead'], '\n'.join(f'• {x}' for x in t['includes']),
-                       ' '.join(t['terms']), (s.get('duration') or '').strip()]
-                cells = []
-                for label in labels[:5]:
-                    p = s['prices'].get(label)
-                    v = (p.get('value') if p.get('value') is not None else p.get('min')) if p else None
-                    cells.append((v, p.get('kind') if p else None))
-                cells += [(None, None)] * (5 - len(cells))
-                row += [v if v is not None else 'по запросу' for v, _ in cells]
-                row += ['\n'.join(notes), None, f"{sh['id']}:{s['id']}"]
-                ws.append(row)
-                r = ws.max_row
-                for c in ws[r]:
-                    c.alignment = wrap
-                ws.cell(r, 4).font = bold
-                ws.cell(r, HEAD.index('Комментарий') + 1).fill = yellow
-                for k, (v, kind) in enumerate(cells):
-                    if v is not None:
-                        ws.cell(r, PRICE_COL + k).number_format = ('"от "' if kind == 'from' else '') + '# ##0 ₽'
-                total += 1
+        for sh, g, s, visible in section_rows(ref, cat.get('hidden')):
+            labels = sh['classLabels']
+            odd = len(labels) != 5  # мототехника: свои два класса
+            t = service_text(sh['id'], s)
+            notes = []
+            if odd:
+                notes.append('Классы мото: ' + ', '.join(f'{i + 1} — {l}' for i, l in enumerate(labels)))
+            if s.get('footnote'):
+                notes.append(foot.get(s['footnote'], s['footnote']))
+            row = [cat['title'], ref['title'], sentence(g.get('title') or ''), 'да' if visible else 'скрыто', t['name'],
+                   sentence(s['name']), t['lead'], '\n'.join(f'• {x}' for x in t['includes']),
+                   ' '.join(t['terms']), (s.get('duration') or '').strip()]
+            cells = []
+            for label in labels[:5]:
+                p = s['prices'].get(label)
+                v = (p.get('value') if p.get('value') is not None else p.get('min')) if p else None
+                cells.append((v, p.get('kind') if p else None))
+            cells += [(None, None)] * (5 - len(cells))
+            row += [v if v is not None else 'по запросу' for v, _ in cells]
+            row += ['\n'.join(notes), None, f"{sh['id']}:{s['id']}"]
+            ws.append(row)
+            r = ws.max_row
+            for c in ws[r]:
+                c.alignment = wrap
+            ws.cell(r, HEAD.index('Услуга на сайте') + 1).font = bold
+            ws.cell(r, HEAD.index('Комментарий') + 1).fill = yellow
+            for k, (v, kind) in enumerate(cells):
+                if v is not None:
+                    ws.cell(r, PRICE_COL + k).number_format = ('"от "' if kind == 'from' else '') + '# ##0 ₽'
+            total += 1
+            shown += visible
 
-ws.freeze_panes = 'E2'
+ws.freeze_panes = 'F2'
 ws.auto_filter.ref = f'A1:{get_column_letter(len(HEAD))}{ws.max_row}'
 wb.save(OUT)
-print(f'{OUT.name}: {total} услуг в {len(content["services"]["categories"])} категориях')
+print(f'{OUT.name}: {total} услуг, на сайте {shown}, скрыто {total - shown}')

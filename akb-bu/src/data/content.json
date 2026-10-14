@@ -110,7 +110,7 @@
   },
   "services": {
     "label": "Услуги",
-    "title": "Семь направлений. Одна планка качества.",
+    "title": "Шесть направлений. Одна планка качества.",
     "menuTitle": "Услуги",
     "menuNote": "Цены — по 1-му классу автомобиля. Точная — после осмотра.",
     "more": "Рассчитать стоимость",
@@ -121,33 +121,48 @@
         "tag": "Уход",
         "title": "Мойка и уход",
         "media": "/img/tiles/uhod.webp",
+        "wide": true,
         "sheets": [
           {
             "sheet": "Экстерьер (кузов)",
             "title": "Мойка кузова"
           },
           {
-            "sheet": "Интерьер (салон)",
-            "title": "Уборка салона"
-          },
-          {
             "sheet": "Комплексы (кузов+салон)",
             "title": "Комплексы кузов + салон"
           },
           {
-            "sheet": "Доп.услуги (чистка ЛКП, дисков)",
-            "title": "Чистка ЛКП и дисков"
+            "sheets": [
+              "Интерьер (салон)",
+              "Доп.услуги (чистка ЛКП, дисков)"
+            ],
+            "title": "Уборка салона и доп. услуги",
+            "hide": [
+              "ochistka-lkp-ot-bitumnyh-reagentnyh-pyaten-za-detal",
+              "ochistka-lkp-ot-zhelezistogo-naleta-za-detal",
+              "ochistka-lkp-sinteticheskoj-glinoj-za-detal",
+              "ochistka-lkp-ot-smoly-derevev-kompleks",
+              "ochistka-lkp-udalenie-nasekomyh-s-poverhnosti-perednyaya-cha",
+              "ochistka-lkp-kolesnyh-diskov-himchistka-kislotnym-spec-sosta",
+              "ochistka-lkp-kolesnyh-diskov-himchistka-kislotnym-spec-sosta-3",
+              "primenenie-beskislotnogo-spec-sostava-reactive-rust-remover-",
+              "polnaya-produvka-kuzova"
+            ]
           },
           {
             "sheet": "Обработка кузова (воск.полим.)",
-            "title": "Воски и полимеры"
+            "title": "Воски и полимеры",
+            "hide": [
+              "zaschita-obrabotka-kuzova-konservantom-ot-koch-chemie-nanocr",
+              "zaschita-obrabotka-kuzova-zhidkim-voskom-twin-wax"
+            ]
           },
           {
             "sheet": "Мототехника",
-            "title": "Мототехника"
+            "title": "Мототехника",
+            "hidden": true
           }
-        ],
-        "wide": true
+        ]
       },
       {
         "id": "himchistka",
@@ -160,11 +175,13 @@
           },
           {
             "sheet": "Двигатель (радиаторы ДВС)",
-            "title": "Двигатель и радиаторы"
+            "title": "Двигатель и радиаторы",
+            "hidden": true
           },
           {
             "sheet": "Ходовая часть (подвеска)",
-            "title": "Подвеска и арки"
+            "title": "Подвеска и арки",
+            "hidden": true
           }
         ]
       },
@@ -173,10 +190,22 @@
         "tag": "Полировка",
         "title": "Полировка",
         "media": "/img/tiles/polirovka.webp",
+        "wide": true,
         "sheets": [
           {
             "sheet": "Полировка ЛКП",
             "title": "Полировка ЛКП"
+          },
+          {
+            "sheet": "Защита ЛКП керамика",
+            "title": "Полировка и керамика под ключ",
+            "id": "polirovka-keramika-pod-klyuch",
+            "only": [
+              "zhidkoe-steklo-power-shield-supershine-dlya-novogo-avto-prob",
+              "keramicheskoe-pokrytie-power-shield-dlya-novogo-avto-probeg-",
+              "zhidkoe-steklo-power-shield-supershine-dlya-avto-s-probegom",
+              "keramicheskoe-pokrytie-power-shield-dlya-avto-s-probegom-2-s"
+            ]
           }
         ]
       },
@@ -196,10 +225,17 @@
         "tag": "Керамика",
         "title": "Керамические покрытия",
         "media": "/img/tiles/keramika.webp",
+        "wide": true,
         "sheets": [
           {
             "sheet": "Защита ЛКП керамика",
-            "title": "Керамика для кузова"
+            "title": "Керамика для кузова",
+            "hide": [
+              "zhidkoe-steklo-power-shield-supershine-dlya-novogo-avto-prob",
+              "keramicheskoe-pokrytie-power-shield-dlya-novogo-avto-probeg-",
+              "zhidkoe-steklo-power-shield-supershine-dlya-avto-s-probegom",
+              "keramicheskoe-pokrytie-power-shield-dlya-avto-s-probegom-2-s"
+            ]
           },
           {
             "sheet": "Защита колесных дисков",
@@ -207,7 +243,10 @@
           },
           {
             "sheet": "Защита кожаных покрытий",
-            "title": "Защита кожи"
+            "title": "Защита кожи",
+            "hide": [
+              "rul"
+            ]
           },
           {
             "sheet": "Защита текстильных покрытий",
@@ -215,7 +254,8 @@
           },
           {
             "sheet": "Защита пластика",
-            "title": "Защита пластика"
+            "title": "Защита пластика",
+            "hidden": true
           },
           {
             "sheet": "Защита стекла антидождь",
@@ -231,7 +271,11 @@
         "sheets": [
           {
             "sheet": "защита ЛКП пленка PPF",
-            "title": "Антигравийная плёнка PPF"
+            "title": "Антигравийная плёнка PPF",
+            "hide": [
+              "ustanovka-poliuretanovoj-antigravijnoj-plenki-suntek-ppf-avt",
+              "ustanovka-poliuretanovoj-antigravijnoj-plenki-suntek-ppf-bam"
+            ]
           },
           {
             "sheet": "Тонирование бронирование стекол",
@@ -241,13 +285,13 @@
             "sheet": "Защита фар",
             "title": "Защита фар"
           }
-        ],
-        "wide": true
+        ]
       },
       {
         "id": "salon",
         "tag": "Салон",
         "title": "Перетяжка и пошив",
+        "hidden": true,
         "sheets": [
           {
             "sheet": "Пошив салона",

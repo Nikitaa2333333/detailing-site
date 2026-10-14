@@ -343,14 +343,12 @@ const SERVICES = [
   ['полировка кузова', ['polirovka-lkp:vosstanovitelnaya-polirovka-lkp']],
   ['антидождь', ['zaschita-stekla-antidozhd:obrabotka-stekol-antidozhd-sneg-led', 'zaschita-stekla-antidozhd:obrabotka-stekol-antidozhd-sneg-led-2']],
   ['вмятины', ['udalenie-vmyatin-pdr:udalenie-vmyatin-bez-pokraski']],
-  ['перетяжка руля', ['poshiv-rulej:poshiv-rulevogo-kolesa-kozha-bez-obogreva']],
-  ['потолок', ['peretyazhka-potolka:peretyazhka-potolka-tkan-bez-okrasa-potolochnogo-plastika', 'himchistka-salona:himchistka-potolka']],
+  // перетяжка и пошив, мойка двигателя и подвески скрыты заказчиком 13.10.2026 — в поиске их нет
+  ['потолок', ['himchistka-salona:himchistka-potolka']],
   ['чернение шин', ['obrabotka-kuzova-vosk-polim:zaschita-obrabotka-shin-chernenie']],
   ['воск', ['obrabotka-kuzova-vosk-polim:zaschita-obrabotka-kuzova-s-dobavleniem-voska-karnauby']],
-  ['мойка двигателя', ['dvigatel-radiatory-dvs:mojka-dvigatelya-i-konservaciya-podkapotnogo-prostranstva']],
-  ['подвеска', ['hodovaya-chast-podveska:mojka-himchistka-i-konservaciya-podveski-pnevmaticheskoj-pod']],
   ['nano magic', ['eksterer-kuzov:nano-magic-50-60-min']],
-  ['битум', ['dop-uslugi-chistka-lkp-diskov:ochistka-lkp-ot-bitumnyh-reagentnyh-pyaten-za-detal']],
+  ['битум', ['dop-uslugi-chistka-lkp-diskov:ochistka-lkp-ot-bitumnyh-reagentnyh-pyaten-kompleks-antibitu']],
   ['zzzz', []],
 ];
 
@@ -496,15 +494,16 @@ try {
 
   /* ---------- Услуги: тот же текст карточки, что видит человек в калькуляторе ---------- */
   const rows = [];
-  for (const cat of content.services.categories) {
-    for (const { sheet: name, title } of cat.sheets) {
-      const sheet = prices.categories.find((s) => s.sheet === name);
-      if (!sheet || sheet.classLabels.length !== prices.classes.length) continue;
-      for (const group of sheet.groups) {
-        for (const s of group.services) {
+  // разделы — как на сайте (lib/sections.js): скрытые заказчиком услуги в поиск не попадают
+  const { siteCategories } = await server.ssrLoadModule('/src/lib/sections.js');
+  for (const cat of siteCategories) {
+    for (const { title, classLabels, groups } of cat.sections) {
+      if (classLabels.length !== prices.classes.length) continue;
+      for (const group of groups) {
+        for (const { key, sheet, service: s } of group.services) {
           const text = serviceText(sheet.id, s);
           rows.push({
-            key: `${sheet.id}:${s.id}`,
+            key,
             find: haystack([text.name, text.lead, s.duration, text.terms.join(' '), group.title && sentence(group.title), `${cat.title} · ${title}`]),
           });
         }

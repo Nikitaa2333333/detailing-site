@@ -9,18 +9,19 @@ import { serviceText } from '../lib/service-texts.js';
 import { haystack } from '../lib/service-search.js';
 import { priceCell } from '../lib/services.js';
 import { sentence } from '../lib/typo.js';
+import { siteCategories } from '../lib/sections.js';
 
 const rows = [];
-for (const cat of content.services.categories) {
-  for (const { sheet: name, title } of cat.sheets) {
-    const sheet = prices.categories.find((s) => s.sheet === name);
-    if (!sheet || sheet.classLabels.length !== prices.classes.length) continue;
-    for (const group of sheet.groups) {
-      for (const s of group.services) {
+// разделы — как на сайте (lib/sections.js): скрытые услуги консультант тоже не предлагает
+for (const cat of siteCategories) {
+  for (const { title, classLabels, groups } of cat.sections) {
+    if (classLabels.length !== prices.classes.length) continue;
+    for (const group of groups) {
+      for (const { key, sheet, service: s } of group.services) {
         const text = serviceText(sheet.id, s);
         const section = `${cat.title} · ${title}`;
         rows.push({
-          key: `${sheet.id}:${s.id}`,
+          key,
           name: text.name,
           lead: text.lead,
           includes: text.includes,
@@ -36,7 +37,7 @@ for (const cat of content.services.categories) {
 }
 
 const c = content.contacts;
-const directions = content.services.categories.map((cat) => cat.title);
+const directions = siteCategories.map((cat) => cat.title);
 
 /* Инструкция модели. Под бесплатные модели (Groq, Gemini): коротко, шаги пронумерованы,
    текст реплики передаётся параметром text в reply / offer_services / ask_contacts —
