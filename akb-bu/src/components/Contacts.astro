@@ -1,0 +1,125 @@
+---
+/* Контакты с картой — как на сайте КТМ: три колонки (связь, адрес, часы) и Яндекс Карта
+   во всю ширину контента. Карта — виджет Яндекса (iframe): с mapOid показывает карточку
+   организации с отзывами и маршрутом, без него — метку по координатам.
+   На таче карта неактивна до тапа: иначе свайп по ней крутит карту, а не страницу.
+   Данные — content.json → contacts (адрес, телефон и координаты пока вымышленные). */
+import content from '../data/content.json';
+import { typo } from '../lib/typo.js';
+
+const { contacts } = content;
+const { title = 'Адрес и контакты' } = Astro.props;
+const [lon, lat] = contacts.mapCenter;
+const mapSrc = contacts.mapOid
+  ? `https://yandex.ru/map-widget/v1/?oid=${contacts.mapOid}&ol=biz&z=16`
+  : `https://yandex.ru/map-widget/v1/?ll=${lon}%2C${lat}&z=16&pt=${lon}%2C${lat}%2Cpm2orgl`;
+const routeHref = `https://yandex.ru/maps/?rtext=~${lat}%2C${lon}&rtt=auto`;
+---
+
+<div class="contacts">
+  <h2 class="contacts-title">{typo(title)}</h2>
+
+  <div class="contacts-grid">
+    <div class="contacts-col">
+      <a class="contacts-big" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+      <div class="contacts-links">
+        <a href={`https://wa.me/${contacts.whatsappHref}`} target="_blank" rel="noopener">WhatsApp</a>
+        <a href={`https://t.me/${contacts.telegram}`} target="_blank" rel="noopener">Telegram</a>
+        <a href={`mailto:${contacts.email}`}>{contacts.email}</a>
+      </div>
+    </div>
+    <div class="contacts-col">
+      <p class="contacts-big">{typo(contacts.addressShort ?? contacts.address)}</p>
+      {contacts.addressNote && <p class="contacts-note">{typo(contacts.addressNote)}</p>}
+    </div>
+    <div class="contacts-col">
+      <p class="contacts-big">{typo(contacts.hours)}</p>
+      <a class="contacts-route" href={routeHref} target="_blank" rel="noopener">Построить маршрут</a>
+    </div>
+  </div>
+
+  <div class="contacts-map" data-map>
+    <iframe src={mapSrc} title={`Карта: ${contacts.address}`} loading="lazy" allowfullscreen></iframe>
+    <button class="contacts-map-cover" type="button" data-map-on>
+      <span class="btn btn--primary">Открыть карту</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-map]').forEach((map) => {
+    map.querySelector('[data-map-on]')?.addEventListener('click', () => map.classList.add('is-live'));
+  });
+</script>
+
+<style>
+  .contacts { display: grid; gap: var(--sp-40); }
+  .contacts-title {
+    font-size: var(--text-heading-xl);
+    max-width: var(--measure-head);
+  }
+  .contacts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-24) var(--sp-40);
+  }
+  .contacts-col { display: grid; gap: var(--sp-12); align-content: start; }
+  /* Телефон, адрес, часы — витринные строки одного кегля, как на сайте КТМ */
+  .contacts-big {
+    font-size: var(--text-tile);
+    font-weight: var(--w-semibold);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .contacts-note { font-size: var(--text-body-lg); }
+  .contacts-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-8) var(--sp-20);
+    font-size: var(--text-body-lg);
+  }
+  /* Без подчёркиваний (16.10.2026): ссылка — по наведению цветом акцента */
+  .contacts-links a,
+  .contacts-route {
+    font-size: var(--text-body-lg);
+    font-weight: var(--w-semibold);
+    transition: color var(--t-hover-out) var(--ease-out);
+  }
+  .contacts-links a:hover,
+  .contacts-route:hover { color: var(--color-ember); }
+
+  .contacts-map {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--r-panel);
+    background: var(--color-tile);
+    height: clamp(300px, 30vw, 420px);   /* было до 600 — «громадная» */
+  }
+  .contacts-map iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  /* Крышка карты — только на таче: курсором карта работает сразу */
+  .contacts-map-cover {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: end;
+    justify-content: center;
+    padding-bottom: var(--sp-24);
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+  @media (hover: none) {
+    .contacts-map-cover { display: flex; }
+    .contacts-map.is-live .contacts-map-cover { display: none; }
+  }
+
+  @media (max-width: 860px) {
+    .contacts-grid { grid-template-columns: minmax(0, 1fr); }
+    .contacts { gap: var(--sp-32); }
+  }
+</style>

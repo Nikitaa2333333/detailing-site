@@ -1,0 +1,238 @@
+---
+/* Сезонные пакеты (осень → зима). Состав — src/data/season-packs.json, цены — из прайса:
+   пакет = сумма цен 1-го класса входящих услуг, без скидок. Берём только то, что видно
+   на сайте (lib/sections.js): услуга скрыта заказчиком или пропала из прайса — сборка
+   падает и называет ключ. Цены у услуги нет — в сумму не идёт, на сборке предупреждение.
+
+   Телефон — лента со scroll-snap: карточка 85% ширины, следующая выглядывает.
+   От 700px — сетка 2×2, от 1100px — четыре в ряд. Акцентная карточка (accent) —
+   светлый лист на тёмной полосе.
+
+   Кнопка «Рассчитать пакет» ведёт на #calc; обработчик подключается отдельно:
+     data-pack         — JSON-массив ключей услуг (у выбора «одно из» — первый вариант)
+     data-pack-options — JSON-массив групп «одно из» (если есть)
+     data-pack-qty     — JSON { ключ: штук } для услуг больше одной штуки (если есть) */
+import data from '../data/season-packs.json';
+import { siteCategories } from '../lib/sections.js';
+import { serviceText } from '../lib/service-texts.js';
+import { rub } from '../lib/catalog.js';
+import { typo } from '../lib/typo.js';
+
+const visible = new Map(
+  siteCategories.flatMap((c) => c.sections.flatMap((s) => s.services.map((x) => [x.key, x])))
+);
+
+const orphans = [];
+const noPrice = [];
+
+function resolve(ref, pack) {
+  const found = visible.get(ref.key);
+  if (!found) {
+    orphans.push(`${pack.title} → ${ref.key}`);
+    return null;
+  }
+  const { sheet, service } = found;
+  const cell = service.prices[sheet.classLabels[0]];
+  const unit = cell ? cell.value ?? cell.min ?? null : null;
+  if (unit == null) noPrice.push(`${pack.title} → ${ref.key}`);
+  const qty = ref.qty ?? 1;
+  return {
+    key: ref.key,
+    qty,
+    name: typo(ref.label ?? serviceText(sheet.id, service).name),
+    price: unit == null ? null : unit * qty,
+  };
+}
+
+const packs = data.packs.map((pack) => {
+  const items = pack.items.map((item) => {
+    if (item.oneOf) {
+      const options = item.oneOf.map((ref) => resolve(ref, pack)).filter(Boolean);
+      const prices = options.map((o) => o.price).filter((v) => v != null);
+      return { options, price: prices.length ? Math.min(...prices) : null };
+    }
+    const one = resolve(item, pack);
+    return one && { options: [one], price: one.price };
+  }).filter(Boolean);
+
+  const total = items.reduce((sum, i) => sum + (i.price ?? 0), 0);
+  const groups = items.filter((i) => i.options.length > 1).map((i) => i.options.map((o) => o.key));
+  const qty = Object.fromEntries(items.flatMap((i) => i.options).filter((o) => o.qty > 1).map((o) => [o.key, o.qty]));
+
+  return {
+    id: pack.id,
+    title: typo(pack.title),
+    why: typo(pack.why),
+    accent: !!pack.accent,
+    items,
+    total,
+    keys: items.map((i) => i.options[0]?.key).filter(Boolean),
+    groups,
+    qty,
+  };
+});
+
+if (orphans.length) {
+  throw new Error(
+    `season-packs.json: услуги нет на сайте (скрыта в content.json или пропала из прайса): ${orphans.join(', ')}. ` +
+      'Перенесите пакет на видимую услугу или уберите её из пакета.'
+  );
+}
+if (noPrice.length) {
+  console.warn(`season-packs.json: у услуги нет цены 1-го класса, в сумму пакета не вошла: ${noPrice.join(', ')}`);
+}
+
+const { season, priceNote, button, or } = data;
+const href = Astro.props.href ?? '#calc';
+---
+
+<div class="packs">
+  {packs.map((p) => (
+    <article
+      class:list={['pack', p.accent ? 'pack--accent' : 'on-dark']}
+      id={`pack-${p.id}`}
+    >
+      <span class="chip">{typo(season.chip)}</span>
+      <div class="pack-head">
+        <h3 class="pack-title">{p.title}</h3>
+        <p class="pack-why">{p.why}</p>
+      </div>
+      <ul class="bullets pack-list">
+        {p.items.map((i) =>
+          i.options.map((o, n) => (
+            <>
+              {n > 0 && <li class="pack-or">{or}</li>}
+              <li>{o.name}</li>
+            </>
+          ))
+        )}
+      </ul>
+      <!-- Цена — внутри кнопки, как «Записаться за 6930 ₽/мес.» у бюро Горбунова (16.10.2026) -->
+      <div class="pack-foot">
+        <p class="pack-note">{typo(priceNote)}</p>
+        <a
+          class="btn btn--primary pack-btn"
+          href={href}
+          data-pack={JSON.stringify(p.keys)}
+          data-pack-id={p.id}
+          data-pack-options={p.groups.length ? JSON.stringify(p.groups) : undefined}
+          data-pack-qty={Object.keys(p.qty).length ? JSON.stringify(p.qty) : undefined}
+        >
+          Рассчитать от {rub(p.total)}
+        </a>
+      </div>
+    </article>
+  ))}
+</div>
+
+<style>
+  /* Телефон: лента на всю ширину экрана — выходит за поля контейнера и возвращает их
+     внутренним отступом, первая карточка стоит на сетке страницы */
+  .packs {
+    display: flex;
+    gap: var(--sp-12);
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    scroll-padding-inline: var(--gutter);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .packs::-webkit-scrollbar { display: none; }
+
+  .pack {
+    flex: 0 0 85%;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sp-20);
+    padding: var(--sp-24) var(--sp-20) var(--sp-20);
+    border-radius: var(--r-tile);
+    background: var(--color-tile-dark);
+    color: var(--color-white);
+    /* Иней (16.10.2026): холодная кромка по контуру и изморозь у верхнего края —
+       зернистый шум, тающий книзу. Декор под текстом, контент — над ним */
+    --frost: rgba(225, 240, 255, 0.55);
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    /* холодная обводка-кромка снята 16.10.2026 */
+  }
+  .pack::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 120px;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 2.2 -1.15'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
+      linear-gradient(to bottom, var(--frost), transparent 85%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.55) 40%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.55) 40%, transparent 100%);
+    opacity: 0.55;
+  }
+
+  .pack-head { display: grid; gap: var(--sp-8); }
+  .pack-title { font-size: var(--text-subhead); }
+  .pack-why { font-size: var(--text-body); line-height: 1.4; }
+
+  /* Состав — единый маркер проекта (.bullets), без линий между пунктами */
+  .pack-list { font-size: var(--text-body); line-height: 1.35; }
+  /* «или» между вариантами на выбор — служебная строка без маркера */
+  .pack-list > li.pack-or {
+    padding-left: var(--bullet-indent);
+    font-size: var(--text-caption);
+    font-weight: var(--w-medium);
+  }
+  .pack-list > li.pack-or::before { content: none; }
+
+  /* Цена и кнопка прижаты к низу: в ряду карточек они стоят на одной линии */
+  .pack-foot {
+    margin-top: auto;
+    align-self: stretch;
+    display: grid;
+    gap: var(--sp-4);
+  }
+  .pack-price {
+    font-size: var(--text-tile);
+    font-weight: var(--w-semibold);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .pack-note { font-size: var(--text-caption); }
+  .pack-btn { margin-top: var(--sp-12); width: 100%; }
+
+  /* Акцент — светлый лист на тёмной полосе. Полоса даёт предкам .on-dark, поэтому чип
+     и первичную кнопку возвращаем к светлой схеме явно */
+  .pack.pack--accent {
+    background: var(--color-page);
+    color: var(--color-ink);
+    box-shadow: none;
+  }
+  /* голубой иней на светлой карточке снят 16.10.2026 — «девичье» */
+  .pack.pack--accent::before { display: none; }
+  .pack.pack--accent .chip { box-shadow: inset 0 0 0 1px var(--color-line-ink); }
+  .pack.pack--accent .btn--primary { background: var(--color-ink); color: var(--color-white); }
+  .pack.pack--accent .btn--primary:hover { background: var(--color-ink-hover); }
+
+  /* Планшет: сетка 2×2, лента выключена */
+  @media (min-width: 700px) {
+    .packs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-inline: 0;
+      padding-inline: 0;
+      overflow: visible;
+    }
+    .pack { padding: var(--sp-28) var(--sp-24) var(--sp-24); }
+  }
+  /* Десктоп: четыре в ряд */
+  @media (min-width: 1100px) {
+    .packs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+</style>

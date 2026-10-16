@@ -6,7 +6,8 @@
    <Section label="Работы" title="…">   — с меткой
    <Section title="…">                  — заголовок по левому краю
    <Section>                            — без шапки, только контент
-   dark      — чёрная полоса во всю ширину, белый текст
+   dark      — тёмная полоса во всю ширину, белый текст
+   sheet     — светлый лист со скруглёнными углами на тёмной основе
    flushTop  — прижать к предыдущей секции (убрать верхний отступ)
    center    — заголовок без метки, по центру над блоком (калькулятор)
    reveal    — появление шапки при прокрутке; false — секция стоит на месте сразу */
@@ -15,6 +16,7 @@ const {
   label,
   title,
   dark = false,
+  sheet = false,
   flushTop = false,
   center = false,
   reveal = true,
@@ -28,10 +30,12 @@ const {
     'section',
     dark && 'section--dark',
     dark && 'on-dark',
+    sheet && 'section--sheet',
     flushTop && 'section--flush-top',
     klass,
   ]}
 >
+  <slot name="bg" />
   <div class="container">
     {title && (
       <div class:list={['section-head', !label && 'section-head--plain', center && 'section-head--center']} data-reveal={reveal || undefined}>

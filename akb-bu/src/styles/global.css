@@ -1,22 +1,28 @@
-/* Детейлинг — база. Светлая основа, серые плашки, чёрный на акцентах.
-   Швейцарская типографика на Onest. Кнопки и чипы — пилюли. */
+/* Детейлинг — база. Тёмная основа с синевой (не чистый чёрный), светлые листы-вставки,
+   серо-голубые плашки. Швейцарская типографика на Onest. Кнопки и чипы — пилюли.
+   Палитра 14.10.2026 — по референсу b2b.yandex.ru/adv/meropriyatiya (refs/). */
 
 :root {
-  /* Цвета — монохром */
-  --color-page: #f5f5f5;        /* фон страницы */
-  --color-tile: #e4e4e6;        /* серая плашка на светлом */
-  --color-tile-hover: #dcdcdf;
-  --color-tile-dark: #1c1c20;   /* графитовая плашка на тёмной полосе */
-  --color-tile-back: #2a2a30;   /* оборот плашки по наведению — светлее и плашки, и полосы */
+  /* Цвета — сине-чёрный и светлые листы */
+  --color-page: #eef1f6;        /* светлый лист и поля на нём (Яндекс: #ebeff5) */
+  --color-tile: #e2e7f0;        /* плашка на светлом */
+  --color-tile-hover: #d8deea;
+  --color-tile-dark: #1e2837;   /* плашка на тёмной полосе */
+  --color-tile-back: #2a3548;   /* оборот плашки по наведению — светлее и плашки, и полосы */
   --color-white: #ffffff;
-  --color-ink: #0a0a0b;         /* текст на светлом, тёмные плашки и полосы */
-  --color-coal: #131316;
-  --color-grey-text: #8a8a8f;   /* ТОЛЬКО плейсхолдеры */
-  --color-grey-text-dark: #a9a9b0; /* ТОЛЬКО описания услуг в обороте плашки (по запросу заказчика) */
-  --color-line-ink: rgba(10, 10, 11, 0.12);
+  --color-ink: #0f141e;         /* фон сайта, тёмные полосы; текст на светлом */
+  --color-coal: #191e28;        /* нижний ярус подвала — на ступень светлее основы */
+  --color-grey-text: #8090ad;   /* ТОЛЬКО плейсхолдеры */
+  --color-grey-text-dark: #a0afc8; /* ТОЛЬКО описания услуг в обороте плашки (по запросу заказчика) */
+  /* Приглушённый текст на ровном тёмном фоне — исключение из правила контраста по прямой
+     просьбе (14.10.2026): ответы FAQ и ссылки подвала, как у референса. На фото не ставить —
+     на первом экране пробовали, сине-серый на янтаре грязнит */
+  --color-text-muted: #a0afc8;
+  --color-line-ink: rgba(15, 20, 30, 0.12);
   --color-line-white: rgba(255, 255, 255, 0.14);
-  --color-ink-hover: #2a2a2e;   /* наведение на чёрную кнопку */
-  --color-void: #050505;        /* канва под hero-кадрами, темнее чёрных полос */
+  --color-ink-hover: #1e2837;   /* наведение на тёмную кнопку */
+  --color-void: #0b0f17;        /* канва под hero-кадрами, темнее тёмных полос */
+  --color-photo-black: #060708; /* чёрный фото hero: канва под кадром на телефоне, шапка */
 
   /* Полупрозрачные слои на тёмном фоне: подложки контролов и волосяные обводки.
      Четыре ступени на весь сайт — новых значений rgba(255,255,255,…) не заводим */
@@ -33,22 +39,37 @@
   --color-amber: #ffb35c;       /* светлый край балки */
   --color-orange: #ff8a2a;      /* ядро свечения */
   --color-ember: #e8560f;       /* тёмный край, к которому уходит градиент */
+  /* Акцент — оранжевый балки (≈28° на круге) против синей основы (≈220°): почти
+     дополнительная пара. Контраст: тёмный текст на оранжевом ≈ 8:1, оранжевый на основе ≈ 8:1.
+     Только главное действие — шапка и «Рассчитать стоимость» */
+  --color-accent: var(--color-orange);
+  --color-accent-hover: var(--color-amber);
+  --color-on-accent: #0b0b0c;   /* текст на оранжевом — нейтральный чёрный: синий на оранжевом спорил */
+  --cut: 18px;                  /* срез угла карточки-бирки (32 пробовали — слишком сильно) */
+  --cut-sm: 10px;               /* срез нижних углов шапки */
   --gradient-sparks: linear-gradient(160deg, var(--color-amber) 0%, var(--color-orange) 45%, var(--color-ember) 100%);
 
   /* Шрифт */
   --font-body: 'Onest Variable', system-ui, sans-serif;
+  /* Технический слой (16.10.2026, «чуть гаража»): метки, счётчики, цены-«от», чипы.
+     Только служебные строки — набор и заголовки остаются на Onest */
+  --font-mono: 'Geist Mono Variable', ui-monospace, monospace;  /* выбран 16.10.2026 из 8; отвергнуты: JetBrains, IBM Plex, Martian */
   --w-regular: 400;
   --w-medium: 500;
   --w-semibold: 600;
   --w-bold: 700;
+  --w-black: 800;               /* заголовки по референсу (FAQ) — Onest тянет до 900 */
 
   /* Кегль */
   --text-caption: 0.8125rem;
   --text-body: 1rem;
   --text-body-lg: 1.125rem;
+  --text-lead: clamp(1.0625rem, 1.6vw, 1.25rem);          /* лид под h1 и вопрос FAQ: 17 → 20 */
   --text-subhead: clamp(1.25rem, 1.6vw, 1.5rem);         /* заголовок внутри карточки, над списком */
   --text-tile: clamp(1.5rem, 2.2vw, 2.125rem);          /* название услуги в плашке */
-  --text-heading: clamp(1.75rem, 3vw, 2.75rem);          /* заголовок секции */
+  --text-heading: clamp(2.125rem, 4.4vw, 3.75rem);       /* заголовок секции: 34 → 60 (было 28 → 44) */
+  --text-heading-xl: clamp(2.25rem, 4.6vw, 4rem);        /* крупный заголовок блока: 36 → 64 (было 32 → 48) */
+  --text-question: clamp(1.125rem, 1.9vw, 1.5rem);       /* вопрос FAQ: 18 → 24 */
   --text-display: clamp(2.25rem, 4.2vw, 4.5rem);         /* h1 — две строки над фото */
   --text-stat: clamp(2.5rem, 4.5vw, 4rem);
 
@@ -61,7 +82,7 @@
   --page-max: 1680px;                        /* ширина контента */
   --gutter: clamp(20px, 3.5vw, 48px);        /* боковые поля */
   --section-gap: clamp(40px, 5.5vw, 80px);   /* половина разрыва между секциями */
-  --header-h: 72px;
+  --header-h: clamp(60px, 5vw, 72px);        /* шапка: 72 на десктопе (было 88 — «крупная») */
 
   /* Мера строки, в ch — ставить на сам текстовый элемент */
   --measure-text: 68ch;
@@ -73,12 +94,14 @@
   --bullet-indent: 16px;        /* отступ текста от левого края пункта */
   --bullet-gap: 6px;            /* между пунктами — меньше, чем между абзацами */
 
-  /* Радиусы */
-  --r-row: 8px;                 /* подсветка строки списка */
-  --r-input: 12px;
-  --r-tile: 20px;
-  --r-panel: 24px;
-  --r-pill: 10000px;
+  /* Радиусы. 16.10.2026: прямые углы (3px) — «грубо, как в 2000-х»; прежние (tile 20,
+     panel 24, пилюли) — «слишком сильно». Середина — ниже */
+  --r-row: 6px;                 /* подсветка строки списка */
+  --r-input: 10px;
+  --r-tile: 12px;
+  --r-panel: 14px;
+  --r-sheet: clamp(16px, 2.2vw, 28px);  /* светлый лист во всю ширину окна — углы видны по краям */
+  --r-pill: 10px;               /* кнопки, чипы — мягкий угол, не пилюля */
 
   /* Движение */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -94,31 +117,57 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
-  background: var(--color-page);
+  background: var(--color-ink);
 }
 
+/* Основа сайта тёмная: светлое — только листы-вставки (.section--sheet) */
 body {
   margin: 0;
-  background: var(--color-page);
-  color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--color-white);
   font-family: var(--font-body);
   font-weight: var(--w-regular);
   font-size: var(--text-body);
   line-height: 1.5;
 }
 
-/* Швейцарская типографика: плотный интерлиньяж, отрицательный трекинг, средний вес */
+/* Швейцарская типографика, «дерзко» (16.10.2026): крупные заголовки секций тяжёлые и плотные,
+   подзаголовки карточек — на ступень легче. Было: всё 600, трекинг −0.03em */
 h1, h2, h3, h4 {
   margin: 0;
-  font-weight: var(--w-semibold);
-  line-height: 1.02;
-  letter-spacing: -0.03em;
+  font-weight: var(--w-bold);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+}
+/* трекинг разряжен 16.10.2026: −0.045em слипался («буквы прижаты») */
+h1, h2 {
+  font-weight: var(--w-black);
+  line-height: 1;
+  letter-spacing: -0.025em;
 }
 
 p { margin: 0; }
 a { color: inherit; text-decoration: none; }
 img, video { max-width: 100%; display: block; }
 button, input, textarea, select { font: inherit; }
+
+/* Технический слой — моноширинный: только метки секций, чипы и счётчики.
+   Цены и подписи — на основном шрифте (16.10.2026). Список держим здесь,
+   чтобы «гараж» дозировался в одном месте */
+.mono,
+.section-label,
+.chip {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* Срезанные углы-бирки (плашки, пакеты, гарантии, шапка) пробовали 16.10.2026 — сняты
+   вместе с прямыми углами: «грубо». Рисунки срезов — в истории git */
+
+/* Акцентная кнопка — оранжевая, только главное действие (шапка, «Рассчитать стоимость») */
+.btn--accent { background: var(--color-accent); color: var(--color-on-accent); font-weight: var(--w-bold); }
+.btn--accent:hover { background: var(--color-accent-hover); }
 
 /* Предохранитель: жирность внутри наборного текста запрещена */
 p b, p strong, p em, p i,
@@ -170,6 +219,13 @@ mark {
 /* Тёмная полоса во всю ширину — чёрный фон, белый текст; чипы/кнопки инвертирует класс on-dark */
 .section--dark { background: var(--color-ink); color: var(--color-white); }
 .section--dark ::selection { background: var(--color-white); color: var(--color-ink); }
+/* Светлый лист на тёмной основе — во всю ширину окна, скруглённые углы. Приём референса:
+   светлая секция вставлена в тёмную страницу отдельным листом */
+.section--sheet {
+  background: var(--color-page);   /* белые карточки на нём читаются плашками */
+  color: var(--color-ink);
+  border-radius: var(--r-sheet);
+}
 
 /* Заголовок секции с меткой слева — швейцарская двухколонка */
 .section-head {
@@ -213,12 +269,15 @@ mark {
   gap: var(--sp-8);
   padding: 14px 24px;
   border-radius: var(--r-pill);
-  font-weight: var(--w-medium);
+  /* плотная кнопка-прямоугольник, как у бюро Горбунова (16.10.2026; было medium) */
+  font-weight: var(--w-semibold);
+  letter-spacing: -0.01em;
   font-size: var(--text-body);
   line-height: 1.2;
   cursor: pointer;
   border: none;
   white-space: nowrap;
+  /* Объёмная обводка-фаска на кнопках пробовалась 16.10.2026 — «грязно», снята */
   transition: background-color var(--t-hover-out) var(--ease-out), color var(--t-hover-out) var(--ease-out);
 }
 .btn:hover { transition-duration: var(--t-hover-in); }

@@ -1,9 +1,13 @@
 ---
 /* Плашки категорий услуг. Лицо — название и цена «от», оборот по наведению —
-   мини-прайс со ссылками на услуги. Три категории (wide в content.json) — в ширину на две колонки.
+   мини-прайс со ссылками на услуги. Оборот только там, где есть курсор: на телефоне
+   (14.10.2026) переворота нет — тап по плашке открывает её направление в калькуляторе
+   (data-calc-cat, обработчик в Calculator.astro). Клик по лицу на десктопе — то же.
+   Сетка ровная, все плашки одного размера (14.10.2026: широкие сняты — ряд «широкая + узкая»
+   ехал). Число категорий не кратно трём — последний ряд неполный, это нормально.
    Призыв «Не знаете, с чего начать?» — отдельным блоком под сеткой, без плашки.
    Данные считаются из прайса в lib/catalog.js, руками цены не проставляем. */
-import { categories, rub, plural } from '../lib/catalog.js';
+import { categories, rub } from '../lib/catalog.js';
 import { asset } from '../lib/paths.js';
 
 const { cta, more, href = '#contacts' } = Astro.props;
@@ -11,16 +15,17 @@ const { cta, more, href = '#contacts' } = Astro.props;
 
 <div class:list={['tiles', categories.length % 2 && 'tiles--odd']}>
   {categories.map((c) => (
+    <div class="tile-cell">
     <article
-      class:list={['tile', c.media && 'tile--media', c.wide && 'tile--wide']}
+      class:list={['tile', c.media && 'tile--media']}
       id={`cat-${c.id}`}
       data-tile
+      data-calc-cat={c.id}
     >
       {c.media && <img class="tile-bg" src={asset(c.media)} alt="" loading="lazy" />}
       <div class="tile-front">
         <div class="tile-top">
           <span class="chip">{c.tag}</span>
-          <span class="tile-count">{c.count} {plural(c.count)}</span>
         </div>
         <div class="tile-headline">
           <h3 class="tile-title">{c.title}</h3>
@@ -42,6 +47,7 @@ const { cta, more, href = '#contacts' } = Astro.props;
         <a class="btn btn--ghost tile-more" href={href}>{more}</a>
       </div>
     </article>
+    </div>
   ))}
 
 </div>
@@ -56,30 +62,10 @@ const { cta, more, href = '#contacts' } = Astro.props;
   </div>
 )}
 
-<script>
-  /* Тап по плашке на тач-экране: открыть оборот / закрыть. Ссылки внутри открытого
-     оборота работают как обычно; открытой может быть только одна плашка */
-  const tiles = document.querySelectorAll('.tile[data-tile]');
-  tiles.forEach((tile) => {
-    tile.addEventListener('click', (e) => {
-      if (!matchMedia('(hover: none)').matches) return; // с курсором хватает наведения
-      const open = tile.classList.contains('is-open');
-      if (open && e.target.closest('a')) return;
-      e.preventDefault();
-      tiles.forEach((t) => t !== tile && t.classList.remove('is-open'));
-      tile.classList.toggle('is-open', !open);
-      if (!open && tile.getBoundingClientRect().top < 0) {
-        tile.scrollIntoView({ block: 'start' });
-      }
-    });
-  });
-</script>
-
 <style>
-  /* Плашки услуг: 3 колонки, высота у всех одна — квадрат узкой плашки. Шесть категорий,
-     три широкие (wide в content.json, на две колонки): Ш+У / Ш+У / Ш+У = ровно 3 ряда.
-     Сменилось число категорий — пересчитать wide: категорий + широких = кратно трём.
-     В высоту плашки не растягиваем — только в ширину */
+  /* Плашки услуг: ровная сетка 3 колонки, все одного размера. Ниже квадрата — 5:4:
+     квадрат в треть ширины выходил огромным. Ниже 5:4 не опускать — на обороте
+     должен уместиться мини-прайс с кнопкой */
   .tiles {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -88,16 +74,14 @@ const { cta, more, href = '#contacts' } = Astro.props;
   .tile {
     position: relative;
     overflow: hidden;
-    /* Пропорция — переменной: её же держит раскрытый на таче оборот как минимальную */
-    --tile-ratio: 1;
+    --tile-ratio: 5 / 4;
     aspect-ratio: var(--tile-ratio);
     border-radius: var(--r-tile);
     background: var(--color-tile-dark);
     color: var(--color-white);
-    /* переход из меню: якорь не должен уезжать под фиксированную шапку */
+    /* переход из меню: якорь не должен уезжать под шапку */
     scroll-margin-top: calc(var(--header-h) + var(--sp-24));
   }
-  .tile--wide { grid-column: span 2; aspect-ratio: auto; }
   .tile-bg {
     position: absolute;
     inset: 0;
@@ -158,11 +142,11 @@ const { cta, more, href = '#contacts' } = Astro.props;
     font-weight: var(--w-semibold);
     letter-spacing: -0.02em;
     line-height: 1.1;
-    margin-bottom: var(--sp-16);
+    margin-bottom: var(--sp-12);
   }
   /* Кнопка прижата к низу, но от последней строки прайса всегда отбита */
   .tile-back .tile-more { margin-top: auto; }
-  .tile-back .tile-list { margin-bottom: var(--sp-24); }
+  .tile-back .tile-list { margin-bottom: var(--sp-16); }
   /* Раскрытие: наведение (только там, где есть курсор — на тач-экране «липкий» hover
      путает), фокус внутри (клавиатура), клик из меню и тап — .is-open */
   @media (hover: hover) {
@@ -194,7 +178,7 @@ const { cta, more, href = '#contacts' } = Astro.props;
     justify-content: space-between;
     gap: var(--sp-16);
     margin-inline: calc(var(--sp-8) * -1);
-    padding: 5px var(--sp-8);
+    padding: 4px var(--sp-8);
     border-radius: var(--r-row);
     transition: background-color var(--t-hover-out) var(--ease-out);
   }
@@ -206,11 +190,6 @@ const { cta, more, href = '#contacts' } = Astro.props;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
-  .tile--wide .tile-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--sp-12) var(--sp-48);
-  }
-  .tile--wide .tile-list li { font-size: var(--text-body-lg); }
   /* Переход к заявке — кнопка в ободке, а не текстовая ссылка: на обороте плашки
      это единственное целевое действие, оно должно читаться кнопкой. Заливка остаётся
      за первичной кнопкой в плашке-призыве — здесь вторая ступень иерархии */
@@ -218,6 +197,12 @@ const { cta, more, href = '#contacts' } = Astro.props;
     align-self: start;
     font-size: var(--text-body);
   }
+
+  /* Текст — на плашке: название и «от … ₽» (16.10.2026: подпись под фото по Горбунову
+     пробовали — вернули на плашку). Чип и число услуг сняты — минимализм */
+  .tile-cell { display: grid; }
+  .tile-top { display: none; }
+  .tile-front { justify-content: flex-end; }
 
   /* Призыв — не плашка и не клетка сетки: текст и кнопка отдельной строкой под плашками */
   .tiles-cta {
@@ -232,38 +217,66 @@ const { cta, more, href = '#contacts' } = Astro.props;
   .tiles-cta-title { font-size: var(--text-tile); }
   .tiles-cta-text p { max-width: var(--measure-lead); font-size: var(--text-body-lg); }
 
-  /* Тач-экраны (телефон, планшет): курсора нет, оборот открывается тапом. Открытая плашка
-     вырастает под весь список — оборот встаёт в поток и держит пропорцию закрытой как
-     минимум (overflow у него visible, длинный список тянет вниз). Соседи по ряду не
-     растягиваются за ней; крупная 2×2 по-прежнему занимает свои два ряда */
+  /* Тач-экраны: оборота нет вовсе — только лицо, тап ведёт в калькулятор */
   @media (hover: none) {
-    .tiles { align-items: start; }
-    .tile.is-open { aspect-ratio: auto; }
-    .tile.is-open .tile-back { position: relative; inset: auto; aspect-ratio: var(--tile-ratio); }
-    .tile.is-open .tile-front { opacity: 0; }
+    .tile-back { display: none; }
   }
 
-  /* Две колонки: все плашки — квадраты по две в ряд; при нечётном числе категорий первая
-     («Мойка и уход») во всю ширину, чтобы не было дыры */
+  /* Две колонки: при нечётном числе категорий первая во всю ширину, чтобы не было дыры */
   @media (max-width: 1100px) {
     .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .tile--wide { grid-column: auto; aspect-ratio: var(--tile-ratio); }
-    .tile--wide .tile-list { grid-template-columns: 1fr; gap: 2px; }
-    .tile--wide .tile-list li { font-size: var(--text-body); }
   }
   @media (min-width: 561px) and (max-width: 1100px) {
-    .tiles--odd .tile:first-child { grid-column: span 2; --tile-ratio: 2 / 1; aspect-ratio: var(--tile-ratio); }
+    .tiles--odd .tile-cell:first-child { grid-column: span 2; }
+    .tiles--odd .tile-cell:first-child .tile { --tile-ratio: 5 / 2; }
   }
-  /* Телефон: одна колонка в полях контейнера. Все плашки одного вида: лицо 5:4,
-     по тапу оборот встаёт в поток и плашка вырастает под весь список — ничего не обрезается */
+  /* Телефон: одна колонка, лицо 16:10. Тап переворачивает плашку: на обороте без фото —
+     название, мини-прайс, кнопка; высота тянется по списку (16.10.2026: оборот поверх
+     фото в рамке 16:10 не вмещал список). Наведение здесь ничего не делает */
   @media (max-width: 560px) {
     .tiles { grid-template-columns: 1fr; gap: var(--sp-12); }
-    .tile, .tile--wide { grid-column: auto; --tile-ratio: 5 / 4; }
-    /* Узкая колонка: мини-прайс в обороте — одна колонка и базовый кегль */
-    .tile--wide .tile-list { grid-template-columns: 1fr; }
-    .tile--wide .tile-list li { font-size: var(--text-body); }
-    .tile-list a { padding-block: 8px; }
+    .tile { grid-column: auto; aspect-ratio: auto; }
+    .tile-front { position: relative; aspect-ratio: 16 / 10; }
+    .tile-back,
+    .tile:hover .tile-back,
+    .tile:focus-within .tile-back {
+      position: static;
+      display: none;
+      opacity: 1;
+    }
+    .tile.is-open .tile-bg,
+    .tile.is-open .tile-front { display: none; }
+    /* не ниже лица (16:10), длинный список тянет оборот выше */
+    .tile.is-open .tile-back { display: flex; aspect-ratio: 16 / 10; }
     .tiles-cta { margin-top: var(--sp-48); }
     .tiles-cta-text p { font-size: var(--text-body); }
   }
 </style>
+
+<script>
+  /* Телефон: тап по плашке меняет сторону (лицо ↔ мини-прайс): новая сторона мягко
+     проявляется, высота плавно доезжает до новой. Без разворотов (16.10.2026: поворот
+     по оси — резко). Ссылки на обороте работают как ссылки; открыта только одна плашка */
+  const narrow = matchMedia('(max-width: 560px)');
+  const still = matchMedia('(prefers-reduced-motion: reduce)');
+  const ease = 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+  function flip(tile: HTMLElement, open: boolean) {
+    if (still.matches) return void tile.classList.toggle('is-open', open);
+    const from = tile.offsetHeight;
+    tile.classList.toggle('is-open', open);
+    const to = tile.offsetHeight;
+    tile.animate([{ height: `${from}px` }, { height: `${to}px` }], { duration: 360, easing: ease });
+    const side = tile.querySelector<HTMLElement>(open ? '.tile-back' : '.tile-front');
+    side?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' });
+  }
+
+  document.querySelectorAll<HTMLElement>('.tile').forEach((tile) => {
+    tile.addEventListener('click', (e) => {
+      if (!narrow.matches || (e.target as HTMLElement).closest('a')) return;
+      const open = !tile.classList.contains('is-open');
+      document.querySelectorAll<HTMLElement>('.tile.is-open').forEach((t) => t !== tile && flip(t, false));
+      flip(tile, open);
+    });
+  });
+</script>

@@ -12,7 +12,7 @@
    Мототехника в расчёт не входит: у неё свои два класса, не пять. */
 import content from '../data/content.json';
 import prices from '../data/prices.json';
-import { rub, plural } from '../lib/catalog.js';
+import { rub } from '../lib/catalog.js';
 import { sentence } from '../lib/typo.js';
 import { serviceText } from '../lib/service-texts.js';
 import { checkIntents } from '../lib/service-intents.js';
@@ -117,7 +117,7 @@ const searchIcon =
         {cats.map((c, i) => (
           <button class:list={['cat', i < wide3 && 'cat--wide3', i < wide2 && 'cat--wide2']} type="button" data-cat={c.id}>
             <span class="cat-top">
-              <span class="cat-count">{c.count} {plural(c.count)}</span>
+              <!-- число услуг в направлении снято 16.10.2026 («не пишем количество») -->
               <span class="cat-picked" data-cat-picked hidden></span>
             </span>
             <span class="cat-title">{c.title}</span>
@@ -336,7 +336,7 @@ const searchIcon =
         if (seq !== goSeq) return; // пока уезжал старый шаг, человек нажал что-то ещё
         const from = body.offsetHeight;
         panels.forEach((p) => (p.hidden = p.dataset.panel !== String(state.step)));
-        if (reduced) return;
+        if (reduced || instant) return;
         const to = body.offsetHeight;
         if (from !== to) {
           body.style.overflow = 'hidden';
@@ -510,12 +510,16 @@ const searchIcon =
       root.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
     });
 
-    /* Первый экран: поле «марка или модель» ведёт сюда */
+    /* Плитка направления на главной (лицо плашки, не строка списка) — открыть направление */
     document.addEventListener('click', (e) => {
-      if (!(e.target as HTMLElement)?.closest?.('[data-calc-open]')) return;
+      const tile = (e.target as HTMLElement)?.closest?.<HTMLElement>('[data-calc-cat]');
+      if (!tile || (e.target as HTMLElement).closest('a')) return;
+      // Телефон: тап раскрывает плашку (ServiceTiles), в калькулятор ведут её строки и кнопка
+      if (matchMedia('(max-width: 560px)').matches) return;
+      if (!$(`[data-cat="${tile.dataset.calcCat}"]`)) return;
       e.preventDefault();
-      if (state.step !== 1) go(1, { scroll: false, instant: true });
-      combo.focus({ preventScroll: true });
+      state.carSeen = true;
+      openCat(tile.dataset.calcCat!);
       root.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
     });
 
@@ -643,10 +647,13 @@ const searchIcon =
         }
         if (data.car?.cls || data.seen) {
           setCar(data.car?.cls ? data.car : null, { advance: false });
-          go(2, { scroll: false });
+          // instant: пришли с машиной (тизер главной) — сразу шаг 2, без перелистывания с первого
+          go(2, { scroll: false, instant: true });
         }
       }
     } catch {}
+    // /calc/ прячет калькулятор, пока он не восстановил шаг (класс ставит pages/calc.astro)
+    document.documentElement.classList.remove('calc-restore');
 
     /* ---------- Заявка ---------- */
     const form = $<HTMLFormElement>('[data-form]');

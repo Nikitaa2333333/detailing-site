@@ -1,12 +1,12 @@
 ---
 import content from '../data/content.json';
-import { categories, rub, plural } from '../lib/catalog.js';
+import { categories, rub } from '../lib/catalog.js';
 import { url } from '../lib/paths.js';
 const { contacts, brand, nav, services } = content;
 ---
 
-<!-- Шапка без подложки: на hero видна всегда, после hero пропадает, при скролле вверх возвращается.
-     Цвет — через переключение класса (белый над тёмным, чёрный над светлым).
+<!-- Шапка без подложки поверх первого экрана и уезжает вместе со страницей — как у референса
+     (b2b.yandex.ru): не висит над контентом, не прячется-появляется. Кегль навигации — 16px.
      «Услуги» раскрывают карту прайса: наведение открывает, клик фиксирует (замечание к ТЗ —
      на референсе строка не фиксируется и уводит курсор мимо нужного пункта). -->
 <header class="header on-dark" id="header">
@@ -20,7 +20,11 @@ const { contacts, brand, nav, services } = content;
       {nav.map((item) => <a class="nav-link" href={item.href}>{item.label}</a>)}
     </nav>
     <a class="header-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
-    <a class="btn btn--primary header-cta" href="#contacts">Связаться</a>
+    <a class="btn btn--accent header-cta" href="#contacts">Связаться</a>
+    <!-- Телефон и планшет: бургер выкатывает ту же карту услуг сверху -->
+    <button class="burger" type="button" id="menu-burger" aria-expanded="false" aria-controls="services-menu" aria-label="Меню">
+      <span></span><span></span>
+    </button>
   </div>
 
   <div class="mega" id="services-menu">
@@ -29,7 +33,6 @@ const { contacts, brand, nav, services } = content;
         <div class="mega-col">
           <a class="mega-head" href={`#cat-${c.id}`} data-tile={c.id}>
             <span class="mega-title">{c.title}</span>
-            <span class="mega-count">{c.count} {plural(c.count)}</span>
           </a>
           <ul class="mega-list">
             {c.items.map((i) => (
@@ -45,22 +48,38 @@ const { contacts, brand, nav, services } = content;
       ))}
     </div>
     <p class="mega-note">{services.menuNote}</p>
+    <!-- только в мобильном меню: остальная навигация и телефон -->
+    <div class="mega-extra">
+      {nav.map((item) => <a class="mega-extra-link" href={item.href}>{item.label}</a>)}
+      <a class="mega-extra-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+    </div>
   </div>
+  <!-- Затемнение страницы под открытым меню, как на сайте КТМ; клик или курсор сюда — закрыть -->
+  <div class="mega-scrim" data-mega-scrim aria-hidden="true"></div>
 </header>
 
 <script>
   const header = document.getElementById('header');
-  const hero = document.querySelector('.hero');
   const toggle = document.getElementById('services-toggle');
   const mega = document.getElementById('services-menu');
 
   /* ——— Карта услуг ——— */
   let pinned = false; // зафиксировано кликом: наведение больше не закрывает
+  const burger = document.getElementById('menu-burger');
+  const mobile = window.matchMedia('(max-width: 900px)');
   const setMenu = (open) => {
     if (!open) pinned = false;
     header?.classList.toggle('is-menu-open', open);
     toggle?.setAttribute('aria-expanded', String(open));
+    burger?.setAttribute('aria-expanded', String(open));
+    // на телефоне меню во весь экран — страница под ним не крутится
+    document.documentElement.style.overflow = open && mobile.matches ? 'hidden' : '';
   };
+  burger?.addEventListener('click', () => {
+    if (header?.classList.contains('is-menu-open')) return setMenu(false);
+    pinned = true;
+    setMenu(true);
+  });
   const isOpen = () => header?.classList.contains('is-menu-open');
 
   toggle?.addEventListener('click', () => {
@@ -76,6 +95,9 @@ const { contacts, brand, nav, services } = content;
       if (!pinned) setMenu(false);
     });
   }
+  const scrim = header?.querySelector('[data-mega-scrim]');
+  scrim?.addEventListener('click', () => setMenu(false));
+  if (canHover) scrim?.addEventListener('pointerenter', () => { if (!pinned) setMenu(false); });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && isOpen()) {
       setMenu(false);
@@ -108,94 +130,41 @@ const { contacts, brand, nav, services } = content;
       if (t !== tile) t.classList.remove('is-open');
     });
   });
-
-  /* ——— Поведение самой шапки ——— */
-  let hidden = false;
-  let lastY = window.scrollY;
-  let ticking = false;
-  const HIDE_DELTA = 8; // мелкие дёргания скролла не переключают состояние
-  const setHidden = (value) => {
-    if (value === hidden) return; // состояние не изменилось — DOM не трогаем
-    hidden = value;
-    header?.classList.toggle('is-hidden', hidden);
-    if (hidden) setMenu(false); // уезжающая шапка не должна тянуть за собой меню
-  };
-  // Что лежит под нижней кромкой шапки: тёмная поверхность → белый текст, иначе чёрный
-  const DARK = '.hero, .section--dark, .dark-panel, .mega';
-  let onLight = false;
-  const updateTone = () => {
-    if (!header) return;
-    const probe = document.elementFromPoint(window.innerWidth / 2, header.offsetHeight + 1);
-    const light = !!probe && !probe.closest(DARK);
-    if (light === onLight) return;
-    onLight = light;
-    header.classList.toggle('is-on-light', light);
-    header.classList.toggle('on-dark', !light);
-  };
-  const update = () => {
-    ticking = false;
-    const y = window.scrollY;
-    const threshold = hero ? hero.offsetHeight - 80 : 40;
-    const delta = y - lastY;
-    header?.classList.toggle('is-solid', y > threshold);
-    if (y <= threshold) {
-      setHidden(false); // на первом экране шапка видна всегда
-    } else if (Math.abs(delta) >= HIDE_DELTA) {
-      setHidden(delta > 0); // ниже hero: вниз — прячем, вверх — показываем
-    }
-    if (Math.abs(delta) >= HIDE_DELTA) lastY = y;
-    updateTone();
-  };
-  window.addEventListener(
-    'scroll',
-    () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(update);
-    },
-    { passive: true }
-  );
-  update();
 </script>
 
 <style>
+  /* Закреплена на всех экранах, цвета основы (16.10.2026: «шапку всегда оставил бы»;
+     раньше на десктопе лежала прозрачной поверх первого экрана и уезжала) */
   .header {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 100;
+    background: var(--color-ink);
     color: var(--color-white);
-    transition: color 0.2s var(--ease-out), opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out);
   }
-  /* Над светлой секцией — чёрный текст */
-  .header.is-on-light { color: var(--color-ink); }
-  /* Ниже первого экрана шапка возвращается поверх контента — без подложки её текст
-     сливался с текстом плашек. Подложка в тон поверхности под шапкой */
-  .header.is-solid { background: var(--color-ink); }
-  .header.is-solid.is-on-light { background: var(--color-page); }
-  /* Свёрнутое состояние — тихое растворение с лёгким сдвигом */
-  .header.is-hidden { opacity: 0; transform: translateY(-12px); pointer-events: none; }
   .header-inner {
     height: var(--header-h);
     display: flex;
     align-items: center;
-    gap: var(--sp-32);
+    gap: var(--sp-40);
   }
+  /* Логотип — в тон заголовкам: вес 800, плотный трекинг (16.10.2026) */
   .logo {
-    font-weight: var(--w-bold);
-    font-size: 1.05rem;
-    letter-spacing: 0.02em;
+    font-weight: var(--w-black);
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
   }
 
-  .nav { display: flex; align-items: center; gap: var(--sp-24); }
+  .nav { display: flex; align-items: center; gap: var(--sp-32); }
   /* Наведение — подсветка-плашка (тот же приём, что в строках прайса), не подчёркивание.
      Отрицательные поля: плашка шире текста, но пункты остаются на своих местах */
   .nav-link {
-    font-size: var(--text-caption);
+    font-size: var(--text-body);
     font-weight: var(--w-medium);
-    padding: 4px 10px;
-    margin-inline: -10px;
+    padding: 6px 12px;
+    margin-inline: -12px;
     border-radius: var(--r-row);
     transition: background-color var(--t-hover-out) var(--ease-out);
   }
@@ -217,26 +186,40 @@ const { contacts, brand, nav, services } = content;
   .header.is-menu-open .nav-toggle { background: color-mix(in srgb, currentColor 12%, transparent); }
   .header.is-menu-open .nav-chevron { transform: rotate(180deg); }
 
-  /* Карта услуг — тёмная панель шириной с контент, под шапкой */
+  /* Карта услуг — полоса во всю ширину окна, цвета шапки, под ней затемнение страницы
+     (16.10.2026, как на сайте КТМ). Контент полосы — по сетке страницы */
   .mega {
     position: absolute;
     top: var(--header-h);
-    left: 50%;
-    width: min(100% - var(--gutter) * 2, var(--page-max) - var(--gutter) * 2);
-    padding: var(--sp-32) var(--sp-40) var(--sp-24);
-    border-radius: var(--r-panel);
-    background: var(--color-tile-dark);
+    left: 0;
+    right: 0;
+    padding: var(--sp-32) max(var(--gutter), (100% - var(--page-max)) / 2 + var(--gutter)) var(--sp-24);
+    background: var(--color-ink);
     color: var(--color-white);
     opacity: 0;
     visibility: hidden;
-    transform: translate(-50%, -8px);
+    transform: translateY(-8px);
     transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out), visibility 0.2s;
   }
   .header.is-menu-open .mega {
     opacity: 1;
     visibility: visible;
-    transform: translate(-50%, 0);
+    transform: none;
   }
+  /* начинается под шапкой: иначе ложится и на её фон (фон шапки ниже детей с z-index −1).
+     Шапка fixed — значит и затемнение всегда точно под ней */
+  .mega-scrim {
+    position: fixed;
+    inset: var(--header-h) 0 0;
+    z-index: -1;
+    background: rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s var(--ease-out), visibility 0.2s;
+  }
+  .header.is-menu-open .mega-scrim { opacity: 1; visibility: visible; }
+  /* шапка над затемнением — своим фоном, иначе над фото первого экрана она прозрачная */
+  .header.is-menu-open { background: var(--color-ink); }
   .mega-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -306,22 +289,89 @@ const { contacts, brand, nav, services } = content;
 
   .header-phone {
     margin-left: auto;
-    font-size: var(--text-caption);
-    font-weight: var(--w-medium);
+    font-size: var(--text-body-lg);
+    font-weight: var(--w-semibold);
+    letter-spacing: -0.01em;
     white-space: nowrap;
   }
-  .header-cta {
-    padding: 10px 18px;
-    font-size: var(--text-caption);
-  }
+  /* Кнопка обычного кнопочного размера (.btn: 16px, поля 14/24) — не уменьшаем */
+  .header-cta { flex: none; }
 
   @media (max-width: 1240px) {
     .mega-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
+  /* Телефон и планшет: шапка закреплена — телефон и «Связаться» всегда под пальцем.
+     Подложка — чёрный фото hero: над первым экраном шапка не видна как полоса */
+  /* Бургер: две линии → крестик */
+  .burger {
+    display: none;
+    position: relative;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+  }
+  .burger span {
+    position: absolute;
+    left: 11px;
+    right: 11px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform 0.25s var(--ease-out);
+  }
+  .burger span:first-child { top: 17px; }
+  .burger span:last-child { top: 25px; }
+  .header.is-menu-open .burger span:first-child { transform: translateY(4px) rotate(45deg); }
+  .header.is-menu-open .burger span:last-child { transform: translateY(-4px) rotate(-45deg); }
+  .mega-extra { display: none; }
+
   @media (max-width: 900px) {
-    .nav, .mega { display: none; }
+    .nav { display: none; }
+    .burger { display: block; }
+    /* Мобильное меню выкатывается сверху вниз (шторка): на всю высоту под шапкой,
+       своя прокрутка. Колонки категорий — в одну */
+    .mega {
+      bottom: auto;
+      height: calc(100dvh - var(--header-h));
+      overflow-y: auto;
+      padding: var(--sp-24) var(--gutter) var(--sp-40);
+      opacity: 1;
+      transform: none;
+      clip-path: inset(0 0 100% 0);
+      transition: clip-path 0.4s var(--ease-out-expo), visibility 0.4s;
+    }
+    .header.is-menu-open .mega { clip-path: inset(0 0 0 0); }
+    /* Контраст групп — плашками, не линиями (линии между пунктами запрещены правилами):
+       направление = плашка, название крупно и тяжело, пункты крупнее, чем на десктопе */
+    .mega-grid { grid-template-columns: minmax(0, 1fr); gap: var(--sp-8); }
+    .mega-col {
+      padding: var(--sp-16) var(--sp-16) var(--sp-12);
+      border-radius: var(--r-tile);
+      background: var(--color-tile-dark);
+    }
+    .mega-head { padding-bottom: var(--sp-8); }
+    .mega-title { font-size: var(--text-tile); font-weight: var(--w-black); letter-spacing: -0.02em; }
+    .mega-list { gap: 0; font-size: var(--text-body); }
+    .mega-list a { padding-block: 9px; }
+    .mega-name { font-size: var(--text-body-lg); font-weight: var(--w-semibold); }
+    .mega-price { font-size: var(--text-body); }
+    .mega-note { border-top: 0; margin-top: var(--sp-16); }
+    .mega-extra {
+      display: grid;
+      gap: var(--sp-12);
+      margin-top: var(--sp-28);
+    }
+    .mega-extra-link { font-size: var(--text-subhead); font-weight: var(--w-bold); }
+    .mega-extra-phone { margin-top: var(--sp-8); font-size: var(--text-subhead); font-weight: var(--w-bold); }
   }
   @media (max-width: 600px) {
     .header-phone { display: none; }
+    .logo { font-size: 1.25rem; }
+    .header-cta { margin-left: auto; padding: 12px 20px; }
+    .header-inner { gap: var(--sp-8); }
   }
 </style>

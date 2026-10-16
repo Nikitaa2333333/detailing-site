@@ -1,0 +1,61 @@
+{
+  "_comment": "Сезонные пакеты на главной. ЧЕРНОВИК: заказчик не согласовывал, вычитывает. Цены сюда не пишем — компонент SeasonPacks.astro складывает цены 1-го класса из prices.json по ключам «id листа:id услуги» (те же ключи, что в lib/sections.js и калькуляторе). Услуга скрыта на сайте или пропала из прайса — сборка падает и называет ключ. Скидок нет: цена пакета = сумма цен входящих услуг. items: { key, label?, qty? } — услуга (label — своё название вместо service-texts, qty — сколько штук в пакете); { oneOf: [ … ] } — одна из нескольких на выбор, в цену идёт самая дешёвая, в data-pack — первая.",
+  "season": {
+    "label": "Сезон: осень — зима",
+    "title": "Готовим машину к зиме",
+    "chip": "Осень — зима"
+  },
+  "priceNote": "Сумма услуг для 1-го класса",
+  "button": "Рассчитать пакет",
+  "or": "или",
+  "packs": [
+    {
+      "id": "winter-prep",
+      "title": "Подготовка к зиме",
+      "why": "Стёкла чище в снег, двери не примерзают, лак защищён от соли",
+      "accent": true,
+      "items": [
+        { "key": "zaschita-stekla-antidozhd:obrabotka-stekol-antidozhd-sneg-led" },
+        { "key": "obrabotka-kuzova-vosk-polim:zaschita-obrabotka-dvernyh-uplotnitelej" },
+        { "key": "obrabotka-kuzova-vosk-polim:zaschita-obrabotka-kuzova-polimer-konservantom-hydro-shine" }
+      ]
+    },
+    {
+      "id": "reagents-gravel",
+      "title": "Защита от реагентов и гравия",
+      "why": "Песок, гравий и реагенты с трассы — главный износ лака зимой",
+      "items": [
+        {
+          "oneOf": [
+            {
+              "key": "zaschita-lkp-keramika:stoimost-zaschitnogo-pokrytiya-power-shield-supershine-zhidk",
+              "label": "Керамика кузова «Жидкое стекло» Power Shield"
+            },
+            {
+              "key": "zaschita-lkp-plenka-ppf:ustanovka-poliuretanovoj-antigravijnoj-plenki-wematec-bamper",
+              "label": "Антигравийная плёнка: бампер, крылья, капот, фары и зеркала"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "winter-light",
+      "title": "Свет зимой",
+      "why": "Темнеет рано: мутные фары светят хуже, плёнка бережёт их от песка",
+      "items": [
+        { "key": "polirovka-lkp:polirovka-far-zadnih-fonarej-za-1sht", "label": "Полировка двух фар", "qty": 2 },
+        { "key": "zaschita-far:ustanovka-poliuretanovoj-antigravijnoj-plenki-na-fary-golovn" }
+      ]
+    },
+    {
+      "id": "salon-slush",
+      "title": "Салон после слякоти",
+      "why": "Соль и грязь с обуви въедаются в пол, кожа сохнет от печки",
+      "items": [
+        { "key": "himchistka-salona:himchistka-pola" },
+        { "key": "interer-salon:obrabotka-izdelij-iz-kozhi-kondicionerom-ot-koch-chemie-unna" }
+      ]
+    }
+  ]
+}

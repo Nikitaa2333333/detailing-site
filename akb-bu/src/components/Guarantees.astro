@@ -1,0 +1,67 @@
+---
+/* Гарантии (16.10.2026, переделка): крупное фото в фирменном стиле (тёмная студия,
+   балка света) + жёсткий крупный заголовок + одна строка текста. Без номеров и цветных
+   цифр — было «игриво». Фото — content.json → guarantees.items[].media; файла ещё нет —
+   карточка без фото. Сетка: телефон — столбик, планшет — 2×2, десктоп — 4 в ряд. */
+import { asset } from '../lib/paths.js';
+import { typo } from '../lib/typo.js';
+import fs from 'node:fs';
+const { items = [] } = Astro.props;
+const exists = (p) => p && fs.existsSync(new URL(`../../public${p}`, import.meta.url));
+---
+
+<ul class="guarantees">
+  {items.map((g) => (
+    <li class="guarantee">
+      {exists(g.media) && <img class="guarantee-img" src={asset(g.media)} alt="" loading="lazy" />}
+      <div class="guarantee-body">
+        <h3 class="guarantee-title">{typo(g.title)}</h3>
+        <p>{typo(g.text)}</p>
+      </div>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .guarantees {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--sp-12);
+  }
+  .guarantee {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: var(--r-tile);
+    background: var(--color-tile-dark);
+    color: var(--color-white);
+  }
+  .guarantee-img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+  .guarantee-body {
+    display: grid;
+    gap: var(--sp-12);
+    padding: var(--sp-24);
+  }
+  /* Заголовок пункта — на ступень меньше заголовка плашки (16.10.2026: на ПК был громадным) */
+  .guarantee-title {
+    font-size: var(--text-subhead);
+    font-weight: var(--w-bold);
+    letter-spacing: -0.015em;
+    line-height: 1.05;
+  }
+  @media (max-width: 1100px) {
+    .guarantees { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 560px) {
+    .guarantees { grid-template-columns: minmax(0, 1fr); }
+    .guarantee-body { padding: var(--sp-20); }
+  }
+</style>

@@ -82,6 +82,9 @@ const footnotes = globalFootnotes.filter((f) => body.includes(f.marker));
   .price { display: grid; gap: var(--sp-32); }
   .price-block {
     background: var(--color-white);
+    /* Поле белое, а лежать может и в тёмной секции — цвет текста задаём здесь,
+       иначе он наследует белый от тёмной страницы и таблица исчезает */
+    color: var(--color-ink);
     border-radius: var(--r-panel);
     padding: var(--sp-8) var(--sp-8) var(--sp-24);
   }

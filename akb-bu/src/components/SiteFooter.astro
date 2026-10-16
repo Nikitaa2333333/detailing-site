@@ -1,201 +1,200 @@
 ---
-/* Футер — чёрная полоса во всю ширину, последний экран сайта.
-   Три задачи: перелинковка (услуги + информационные страницы), доверие (адрес,
-   часы, соцсети) и последняя точка входа в заявку — телефон и кнопка.
+/* Подвал — по референсу b2b.yandex.ru: два яруса.
+   Верхний — лист основы со скруглённым низом: крупный логотип, связь (о компании и кнопка
+   заявки), соцсети, телефон и адрес. Нижний — на ступень светлее (--color-coal), лежит под
+   скруглением верхнего: колонки ссылок, копирайт и оговорка.
+   Ссылки приглушены (--color-text-muted), заголовки колонок белые — исключение из правила
+   контраста по прямой просьбе 14.10.2026, как у референса.
 
    Данные — из content.json (footer, contacts) и каталога: список категорий
    считается из прайса, руками сюда не вписывается. Телефон и адрес вымышленные. */
 import content from '../data/content.json';
 import { categories } from '../lib/catalog.js';
 import { url } from '../lib/paths.js';
+import { typo } from '../lib/typo.js';
 
 const { footer, contacts, services } = content;
 const { brand, year = new Date().getFullYear() } = Astro.props;
 ---
 
-<footer class="footer on-dark">
-  <div class="container">
-    <div class="footer-top">
-      <div class="footer-brand">
-        <a class="logo" href={url('/')}>{brand.logo}<span class="logo-accent">{brand.logoAccent}</span></a>
-        <p class="footer-about">{footer.about}</p>
-        <ul class="socials">
-          {footer.socials.map((s) => (
-            <li><a class="chip social" href={s.href} target="_blank" rel="noopener">{s.label}</a></li>
-          ))}
-        </ul>
-      </div>
+<footer class="footer on-dark" id="footer">
+  <div class="footer-main">
+    <div class="container">
+      <a class="logo" href={url('/')}>{brand.logo}<span class="logo-accent">{brand.logoAccent}</span></a>
 
-      <nav class="footer-col">
-        <h3 class="footer-col-title">{services.menuTitle}</h3>
-        <ul class="footer-links">
-          {categories.map((c) => (
-            <li><a href={`#cat-${c.id}`}>{c.title}</a></li>
-          ))}
-        </ul>
-      </nav>
+      <div class="footer-top">
+        <div class="footer-col">
+          <h3 class="footer-col-title">Записаться</h3>
+          <p class="footer-about">{typo(footer.about)}</p>
+          <a class="btn btn--primary footer-cta" href="#calc">Оставить заявку</a>
+        </div>
 
-      <nav class="footer-col">
-        <h3 class="footer-col-title">{footer.company.title}</h3>
-        <ul class="footer-links">
-          {footer.company.links.map((l) => (
-            <li><a href={url(l.href)}>{l.label}</a></li>
-          ))}
-        </ul>
-      </nav>
+        <nav class="footer-col">
+          <h3 class="footer-col-title">Мы в соцсетях</h3>
+          <ul class="footer-links footer-links--lg">
+            {footer.socials.map((s) => (
+              <li><a href={s.href} target="_blank" rel="noopener">{s.label}</a></li>
+            ))}
+          </ul>
+        </nav>
 
-      <div class="footer-col footer-contacts">
-        <h3 class="footer-col-title">Контакты</h3>
-        <a class="footer-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
-        <p class="footer-address">{contacts.address}</p>
-        <p class="footer-hours">{contacts.hours}</p>
-        <a class="footer-mail" href={`mailto:${contacts.email}`}>{contacts.email}</a>
-        <a class="btn btn--primary footer-cta" href="#contacts">Оставить заявку</a>
+        <div class="footer-col footer-contacts">
+          <a class="footer-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+          <p class="footer-muted">{contacts.hours}</p>
+          <p class="footer-muted">{contacts.address}</p>
+          <a class="footer-link-muted" href={`mailto:${contacts.email}`}>{contacts.email}</a>
+        </div>
       </div>
     </div>
+  </div>
 
-    <div class="footer-bottom">
-      <p class="footer-disclaimer">{footer.disclaimer}</p>
-      <div class="footer-legal">
+  <div class="footer-sub">
+    <div class="container">
+      <div class="footer-cols">
+        <nav class="footer-col">
+          <h3 class="footer-col-title footer-col-title--sm">{services.menuTitle}</h3>
+          <ul class="footer-links">
+            {categories.map((c) => (
+              <li><a href={`#cat-${c.id}`}>{c.title}</a></li>
+            ))}
+          </ul>
+        </nav>
+
+        <nav class="footer-col">
+          <h3 class="footer-col-title footer-col-title--sm">{footer.company.title}</h3>
+          <ul class="footer-links">
+            {footer.company.links.map((l) => (
+              <li><a href={url(l.href)}>{l.label}</a></li>
+            ))}
+          </ul>
+        </nav>
+
+        <nav class="footer-col">
+          <h3 class="footer-col-title footer-col-title--sm">Документы</h3>
+          <ul class="footer-links">
+            {footer.legal.map((l) => (
+              <li><a href={url(l.href)}>{l.label}</a></li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+
+      <div class="footer-bottom">
         <span>© {year} {brand.name}</span>
-        <ul class="legal-links">
-          {footer.legal.map((l) => (
-            <li><a href={url(l.href)}>{l.label}</a></li>
-          ))}
-        </ul>
+        <p class="footer-disclaimer">{typo(footer.disclaimer)}</p>
       </div>
     </div>
   </div>
 </footer>
 
 <style>
-  .footer {
-    background: var(--color-ink);
-    color: var(--color-white);
-    padding-block: var(--section-gap);
-    /* Отбивка от тёмной секции выше: без неё две чёрные полосы сливаются */
-    border-top: 1px solid var(--color-line-white);
-  }
+  .footer { color: var(--color-white); }
   .footer ::selection { background: var(--color-white); color: var(--color-ink); }
 
-  /* Бренд шире колонок ссылок: в нём лежит абзац о компании */
-  .footer-top {
-    display: grid;
-    grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
-    gap: var(--sp-48);
+  /* Верхний ярус — тот же тон, что основа сайта, скруглённый низ ложится на нижний ярус */
+  .footer-main {
+    position: relative;
+    z-index: 1;
+    background: var(--color-ink);
+    border-radius: 0 0 var(--r-sheet) var(--r-sheet);
+    padding-block: var(--sp-64) var(--sp-80);
   }
   .logo {
     display: inline-block;
     font-weight: var(--w-bold);
-    font-size: 1.05rem;
+    font-size: clamp(1.5rem, 2.4vw, 2rem);
     letter-spacing: 0.02em;
   }
-  .footer-about {
-    margin-top: var(--sp-20);
-    max-width: 44ch;
-    font-size: var(--text-body);
+  .footer-top {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-40) var(--sp-48);
+    margin-top: var(--sp-64);
   }
-
-  .socials {
-    list-style: none;
-    margin: var(--sp-28) 0 0;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-8);
-  }
-  .social { transition: background-color var(--t-hover-out) var(--ease-out); }
-  .social:hover { background: var(--veil-fill-soft); transition-duration: var(--t-hover-in); }
 
   /* Заголовок колонки — служебный интерфейс, жирность здесь разрешена.
      Капса нет: отличаем кеглем и весом, а не прописными */
   .footer-col-title {
-    font-size: var(--text-caption);
+    font-size: var(--text-body);
     font-weight: var(--w-semibold);
-    margin-bottom: var(--sp-20);
+    letter-spacing: 0;
+    line-height: 1.5;
+    margin-bottom: var(--sp-16);
   }
+  .footer-about { max-width: 40ch; }
+  .footer-cta { margin-top: var(--sp-24); }
 
-  /* Ссылки без линий-разделителей; наведение — подсветка-плашка, как в шапке.
+  /* Ссылки приглушены и без линий; наведение — белый текст и подсветка-плашка, как в шапке.
      Отрицательные поля: плашка шире текста, колонка остаётся на своём месте */
   .footer-links {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 2px;
+    gap: var(--sp-4);
   }
+  .footer-links--lg { font-size: var(--text-body-lg); gap: var(--sp-8); }
   .footer-links a,
-  .legal-links a {
+  .footer-link-muted {
     display: inline-block;
-    padding: 4px 10px;
-    margin-inline: -10px;
-    border-radius: var(--r-row);
-    transition: background-color var(--t-hover-out) var(--ease-out);
-  }
-  .footer-links a:hover,
-  .footer-links a:focus-visible,
-  .legal-links a:hover,
-  .legal-links a:focus-visible {
-    background: var(--color-row-hover-dark);
-    transition-duration: var(--t-hover-in);
-  }
-
-  .footer-contacts { display: grid; justify-items: start; gap: var(--sp-8); }
-  .footer-phone {
-    font-size: var(--text-body-lg);
-    font-weight: var(--w-semibold);
-    letter-spacing: -0.02em;
-    white-space: nowrap;
-  }
-  .footer-address, .footer-hours, .footer-mail { font-size: var(--text-body); }
-  /* Почта — подсветка-плашка на наведении, как везде на сайте.
-     Подчёркиваний в проекте нет */
-  .footer-mail {
     padding: 2px var(--sp-8);
     margin-inline: calc(var(--sp-8) * -1);
     border-radius: var(--r-row);
-    transition: background-color var(--t-hover-out) var(--ease-out);
+    color: var(--color-text-muted);
+    transition: background-color var(--t-hover-out) var(--ease-out), color var(--t-hover-out) var(--ease-out);
   }
-  .footer-mail:hover {
+  .footer-links a:hover,
+  .footer-links a:focus-visible,
+  .footer-link-muted:hover,
+  .footer-link-muted:focus-visible {
+    color: var(--color-white);
     background: var(--color-row-hover-dark);
     transition-duration: var(--t-hover-in);
   }
-  .footer-cta { margin-top: var(--sp-16); }
 
-  .footer-bottom {
-    margin-top: var(--sp-48);
-    padding-top: var(--sp-24);
-    border-top: 1px solid var(--color-line-white);
-    display: grid;
-    grid-template-columns: minmax(0, 1.5fr) minmax(0, 2fr);
-    gap: var(--sp-24) var(--sp-48);
-    align-items: start;
+  .footer-contacts { display: grid; justify-items: start; gap: var(--sp-8); align-content: start; }
+  .footer-phone {
+    font-size: var(--text-subhead);
+    font-weight: var(--w-semibold);
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    margin-bottom: var(--sp-8);
+  }
+  .footer-muted { color: var(--color-text-muted); font-size: var(--text-body-lg); }
+  .footer-link-muted { font-size: var(--text-body-lg); }
+
+  /* Нижний ярус — заезжает под скругление верхнего, чтобы в углах был его цвет */
+  .footer-sub {
+    background: var(--color-coal);
+    margin-top: calc(var(--r-sheet) * -1);
+    padding: calc(var(--r-sheet) + var(--sp-48)) 0 var(--sp-48);
     font-size: var(--text-caption);
   }
-  .footer-disclaimer { max-width: 60ch; }
-  .footer-legal {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: flex-end;
-    gap: var(--sp-12) var(--sp-24);
+  .footer-cols {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--sp-40) var(--sp-48);
   }
-  .legal-links {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-4) var(--sp-16);
-  }
+  .footer-col-title--sm { font-size: var(--text-caption); margin-bottom: var(--sp-8); }
 
-  @media (max-width: 1100px) {
-    .footer-top { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-40); }
-    .footer-brand { grid-column: 1 / -1; }
+  .footer-bottom {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+    gap: var(--sp-12) var(--sp-48);
+    margin-top: var(--sp-64);
+    color: var(--color-text-muted);
   }
-  @media (max-width: 700px) {
-    .footer-top { grid-template-columns: 1fr; }
-    .footer-bottom { grid-template-columns: 1fr; }
-    .footer-legal { justify-content: flex-start; }
+  .footer-disclaimer { max-width: var(--measure-text); }
+
+  @media (max-width: 1000px) {
+    .footer-top { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .footer-top > :first-child { grid-column: 1 / -1; }
+    .footer-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 600px) {
+    .footer-main { padding-block: var(--sp-48) var(--sp-64); }
+    .footer-top { grid-template-columns: minmax(0, 1fr); margin-top: var(--sp-40); }
+    .footer-cols { grid-template-columns: minmax(0, 1fr); }
+    .footer-bottom { grid-template-columns: minmax(0, 1fr); margin-top: var(--sp-40); }
   }
 </style>

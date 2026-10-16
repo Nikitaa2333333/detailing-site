@@ -7,27 +7,61 @@ import Hero from '../components/Hero.astro';
 import Section from '../components/Section.astro';
 import ServiceTiles from '../components/ServiceTiles.astro';
 import Calculator from '../components/Calculator.astro';
+import Faq from '../components/Faq.astro';
+import CalcTeaser from '../components/CalcTeaser.astro';
+import SeasonPacks from '../components/SeasonPacks.astro';
+import seasonPacks from '../data/season-packs.json';
+import Guarantees from '../components/Guarantees.astro';
+import Reviews from '../components/Reviews.astro';
+import Contacts from '../components/Contacts.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import content from '../data/content.json';
+import { url } from '../lib/paths.js';
 
 // Цифры, работы и форма CalcPanel временно сняты со страницы — компоненты
 // Numbers/Works/CalcPanel лежат на месте, вернуть = раскомментировать секции ниже.
-const { services, brand, calculator } = content;
+// Калькулятор с 16.10.2026 — на /calc/ (pages/calc.astro), здесь тизер; вернуть на главную —
+// секция <Section id="calc" … sheet center><Calculator /></Section> вместо тизера.
+const { services, brand, faq, guarantees, reviews } = content;
+const calcHref = url('/calc/');
 ---
 
 <Layout>
   <Header />
   <Hero />
 
-  <!-- Калькулятор сразу под первым экраном: машина → услуги → сумма → заявка -->
-  <Section id="calc" title={calculator.title} dark center>
-    <Calculator />
+  <!-- Тизер калькулятора: видео-демо + поле машины → /calc/?car=… -->
+  <Section id="calc-teaser" dark>
+    <CalcTeaser />
   </Section>
 
-  <!-- Услуги — тёмная полоса; плашка с фото занимает 2×2, по наведению показывает список услуг.
-       Ссылки плашек ведут в свой раздел калькулятора -->
+  <!-- Услуги — тёмная полоса; на телефоне плашка переворачивается тапом -->
   <Section id="services" title={services.title} dark reveal={false}>
-    <ServiceTiles cta={services.cta} more={services.more} href="#calc" />
+    <!-- призыв «Не знаете, с чего начать?» снят 16.10.2026: повторял тизер калькулятора -->
+    <ServiceTiles more={services.more} href={calcHref} />
+  </Section>
+
+  <!-- Сезонные пакеты (осень — зима): данные и суммы — season-packs.json + прайс -->
+  <!-- Снег (Snow.astro, slot="bg", class="has-snow") снят 16.10.2026: игриво -->
+  <Section id="season" dark label={seasonPacks.season.label} title={seasonPacks.season.title}>
+    <SeasonPacks href={calcHref} />
+  </Section>
+
+  <Section id="guarantees" title={guarantees.title} dark>
+    <Guarantees items={guarantees.items} />
+  </Section>
+
+  <Section id="reviews" title={reviews.title} dark>
+    <Reviews />
+  </Section>
+
+  <!-- Карта — перед вопросами (16.10.2026): крупный блок, вопросы уже добивают сомнения -->
+  <Section id="contacts" sheet>
+    <Contacts />
+  </Section>
+
+  <Section id="faq" dark>
+    <Faq title={faq.title} items={faq.items} />
   </Section>
 
   <SiteFooter brand={brand} />

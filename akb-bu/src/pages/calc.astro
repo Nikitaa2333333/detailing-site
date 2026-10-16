@@ -1,0 +1,51 @@
+---
+/* Калькулятор отдельной страницей (16.10.2026): на главной — тизер CalcTeaser, сюда ведут
+   его поле и кнопки «Рассчитать». ?car=… из тизера подставляется в поле машины. */
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Section from '../components/Section.astro';
+import Calculator from '../components/Calculator.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import content from '../data/content.json';
+
+const { brand, calculator } = content;
+---
+
+<Layout
+  title="Калькулятор детейлинга — цена для вашей машины"
+  description="Выберите марку и модель — калькулятор покажет цены на мойку, химчистку, полировку, керамику и оклейку плёнкой для класса вашей машины."
+>
+  <!-- Машина уже выбрана (тизер главной) — прячем калькулятор до восстановления шага,
+       иначе на миг мелькает шаг 1. Снимает класс Calculator.astro; страховка — 1,5 с -->
+  <script is:inline>
+    try {
+      var d = JSON.parse(localStorage.getItem('ds-calc-v1') || 'null');
+      if (d && ((d.car && d.car.cls) || d.seen)) {
+        document.documentElement.classList.add('calc-restore');
+        setTimeout(function () { document.documentElement.classList.remove('calc-restore'); }, 1500);
+      }
+    } catch (e) {}
+  </script>
+  <Header />
+  <div class="calc-page">
+    <Section id="calc" title={calculator.title} sheet center reveal={false}>
+      <Calculator />
+    </Section>
+  </div>
+  <SiteFooter brand={brand} />
+</Layout>
+
+<script>
+  /* Машина из тизера главной: подставить в поле и открыть выдачу */
+  const car = new URLSearchParams(location.search).get('car')?.trim();
+  const input = document.querySelector<HTMLInputElement>('#calc [data-car-input]');
+  if (car && input) {
+    input.value = car;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+</script>
+
+<style>
+  .calc-page { padding-top: var(--header-h); }
+  :global(html.calc-restore [data-calc]) { visibility: hidden; }
+</style>
