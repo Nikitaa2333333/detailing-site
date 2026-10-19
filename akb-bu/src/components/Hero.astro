@@ -66,9 +66,27 @@ const frames = hero.frames ?? [hero.media];
     --hero-travel: 55svh;
     --frame-count: 3;
     position: relative;
-    height: calc(100svh + var(--hero-travel));
-    background: var(--color-photo-black);
+    /* Низ первого экрана гаснет в общий фон страницы (19.10.2026): под кадром зона
+       --hero-fade, в ней сглаженный градиент тёмный → прозрачный (::after) */
+    --hero-fade: clamp(100px, 16vh, 180px);
+    height: calc(100svh + var(--hero-travel) + var(--hero-fade));
+    background: linear-gradient(to bottom,
+      var(--color-photo-black) calc(100% - var(--hero-fade)), transparent calc(100% - var(--hero-fade)));
     color: var(--color-white);
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: var(--hero-fade);
+    background: linear-gradient(to bottom,
+      rgba(1, 2, 5, 1) 0%, rgba(1, 2, 5, 0.987) 8.1%, rgba(1, 2, 5, 0.951) 15.5%,
+      rgba(1, 2, 5, 0.896) 22.5%, rgba(1, 2, 5, 0.825) 29%, rgba(1, 2, 5, 0.741) 35.3%,
+      rgba(1, 2, 5, 0.648) 41.2%, rgba(1, 2, 5, 0.55) 47.1%, rgba(1, 2, 5, 0.45) 52.9%,
+      rgba(1, 2, 5, 0.352) 58.8%, rgba(1, 2, 5, 0.259) 64.7%, rgba(1, 2, 5, 0.175) 71%,
+      rgba(1, 2, 5, 0.104) 77.5%, rgba(1, 2, 5, 0.049) 84.5%, rgba(1, 2, 5, 0.013) 91.9%,
+      rgba(1, 2, 5, 0) 100%);
+    pointer-events: none;
   }
   .hero-sticky {
     position: sticky;
@@ -200,9 +218,9 @@ const frames = hero.frames ?? [hero.media];
     .hero {
       --hero-travel: 36svh;
       height: auto;
-      /* Канва нейтрально-чёрная, как фото: на синеватой фото читалось чужим
-         прямоугольником. К низу блока уходит в цвет сайта */
-      background: linear-gradient(to bottom, var(--color-photo-black) 55%, var(--color-ink) 100%);
+      padding-bottom: var(--hero-fade);
+      background: linear-gradient(to bottom,
+        var(--color-photo-black) calc(100% - var(--hero-fade)), transparent calc(100% - var(--hero-fade)));
     }
     .hero-sticky {
       position: relative;
