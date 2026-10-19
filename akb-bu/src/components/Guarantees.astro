@@ -71,11 +71,13 @@ const arrow = (d) => `<path d="${d}" fill="none" stroke="currentColor" stroke-wi
   .g-arrow:disabled { opacity: 0.35; cursor: default; }
   .g-arrow svg { width: 22px; height: 22px; }
 
-  /* Лента выходит за правое поле контейнера до края окна — видно, что листается дальше */
+  /* Лента — на всю ширину окна в обе стороны: при листании карточки уходят за край экрана,
+     а не обрезаются полем секции. Первая карточка стоит по сетке (scroll-padding) */
   .g-track {
     list-style: none;
-    margin: 0 calc(var(--gutter) * -1) 0 0;
-    padding: 0 var(--gutter) 0 0;
+    margin: 0 calc(var(--gutter) * -1);
+    padding: 0 var(--gutter);
+    scroll-padding-inline: var(--gutter);
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: min(64%, 820px);
