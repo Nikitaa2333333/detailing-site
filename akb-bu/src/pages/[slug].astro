@@ -119,8 +119,6 @@ const short = page.tab ?? page.h1;
   <main class="spage">
     <!-- 1. Первый экран -->
     <Section dark reveal={false} class="spage-hero">
-      <!-- проба 19.10.2026: шлейф синий→индиго с фотосерии за заголовком -->
-      <div slot="bg" class="glow glow--tl" aria-hidden="true"></div>
       <p class="hero-word" aria-hidden="true">{word}</p>
       <div class="hero-body">
         <nav class="crumbs" aria-label="Навигация">
@@ -354,7 +352,6 @@ const short = page.tab ?? page.h1;
     --spage-hero-r: var(--r-tile);
     position: relative;
     z-index: 1;
-    isolation: isolate;   /* шлейф .glow (z-index: -1) — над чёрным фоном, под текстом */
     overflow: clip;
     padding-top: var(--sp-40);
     padding-bottom: var(--sp-48);
@@ -367,9 +364,7 @@ const short = page.tab ?? page.h1;
     padding-top: calc(var(--section-gap) + var(--r-tile));
   }
   /* Огромное бледное слово направления за заголовком — их «GT3» за машиной.
-     Декор: правило «текст только контрастный» его не касается. С 19.10.2026 (ночь) —
-     полупрозрачный белый сверху вниз и сложение со светом: на чёрном едва видно, над
-     шлейфом .glow буквы светлеют в его синий, а не лежат тёмным пятном поверх */
+     Цвет плашки, декор: правило «текст только контрастный» его не касается */
   .hero-word {
     position: absolute;
     inset: var(--sp-8) 0 auto;
@@ -377,11 +372,7 @@ const short = page.tab ?? page.h1;
     font-size: clamp(4rem, 12vw, 10rem);
     line-height: 1;
     letter-spacing: -0.05em;
-    color: transparent;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
-    -webkit-background-clip: text;
-    background-clip: text;
-    mix-blend-mode: plus-lighter;
+    color: var(--color-tile-dark);   /* на чёрном — чуть светлее фона */
     white-space: nowrap;
     pointer-events: none;
     user-select: none;

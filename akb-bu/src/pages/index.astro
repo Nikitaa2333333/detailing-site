@@ -59,9 +59,7 @@ const calcHref = url('/calc/');
 
   <!-- Гарантии — их «Drive.»: тёмная полоса, заголовок по центру, лента карточек со
        стрелками выходит нижней половиной на белое. Сверху — плавный вход с белого -->
-  <Section id="guarantees" title={guarantees.title} dark stage class="glow-host">
-    <!-- проба 19.10.2026: шлейф синий→индиго с фотосерии, правый верхний угол -->
-    <div slot="bg" class="glow glow--tr" aria-hidden="true"></div>
+  <Section id="guarantees" title={guarantees.title} dark stage>
     <Guarantees items={guarantees.items} />
   </Section>
 

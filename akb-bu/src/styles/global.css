@@ -22,10 +22,10 @@
   --color-ink-hover: #26272c;   /* наведение на тёмную кнопку */
   --color-void: #010205;        /* канва под первым экраном */
   --color-photo-black: #010205;
-  /* Фирменный шлейф с фотосерии (19.10.2026, проба): синий → индиго, только декор-свечением
-     на тёмном (.glow), не заливкой кнопок и плашек */
-  --glow-blue: 47, 107, 255;    /* rgb без скобок — для прозрачности в градиентах */
-  --glow-indigo: 92, 62, 245;
+  --color-more: #e1e7f2;        /* «Что входит» (.link-plus) — светлый сине-серый */
+  --color-more-hover: #d2dbeb;
+  --color-more-dark: rgba(150, 170, 215, 0.24);   /* то же на тёмном */
+  --color-more-dark-hover: rgba(150, 170, 215, 0.34);
 
   /* «Стекло» — полупрозрачная серая заливка + размытие подложки. Один приём на чипы,
      кнопки, круглые стрелки, переключатели. Крутить прозрачность в пределах 0.2–0.4 */
@@ -503,7 +503,8 @@ mark {
    Раскрывающая кнопка с aria-expanded="true" — плюс поворачивается в крестик.
    Разметка: <button class="link-plus"><svg … круг+плюс …/><span>Текст</span></button>
    (или <summary class="link-plus"> в <details>). С 19.10.2026, поздно — прямоугольник-«стекло»
-   с радиусом 8, без подчёркивания (просьба: «не совсем скруглённая пилюля, прозрачная») */
+   с радиусом 8, без подчёркивания (просьба: «не совсем скруглённая пилюля, прозрачная»);
+   цвет — светлый сине-серый --color-more (19.10.2026: серое стекло «тёмное, не то») */
 .link-plus {
   display: inline-flex;
   align-items: center;
@@ -511,8 +512,8 @@ mark {
   padding: 7px 14px 7px 10px;
   border: none;
   border-radius: var(--r-row);
-  background: var(--glass-light);
-  color: inherit;
+  background: var(--color-more);
+  color: var(--color-ink);
   font-size: var(--text-body);
   line-height: 1.4;
   cursor: pointer;
@@ -521,9 +522,9 @@ mark {
 }
 .link-plus::-webkit-details-marker { display: none; }
 .link-plus svg { flex: none; width: 18px; height: 18px; transition: transform 0.25s var(--ease-porsche); }
-.link-plus:hover { background: var(--glass-light-hover); transition-duration: var(--t-hover-in); }
-.on-dark .link-plus { background: var(--glass-dark); }
-.on-dark .link-plus:hover { background: rgba(120, 120, 124, 0.56); }
+.link-plus:hover { background: var(--color-more-hover); transition-duration: var(--t-hover-in); }
+.on-dark .link-plus { background: var(--color-more-dark); color: var(--color-white); }
+.on-dark .link-plus:hover { background: var(--color-more-dark-hover); }
 .link-plus[aria-expanded='true'] svg,
 details[open] > .link-plus svg { transform: rotate(45deg); }
 
@@ -534,8 +535,9 @@ details[open] > .link-plus svg { transform: rotate(45deg); }
    Селекторы только через dialog.sheet: .sheet и .sheet-title есть и в калькуляторе —
    без привязки к dialog шторка прибивала его список услуг к экрану на телефоне */
 dialog.sheet {
-  --sheet-max: 82svh;
-  --sheet-pad: var(--sp-24);
+  --sheet-max: 90svh;
+  --sheet-min: 60svh;            /* не «бумажка» внизу: места хватает, длинное листается */
+  --sheet-pad: 28px;
   /* прибита к низу экрана своей высотой, а не растянута на весь экран: на iPhone высота
      экрана меняется вместе с панелью браузера — растянутая шторка прыгала вверх */
   position: fixed;
@@ -555,7 +557,8 @@ dialog.sheet:not([open]) { display: none; }
 /* затемнение плотнее общего --backdrop: белая шторка на сером прайсе сливалась */
 dialog.sheet::backdrop { background: rgba(1, 2, 5, 0.62); }
 dialog.sheet .sheet-panel {
-  position: relative;
+  /* без position: крестик держится за саму шторку и не уезжает при прокрутке текста */
+  min-height: min(var(--sheet-min), var(--sheet-max));
   max-height: var(--sheet-max);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -566,38 +569,15 @@ dialog.sheet .sheet-panel {
   animation: sheet-in 0.32s var(--ease-porsche);
 }
 @keyframes sheet-in { from { transform: translateY(100%); } }
-dialog.sheet .sheet-close { position: absolute; top: var(--sp-16); right: var(--sp-16); background: var(--glass-light); color: var(--color-ink); }
+dialog.sheet .sheet-close { position: absolute; z-index: 1; top: var(--sp-16); right: var(--sp-16); background: var(--glass-light); color: var(--color-ink); }
 dialog.sheet .sheet-close:hover { background: var(--glass-light-hover); }
-dialog.sheet .sheet-kicker { font-size: var(--text-caption); font-weight: var(--w-medium); padding-right: 56px; }
-dialog.sheet .sheet-title { margin-top: var(--sp-8); font-size: var(--text-subhead); padding-right: 56px; }
-dialog.sheet .sheet-body { display: grid; gap: var(--sp-12); margin-top: var(--sp-20); }
-dialog.sheet .sheet-body .bullets { --bullet-gap: 6px; }
+/* крупно и свободно (19.10.2026: «мелко, кучно») — длинный состав листается внутри шторки */
+dialog.sheet .sheet-kicker { font-size: var(--text-body); font-weight: var(--w-medium); padding-right: 64px; }
+dialog.sheet .sheet-title { margin-top: var(--sp-12); font-size: var(--text-tile); letter-spacing: var(--track-head); line-height: 1.15; padding-right: 64px; }
+dialog.sheet .sheet-body { display: grid; gap: var(--sp-20); margin-top: var(--sp-32); font-size: var(--text-body-lg); line-height: 1.55; }
+dialog.sheet .sheet-body .bullets { --bullet-gap: 12px; }
 html.sheet-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { dialog.sheet .sheet-panel { animation: none; } }
-
-/* Шлейф синий → индиго (проба 19.10.2026) — свет с фотосерии на тёмных полосах.
-   <Section class="glow-host"><div slot="bg" class="glow glow--tr" aria-hidden="true" /></Section>
-   Один на секцию, в одном углу. Ручки: --glow-a (сила 0–1), --glow-w (ширина) */
-.glow-host { position: relative; isolation: isolate; overflow-x: clip; }
-.glow {
-  --glow-a: 1;
-  --glow-w: min(1100px, 140vw);
-  position: absolute;
-  z-index: -1;
-  width: var(--glow-w);
-  aspect-ratio: 2.4;
-  pointer-events: none;
-  opacity: var(--glow-a);
-  background:
-    radial-gradient(closest-side, rgba(var(--glow-blue), 0.42), rgba(var(--glow-blue), 0.12) 55%, transparent),
-    radial-gradient(closest-side at 30% 60%, rgba(var(--glow-indigo), 0.45), transparent 75%);
-  filter: blur(36px);
-  transform: rotate(-18deg);
-}
-.glow--tr { top: -12%; right: -38%; }
-.glow--tl { top: -12%; left: -38%; transform: rotate(18deg); }
-.glow--br { bottom: -20%; right: -38%; }
-@media (max-width: 760px) { .glow { --glow-w: 180vw; } }
 
 /* Чип — «стекло», без обводки */
 .chip {
