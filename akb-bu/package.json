@@ -20,6 +20,7 @@
   "dependencies": {
     "@fontsource-variable/geist-mono": "^5.3.0",
     "@fontsource-variable/onest": "^5.2.11",
+    "@fontsource/michroma": "^5.3.0",
     "astro": "^7.0.7"
   }
 }

@@ -189,6 +189,21 @@ button, input, textarea, select { font: inherit; }
 .btn--accent { background: var(--color-accent); color: var(--color-on-accent); font-weight: var(--w-bold); }
 .btn--accent:hover { background: var(--color-accent-hover); }
 
+/* Логотип-начертание «DS SEVER» — растянутый, как знак Porsche (19.10.2026, вариант Г4):
+   Michroma, утолщение обводкой в цвет буквы (у шрифта одно начертание), плотная разрядка.
+   Прописные — само написание знака, правило «капс запрещён» его не касается.
+   Ручки: --logo-stroke (0–1.5px — толщина), --logo-track (0.08–0.24em — разрядка) */
+.brand-logo {
+  --logo-stroke: 1.5px;
+  --logo-track: 0.08em;
+  font-family: 'Michroma', var(--font-body);
+  font-weight: 400;
+  letter-spacing: var(--logo-track);
+  white-space: nowrap;
+  -webkit-text-stroke: var(--logo-stroke) currentColor;
+  paint-order: stroke fill;
+}
+
 /* Предохранитель: жирность внутри наборного текста запрещена */
 p b, p strong, p em, p i,
 li > b, li > strong, li > em, li > i,

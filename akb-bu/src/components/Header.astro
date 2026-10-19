@@ -27,7 +27,7 @@ const icon = {
       <svg viewBox="0 0 20 20" aria-hidden="true" set:html={icon.menu} />
       <span class="menu-btn-label">Меню</span>
     </button>
-    <a class="logo" href={url('/')}>{brand.logo}<span>{brand.logoAccent}</span></a>
+    <a class="logo brand-logo" href={url('/')} aria-label={brand.name}>{brand.name}</a>
     <div class="header-end">
       <a class="header-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
       <a class="btn btn--glass header-cta" href={calc}>Рассчитать</a>
@@ -169,12 +169,7 @@ const icon = {
   }
   .menu-btn:hover { background: var(--glass-dark); transition-duration: var(--t-hover-in); }
   .menu-btn svg { width: 20px; height: 20px; }
-  .logo {
-    font-size: 1.375rem;
-    font-weight: var(--w-semibold);
-    letter-spacing: 0.02em;
-    white-space: nowrap;
-  }
+  .logo { font-size: 1.375rem; }
   .header-end {
     justify-self: end;
     display: flex;

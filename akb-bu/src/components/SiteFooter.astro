@@ -20,7 +20,7 @@ const { brand, year = new Date().getFullYear() } = Astro.props;
 <footer class="footer on-dark" id="footer">
   <div class="footer-main">
     <div class="container">
-      <a class="logo" href={url('/')}>{brand.logo}<span class="logo-accent">{brand.logoAccent}</span></a>
+      <a class="logo brand-logo" href={url('/')} aria-label={brand.name}>{brand.name}</a>
 
       <div class="footer-top">
         <div class="footer-col">
@@ -101,9 +101,7 @@ const { brand, year = new Date().getFullYear() } = Astro.props;
   }
   .logo {
     display: inline-block;
-    font-weight: var(--w-semibold);
     font-size: clamp(1.5rem, 2.4vw, 2rem);
-    letter-spacing: 0.02em;
   }
   .footer-top {
     display: grid;
