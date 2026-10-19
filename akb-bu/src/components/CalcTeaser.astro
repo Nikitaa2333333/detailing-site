@@ -25,7 +25,7 @@ const {
          Выбор кладётся в память калькулятора (ds-calc-v1), /calc/ открывается сразу на шаге 2 -->
     <form class="teaser-form" action={url('/calc/')} method="get" data-teaser data-calc-url={url('/calc/')}>
       <CarCombo id="teaser-car" placeholder="Марка или модель" label="Марка и модель" />
-      <button class="btn teaser-btn" type="submit">
+      <button class="btn btn--primary teaser-btn" type="submit">
         Рассчитать стоимость
       </button>
     </form>
@@ -73,16 +73,7 @@ const {
       }
       location.href = form.dataset.calcUrl!;
     });
-
-    // Открыли поле на десктопе — подтягиваем его к верху экрана, чтобы список не упирался в низ.
-    // На телефоне выбор и так на весь экран
-    const input = box.querySelector<HTMLInputElement>('[data-car-input]');
-    input?.addEventListener('focus', () => {
-      if (!matchMedia('(min-width: 861px)').matches) return;
-      const top = form.getBoundingClientRect().top;
-      const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 88;
-      if (top > window.innerHeight * 0.35) window.scrollBy({ top: top - header - 24, behavior: 'smooth' });
-    });
+    // Подтягивать поле к верху экрана больше не нужно: выбор машины — окно по центру
   }
 </script>
 
@@ -107,7 +98,16 @@ const {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: 'title' 'text' 'form';
     grid-template-rows: none;
+    /* по центру (19.10.2026: «этот блок по центру»): заголовок, лид и форма — одной осью */
+    justify-items: center;
+    text-align: center;
   }
+  .teaser--text .teaser-title,
+  .teaser--text .teaser-text { text-wrap: balance; }
+  .teaser--text .teaser-form { text-align: left; }   /* внутри поля и выдачи — по левому краю */
+  .teaser--text .teaser-form .teaser-btn { justify-self: center; }
+  /* выбранная машина — плашки «марка | модель» по той же оси, что кнопка */
+  .teaser--text .teaser-form :global(.combo:not(.is-sheet)) { justify-content: center; }
   .teaser-phone { grid-area: media; align-self: center; }
   .teaser-title { grid-area: title; align-self: end; }
   .teaser-text { grid-area: text; }
@@ -211,7 +211,7 @@ const {
     font-size: var(--text-body-lg);
   }
   .teaser-form :global(.combo-plate-value) { font-size: var(--text-subhead); }
-  .teaser-form :global(.combo-class) { font-size: var(--text-body); font-weight: var(--w-medium); letter-spacing: 0; }
+  .teaser-form :global(.combo-plate .combo-class) { font-size: var(--text-body); font-weight: var(--w-medium); letter-spacing: 0; }
 
   /* Металлический блик «вжух» на кнопке пробовали 16.10.2026 — снят: лишнее */
   .teaser-form .teaser-btn { justify-self: start; }
@@ -228,12 +228,7 @@ const {
     color: var(--color-ink);
   }
   .teaser-field::placeholder { color: var(--color-grey-text); }
-  /* Их первичная на светлом — чёрная заливка, обычный вес, высота 56 */
-  .teaser-form .teaser-btn {
-    background: var(--color-ink);
-    color: var(--color-white);
-  }
-  .teaser-form .teaser-btn:hover { background: var(--color-ink-hover); }
+  /* Тизер всегда на белом (section--solid) — кнопка обычная чёрная .btn--primary */
 
   /* Телефон: заголовок → описание → видео → форма; видео ~86% ширины */
   @media (max-width: 860px) {

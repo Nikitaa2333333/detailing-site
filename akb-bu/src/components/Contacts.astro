@@ -22,10 +22,9 @@ const routeHref = `https://yandex.ru/maps/?rtext=~${lat}%2C${lon}&rtt=auto`;
   <div class="contacts-grid">
     <div class="contacts-col">
       <a class="contacts-big" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
-      <div class="contacts-links">
-        <a href={`https://wa.me/${contacts.whatsappHref}`} target="_blank" rel="noopener">WhatsApp</a>
-        <a href={`https://t.me/${contacts.telegram}`} target="_blank" rel="noopener">Telegram</a>
-        <a href={`mailto:${contacts.email}`}>{contacts.email}</a>
+      <div class="contacts-msg">
+        <a class="btn btn--glass" href={`https://wa.me/${contacts.whatsappHref}`} target="_blank" rel="noopener">WhatsApp</a>
+        <a class="btn btn--glass" href={`https://t.me/${contacts.telegram}`} target="_blank" rel="noopener">Telegram</a>
       </div>
     </div>
     <div class="contacts-col">
@@ -34,15 +33,18 @@ const routeHref = `https://yandex.ru/maps/?rtext=~${lat}%2C${lon}&rtt=auto`;
     </div>
     <div class="contacts-col">
       <p class="contacts-big">{typo(contacts.hours)}</p>
-      <a class="contacts-route" href={routeHref} target="_blank" rel="noopener">Построить маршрут</a>
+      <a class="contacts-mail" href={`mailto:${contacts.email}`}>{contacts.email}</a>
     </div>
   </div>
 
-  <div class="contacts-map" data-map>
-    <iframe src={mapSrc} title={`Карта: ${contacts.address}`} loading="lazy" allowfullscreen></iframe>
-    <button class="contacts-map-cover" type="button" data-map-on>
-      <span class="btn btn--primary">Открыть карту</span>
-    </button>
+  <div class="contacts-map-block">
+    <div class="contacts-map" data-map>
+      <iframe src={mapSrc} title={`Карта: ${contacts.address}`} loading="lazy" allowfullscreen></iframe>
+      <button class="contacts-map-cover" type="button" data-map-on>
+        <span class="btn btn--glass">Открыть карту</span>
+      </button>
+    </div>
+    <a class="btn btn--primary btn--page contacts-route" href={routeHref} target="_blank" rel="noopener">Построить маршрут</a>
   </div>
 </div>
 
@@ -63,34 +65,35 @@ const routeHref = `https://yandex.ru/maps/?rtext=~${lat}%2C${lon}&rtt=auto`;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--sp-24) var(--sp-40);
   }
-  .contacts-col { display: grid; gap: var(--sp-12); align-content: start; }
-  /* Телефон, адрес, часы — витринные строки одного кегля, как на сайте КТМ */
-  /* Витринные строки — как их цифры и заголовки: крупно, обычный вес */
+  .contacts-col { display: grid; gap: var(--sp-12); align-content: start; justify-items: start; }
+  /* Телефон, адрес, часы — витринные строки одного кегля, обычный вес */
   .contacts-big {
-    font-size: var(--text-tile);
-    line-height: 1.2;
+    font-size: var(--text-subhead);
+    letter-spacing: var(--track-lead);
+    line-height: 1.25;
   }
   .contacts-note { font-size: var(--text-body-lg); }
-  .contacts-links {
+  .contacts-msg {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--sp-8) var(--sp-20);
-    font-size: var(--text-body-lg);
+    gap: var(--sp-8);
+    margin-top: var(--sp-8);
   }
-  /* Ссылки — их приём: подчёркнутый текст (как «Technical data and standard equipment»),
-     под курсором подчёркивание уходит */
-  .contacts-links a,
-  .contacts-route {
+  .contacts-msg .btn { padding: 10px 20px; }
+  /* Почта — их приём: подчёркнутый текст, под курсором подчёркивание уходит */
+  .contacts-mail {
     font-size: var(--text-body-lg);
     text-decoration: underline;
     text-underline-offset: 0.2em;
     text-decoration-thickness: 1px;
   }
-  .contacts-links a:hover,
-  .contacts-route:hover { text-decoration-color: transparent; }
+  .contacts-mail:hover { text-decoration-color: transparent; }
+
+  .contacts-map-block { display: grid; gap: var(--sp-16); justify-items: start; }
 
   .contacts-map {
     position: relative;
+    width: 100%;
     overflow: hidden;
     border-radius: var(--r-tile);
     background: var(--color-tile);
@@ -122,5 +125,10 @@ const routeHref = `https://yandex.ru/maps/?rtext=~${lat}%2C${lon}&rtt=auto`;
   @media (max-width: 860px) {
     .contacts-grid { grid-template-columns: minmax(0, 1fr); }
     .contacts { gap: var(--sp-32); }
+    .contacts-grid { gap: var(--sp-28); }
+  }
+  /* Телефон: основная кнопка — во всю ширину */
+  @media (max-width: 600px) {
+    .contacts-route { justify-self: stretch; }
   }
 </style>

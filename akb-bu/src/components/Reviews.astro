@@ -13,7 +13,7 @@ const allHref = reviews.oid ? `https://yandex.ru/maps/org/${reviews.oid}/reviews
   <div class="reviews-side">
     {reviews.rating && <p class="reviews-rating">{reviews.rating}</p>}
     {reviews.count && <p class="reviews-count">{reviews.count} на Яндекс Картах</p>}
-    {allHref && <a class="btn btn--primary" href={allHref} target="_blank" rel="noopener">Все отзывы</a>}
+    {allHref && <a class="btn btn--primary btn--page" href={allHref} target="_blank" rel="noopener">Все отзывы</a>}
   </div>
   <div class="reviews-feed">
     {widget ? (

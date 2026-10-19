@@ -66,15 +66,6 @@
     rgba(0, 0, 0, 0) 100%;
   --scrim-top-h: clamp(110px, 18vh, 150px);      /* под шапкой на первом экране */
   --scrim-bottom-h: clamp(140px, 24vh, 200px);   /* низ первого экрана */
-  /* Растворение фото в тёмную полосу (их приём «фото → чёрное → белое»): 16 ступеней
-     вместо двух, чтобы не было полосы на переходе */
-  --fade-to-ink: linear-gradient(to bottom,
-    rgba(1, 2, 5, 0) 0%, rgba(1, 2, 5, 0.011) 8.1%, rgba(1, 2, 5, 0.05) 15.5%,
-    rgba(1, 2, 5, 0.12) 22.5%, rgba(1, 2, 5, 0.22) 29%, rgba(1, 2, 5, 0.33) 35.3%,
-    rgba(1, 2, 5, 0.44) 41.2%, rgba(1, 2, 5, 0.52) 47.1%, rgba(1, 2, 5, 0.6) 52.9%,
-    rgba(1, 2, 5, 0.67) 58.8%, rgba(1, 2, 5, 0.73) 64.7%, rgba(1, 2, 5, 0.78) 71%,
-    rgba(1, 2, 5, 0.85) 77.5%, rgba(1, 2, 5, 0.92) 84.5%, rgba(1, 2, 5, 0.97) 91.9%,
-    #010205 100%);
 
   /* Шрифт — Onest (19.10.2026: «шрифт пока Onest оставим»; ближе к Porsche Next —
      Sofia Sans, сравнение в refs/porsche/font/specimen.png) */
@@ -132,6 +123,7 @@
   --r-panel: 24px;              /* панели, карточки внутри секций */
   --r-sheet: 0px;
   --r-pill: 12px;               /* кнопки */
+  --r-hero: clamp(32px, 5vw, 72px);   /* низ первого экрана, «вложенность» (крутить 32–96); на телефоне 0 — ниже */
   --r-full: 999px;              /* чипы, круглые кнопки */
 
   /* Движение */
@@ -142,6 +134,10 @@
      Плавный ВХОД на курсорных состояниях читается как тормоз — не заводить */
   --t-hover-in: 0s;
   --t-hover-out: 0.16s;
+  /* Смена фона страницы по прокрутке и всё, что перекрашивается вместе с ним (текст секций,
+     кнопки, точки). Крутить 1–2.5s; 19.10.2026: 0.8 — «плавнее гораздо» */
+  --bg-fade-t: 1.8s;
+  --bg-fade-ease: cubic-bezier(0.4, 0, 0.2, 1);   /* ровный разгон и торможение, без рывка */
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -212,24 +208,28 @@ a, button { -webkit-tap-highlight-color: transparent; }
   width: max-content;
   border-radius: var(--r-full);
   background: var(--glass-light);
+  color: var(--color-ink);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
 }
-.on-dark .dots { background: var(--glass-dark); }
+.on-dark .dots { background: var(--glass-dark); color: var(--color-white); }
 /* фон страницы сменился, а лента ещё на экране — точки следуют за фоном, а не за секцией */
 html[data-bg-theme='dark'] .dots { background: var(--glass-dark); color: var(--color-white); }
 html[data-bg-theme='light'] .dots { background: var(--glass-light); color: var(--color-ink); }
-.dots { transition: background-color 0.8s var(--ease-porsche), color 0.8s var(--ease-porsche); }
+.dots { transition: background-color var(--bg-fade-t) var(--bg-fade-ease), color var(--bg-fade-t) var(--bg-fade-ease); }
 .dots .dot {
   width: 8px;
   height: 8px;
   padding: 0;
   border: 0;
   border-radius: var(--r-full);
+  color: inherit;     /* без этого iOS красит кнопку в системный синий */
   background: currentColor;
   opacity: 0.45;      /* декоративная точка, не текст */
   cursor: pointer;
-  transition: width 0.3s var(--ease-porsche), opacity 0.3s;
+  -webkit-tap-highlight-color: transparent;
+  /* ширина меняется сразу: с анимацией старая и новая капсулы на миг сливались в одну длинную */
+  transition: opacity 0.2s;
 }
 .dots .dot.is-active { width: 28px; opacity: 1; }
 @media (max-width: 560px) {
@@ -237,15 +237,45 @@ html[data-bg-theme='light'] .dots { background: var(--glass-light); color: var(-
 }
 
 
-/* Фон страницы меняется по прокрутке — как на porsche.com (19.10.2026): цвет задан не у
-   секций, а у body; scripts/motion.js плавно смешивает его между data-bg соседних секций
-   (белый → серые оттенки → тёмный). Секции прозрачные — пока скрипт работает (html.bg-scroll) */
+/* ---------- Фон страницы по прокрутке — как на porsche.com (19.10.2026) ----------
+   Один механизм, без исключений. У секций и первого экрана своего фона нет — цвет один,
+   у body. scripts/motion.js смотрит, какая секция у середины экрана, и ставит на <html>
+   data-bg-theme="light|dark". Дальше всё делает CSS: фон страницы, текст секций и
+   основные кнопки на голом фоне плавно перекрашиваются за --bg-fade-t.
+   Карточки со своей подложкой (фото, плашки, пакеты) цвет задают сами и не трогаются.
+   Шапка, меню и точки лент не участвуют — у них свой постоянный вид. */
 html.bg-scroll .section--dark,
-html.bg-scroll .section--sheet { background-color: transparent; }
-/* смена цвета — анимацией по времени, их длительность и кривая */
-html.bg-scroll, html.bg-scroll body { transition: background-color 0.8s var(--ease-porsche); }
-/* Содержимое секций не прячем: фон меняется под ним (19.10.2026: гашение неактивных
-   секций пробовали — «полностью выключил блок», снято). .is-active ставит motion.js */
+html.bg-scroll .section--sheet { background: transparent; color: inherit; }
+html.bg-scroll body {
+  color: var(--color-white);
+  transition: background-color var(--bg-fade-t) var(--bg-fade-ease), color var(--bg-fade-t) var(--bg-fade-ease);
+}
+html.bg-scroll[data-bg-theme='light'] body { color: var(--color-ink); }
+/* первая покраска при загрузке — без анимации (класс снимает motion.js через кадр) */
+html.bg-instant, html.bg-instant body, html.bg-instant .btn--page { transition: none !important; }
+/* .section--solid — секция со своим фоном, в переходе не участвует: стоит светлой сразу
+   (тизер и плашки услуг под первым экраном, 19.10.2026: «пусть просто белый светлый будет»).
+   Анимированная смена фона — только дальше, при уходе в тёмную часть */
+html.bg-scroll .section--solid.section--sheet { background: var(--color-page); color: var(--color-ink); }
+/* Первый экран — тёмный лист со скруглёнными нижними углами, лежит на белом тизере
+   (19.10.2026: «как вложенность»). Тизер заходит под скругление на его радиус — в углах белое */
+.hero + .section--solid {
+  margin-top: calc(var(--r-hero) * -1);
+  padding-top: calc(var(--section-gap) + var(--r-hero));
+}
+/* телефон и планшет (раскладка первого экрана — 860px): без скругления, экран заполнен целиком */
+@media (max-width: 860px) {
+  :root { --r-hero: 0px; }
+}
+/* .btn--page — основная кнопка, стоящая на голом фоне страницы (не в карточке):
+   белая на тёмном, чёрная на светлом, перекрашивается вместе с фоном. Без скрипта
+   работает как обычная .btn--primary */
+html.bg-scroll .btn--page {
+  background: var(--color-white);
+  color: var(--color-ink);
+  transition: background-color var(--bg-fade-t) var(--bg-fade-ease), color var(--bg-fade-t) var(--bg-fade-ease);
+}
+html.bg-scroll[data-bg-theme='light'] .btn--page { background: var(--color-ink); color: var(--color-white); }
 
 /* Логотип-начертание «DS SEVER» — растянутый, как знак Porsche (19.10.2026, вариант Г4):
    Michroma, утолщение обводкой в цвет буквы (у шрифта одно начертание), плотная разрядка.
@@ -261,6 +291,12 @@ html.bg-scroll, html.bg-scroll body { transition: background-color 0.8s var(--ea
   -webkit-text-stroke: var(--logo-stroke) currentColor;
   paint-order: stroke fill;
 }
+
+/* Фирменный скроллбар — тонкий, серый бегунок без дорожки: страница, меню, списки
+   (19.10.2026). Серый средний — читается и на белом, и на чёрном. Ленты карточек
+   прячут его у себя сами (scrollbar-width: none) */
+:root { --scrollbar-thumb: rgba(138, 139, 147, 0.6); }
+* { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) transparent; }
 
 /* Предохранитель: жирность внутри наборного текста запрещена */
 p b, p strong, p em, p i,
@@ -309,48 +345,8 @@ mark {
 }
 .section { padding-block: var(--section-gap); }
 .section--flush-top { padding-top: 0; }
-/* Плавный переход с тёмной полосы на светлую (как на porsche.com): верх секции начинается
-   цветом основы и по сглаженной кривой уходит в белый. Контент — уже на белом: высоту
-   перехода добавляем к верхнему отступу. Длина — ручка --blend-h (240–480px) */
-/* Обратный переход — со светлой полосы на тёмную: верх секции белый и плавно темнеет */
-.section.section--blend-from-light {
-  --blend-h: clamp(160px, 24vh, 260px);   /* длина перехода; 19.10: было до 440 — «огромные дыры» */
-  padding-top: var(--blend-h);   /* контент — сразу за переходом, без второго отступа */
-  background-color: var(--color-ink);
-  background-image: linear-gradient(to bottom,
-    rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.987) 8.1%, rgba(255, 255, 255, 0.951) 15.5%,
-    rgba(255, 255, 255, 0.896) 22.5%, rgba(255, 255, 255, 0.825) 29%, rgba(255, 255, 255, 0.741) 35.3%,
-    rgba(255, 255, 255, 0.648) 41.2%, rgba(255, 255, 255, 0.55) 47.1%, rgba(255, 255, 255, 0.45) 52.9%,
-    rgba(255, 255, 255, 0.352) 58.8%, rgba(255, 255, 255, 0.259) 64.7%, rgba(255, 255, 255, 0.175) 71%,
-    rgba(255, 255, 255, 0.104) 77.5%, rgba(255, 255, 255, 0.049) 84.5%, rgba(255, 255, 255, 0.013) 91.9%,
-    rgba(255, 255, 255, 0) 100%);
-  background-size: 100% var(--blend-h);
-  background-repeat: no-repeat;
-}
-/* Тёмная полоса, из которой ряд карточек выходит на белое (их «Drive.»: фон секции —
-   чёрный до линии --band-cut от низа, ниже белый). --band-cut ≈ половина высоты карточек
-   плюс нижний отступ секции */
-.section.section--band {
-  --band-cut: calc(var(--section-gap) + 190px);
-  background: linear-gradient(to bottom,
-    transparent 0, transparent calc(100% - var(--band-cut)),
-    var(--color-page) calc(100% - var(--band-cut)), var(--color-page) 100%);
-  color: var(--color-white);
-}
-/* Полоса после белой секции: сверху плавно темнеет (те же ступени, что у blend-from-light) */
-.section.section--band.section--from-light {
-  --blend-h: clamp(160px, 24vh, 260px);
-  padding-top: var(--blend-h);   /* контент — сразу за переходом, без второго отступа */
-  background:
-    linear-gradient(to bottom,
-      rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.951) 15.5%, rgba(255, 255, 255, 0.825) 29%,
-      rgba(255, 255, 255, 0.648) 41.2%, rgba(255, 255, 255, 0.45) 52.9%, rgba(255, 255, 255, 0.259) 64.7%,
-      rgba(255, 255, 255, 0.104) 77.5%, rgba(255, 255, 255, 0.013) 91.9%, rgba(255, 255, 255, 0) 100%)
-      0 0 / 100% var(--blend-h) no-repeat,
-    linear-gradient(to bottom,
-      var(--color-ink) 0, var(--color-ink) calc(100% - var(--band-cut)),
-      var(--color-page) calc(100% - var(--band-cut)), var(--color-page) 100%);
-}
+/* Нарисованные градиенты-переходы между секциями (blend-from-*, band) удалены 19.10.2026:
+   переход делает фон страницы (см. блок «Фон страницы по прокрутке») */
 /* Огромный заголовок-переход (их «Your Porsche journey starts now.», typescale 5xl) */
 .section-title--huge {
   font-size: clamp(2.28rem, 5.2vw + 1.24rem, 7.48rem);
@@ -362,21 +358,9 @@ mark {
 .section-head--hero { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; }
 .section-head--hero .section-title { text-wrap: balance; }
 
-/* два класса — сильнее .section--sheet, чей `background` ниже по файлу сбрасывал градиент */
-.section.section--blend-from-dark {
-  --blend-h: clamp(160px, 24vh, 260px);   /* длина перехода; 19.10: было до 440 — «огромные дыры» */
-  padding-top: var(--blend-h);   /* контент — сразу за переходом, без второго отступа */
-  background-color: var(--color-page);
-  background-image: linear-gradient(to bottom,
-    rgba(1, 2, 5, 1) 0%, rgba(1, 2, 5, 0.987) 8.1%, rgba(1, 2, 5, 0.951) 15.5%,
-    rgba(1, 2, 5, 0.896) 22.5%, rgba(1, 2, 5, 0.825) 29%, rgba(1, 2, 5, 0.741) 35.3%,
-    rgba(1, 2, 5, 0.648) 41.2%, rgba(1, 2, 5, 0.55) 47.1%, rgba(1, 2, 5, 0.45) 52.9%,
-    rgba(1, 2, 5, 0.352) 58.8%, rgba(1, 2, 5, 0.259) 64.7%, rgba(1, 2, 5, 0.175) 71%,
-    rgba(1, 2, 5, 0.104) 77.5%, rgba(1, 2, 5, 0.049) 84.5%, rgba(1, 2, 5, 0.013) 91.9%,
-    rgba(1, 2, 5, 0) 100%);
-  background-size: 100% var(--blend-h);
-  background-repeat: no-repeat;
-}
+/* Секция со снегом (Snow.astro в слоте bg): снег — фоном, содержимое над ним */
+.section.has-snow { position: relative; overflow: clip; }
+.section.has-snow > .container { position: relative; z-index: 1; }
 /* Тёмная полоса во всю ширину — чёрный фон, белый текст; чипы/кнопки инвертирует класс on-dark */
 .section--dark { background: var(--color-ink); color: var(--color-white); }
 .section--dark ::selection { background: var(--color-white); color: var(--color-ink); }

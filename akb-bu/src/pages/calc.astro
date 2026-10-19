@@ -26,9 +26,10 @@ const { brand, calculator } = content;
       }
     } catch (e) {}
   </script>
-  <Header />
+  <Header light />
   <div class="calc-page">
-    <Section id="calc" title={calculator.title} sheet center reveal={false}>
+    <!-- section--solid: свой белый фон — калькулятор не темнеет, когда подходит подвал (19.10.2026) -->
+    <Section id="calc" title={calculator.title} sheet center reveal={false} class="section--solid">
       <Calculator />
     </Section>
   </div>

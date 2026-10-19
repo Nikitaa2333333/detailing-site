@@ -116,12 +116,13 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
     setTimeout(() => window.scrollTo(0, y), 250);
   }
   function fitSheet() {
-    if (!sheet || !vv) return;
+    if (!sheet || !vv || !narrow.matches) return;
     root.style.setProperty('--sheet-h', `${Math.round(vv.height)}px`);
     root.style.setProperty('--sheet-top', `${Math.round(vv.offsetTop)}px`);
   }
+  // Окно выбора — на любой ширине: на ПК по центру поверх затемнения, на телефоне на весь экран
   function openSheet() {
-    if (sheet || !narrow.matches) return;
+    if (sheet) return;
     sheet = true;
     root.classList.add('is-sheet');
     document.documentElement.classList.add('has-car-sheet');
@@ -140,9 +141,12 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
     vv?.removeEventListener('scroll', fitSheet);
     restoreY();
   }
-  // повернули телефон в ширину ПК — обычный выпадающий список
-  narrow.addEventListener('change', (e) => {
-    if (!e.matches) closeSheet();
+  // клик мимо окна (по затемнению) — закрыть, как крестиком
+  document.addEventListener('pointerdown', (e) => {
+    if (!sheet || root.contains(e.target)) return;
+    closeSheet();
+    if (document.activeElement === input) input.blur(); // blur → leave()
+    else leave();
   });
 
   let found = []; // строки, которые можно выбрать, — по порядку в списке
@@ -209,9 +213,16 @@ export function carCombo(root, { cars, car, onPick, missText, onMiss, onSearchMi
       const known = (b) => b.models.filter((m) => !m.base).length;
       topBrands = all.filter(known).sort((a, b) => known(b) - known(a)).slice(0, 30).sort(byBrand);
     }
-    // только популярные: остальные марки находит само поле, длинный алфавитный список не нужен
+    // популярные + «Все марки» внизу: раскрывает полный алфавитный список на месте
+    // (кнопку снимали 08.10.2026, вернули 19.10.2026 вместе с окном выбора — места хватает)
+    if (openOthers) {
+      const lines = [{ type: 'head', text: 'Все марки' }];
+      [...all].sort(byBrand).forEach((brand) => lines.push({ type: 'brand', brand }));
+      return lines;
+    }
     const lines = [{ type: 'head', text: 'Популярные марки' }];
     topBrands.forEach((brand) => lines.push({ type: 'brand', brand }));
+    lines.push({ type: 'others', text: 'Все марки' });
     return lines;
   }
 

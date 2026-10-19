@@ -1,12 +1,12 @@
 ---
-/* Подвал — по референсу b2b.yandex.ru: два яруса.
-   Верхний — лист основы со скруглённым низом: крупный логотип, связь (о компании и кнопка
-   заявки), соцсети, телефон и адрес. Нижний — на ступень светлее (--color-coal), лежит под
-   скруглением верхнего: колонки ссылок, копирайт и оговорка.
-   Ссылки приглушены (--color-text-muted), заголовки колонок белые — исключение из правила
-   контраста по прямой просьбе 14.10.2026, как у референса.
+/* Подвал — в стиле porsche.com (19.10.2026), один тон с основой сайта.
+   Сверху — призыв: крупный заголовок, лид о центре, «Рассчитать» и звонок.
+   Ниже — контакты с круглыми кнопками соцсетей («стекло») и колонки ссылок.
+   На телефоне колонки ссылок — раскрывающиеся плашки (<details>), на десктопе всегда открыты.
+   Внизу — документы и копирайт, под ними логотип во всю ширину подвала.
+   Текст только белый — приглушённого нет.
 
-   Данные — из content.json (footer, contacts) и каталога: список категорий
+   Данные — из content.json (footer, contacts) и каталога: список направлений
    считается из прайса, руками сюда не вписывается. Телефон и адрес вымышленные. */
 import content from '../data/content.json';
 import { categories } from '../lib/catalog.js';
@@ -15,182 +15,285 @@ import { typo } from '../lib/typo.js';
 
 const { footer, contacts, services } = content;
 const { brand, year = new Date().getFullYear() } = Astro.props;
+const calc = url('/calc/');
+
+const groups = [
+  { title: services.menuTitle, links: categories.map((c) => ({ label: c.title, href: `${calc}?cat=${c.id}` })) },
+  { title: footer.company.title, links: footer.company.links.map((l) => ({ label: l.label, href: url(l.href) })) },
+];
+
+/* Значки соцсетей по подписи из content.json; нет значка — круг с первой буквой */
+const socialIcon = {
+  Telegram: '<path d="M21.2 4.1 2.9 11.2c-.9.4-.9 1.6 0 1.9l4.5 1.5 1.7 5.4c.2.7 1.1.9 1.6.4l2.6-2.4 4.5 3.3c.6.5 1.5.1 1.7-.6l3.2-15.2c.2-.9-.7-1.7-1.5-1.4zM9.9 14.6l7.6-6.9-5.9 7.9-.4 2.9z" fill="currentColor" fill-rule="evenodd"/>',
+  WhatsApp: '<path fill-rule="evenodd" d="M12 3a9 9 0 0 0-7.8 13.4L3 21l4.7-1.2A9 9 0 1 0 12 3zM9.3 7.6c-.4.4-.9 1.2-.6 2.3.5 1.9 2.9 4.4 5 5.1.9.3 1.7 0 2.1-.5l.3-1.1-1.9-.9-.8.8c-1-.5-2.1-1.6-2.6-2.6l.8-.8-.9-2z" fill="currentColor"/>',
+  'ВКонтакте': '<path d="M3 7.2h2.9c.3 3.4 1.6 5 2.9 5.4V7.2h2.8v3c1.3-.2 2.6-1.6 3.1-3h2.8c-.4 1.9-1.9 3.4-3 4 1.1.5 2.8 1.9 3.5 4.6h-3.1c-.6-1.8-2-3.1-3.3-3.3v3.3h-.4C6.6 15.8 3.4 12.3 3 7.2z" fill="currentColor"/>',
+  YouTube: '<path fill-rule="evenodd" d="M6.5 5h11A4.5 4.5 0 0 1 22 9.5v5a4.5 4.5 0 0 1-4.5 4.5h-11A4.5 4.5 0 0 1 2 14.5v-5A4.5 4.5 0 0 1 6.5 5zm3.5 4v6l5.2-3z" fill="currentColor"/>',
+};
+const chevron = '<path d="m5 7.5 5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
 ---
 
 <footer class="footer on-dark" id="footer" data-bg="#010205">
-  <div class="footer-main">
-    <div class="container">
-      <a class="logo brand-logo" href={url('/')} aria-label={brand.name}>{brand.name}</a>
-
-      <div class="footer-top">
-        <div class="footer-col">
-          <h3 class="footer-col-title">Записаться</h3>
-          <p class="footer-about">{typo(footer.about)}</p>
-          <a class="btn btn--primary footer-cta" href="#calc">Оставить заявку</a>
-        </div>
-
-        <nav class="footer-col">
-          <h3 class="footer-col-title">Мы в соцсетях</h3>
-          <ul class="footer-links footer-links--lg">
-            {footer.socials.map((s) => (
-              <li><a href={s.href} target="_blank" rel="noopener">{s.label}</a></li>
-            ))}
-          </ul>
-        </nav>
-
-        <div class="footer-col footer-contacts">
-          <a class="footer-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
-          <p class="footer-muted">{contacts.hours}</p>
-          <p class="footer-muted">{contacts.address}</p>
-          <a class="footer-link-muted" href={`mailto:${contacts.email}`}>{contacts.email}</a>
-        </div>
+  <div class="container">
+    <div class="footer-hero">
+      <h2 class="footer-title">Рассчитаем стоимость для вашей машины</h2>
+      <p class="footer-lead">{typo(footer.about)}</p>
+      <div class="footer-actions">
+        <a class="btn btn--primary" href={calc}>Рассчитать стоимость</a>
+        <a class="btn btn--glass" href={`tel:${contacts.phoneHref}`}>Позвонить</a>
       </div>
+    </div>
+
+    <div class="footer-grid">
+      <div class="footer-contacts">
+        <a class="footer-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+        <p>{typo(contacts.hours)}</p>
+        <p>{typo(contacts.address)}</p>
+        <a class="footer-link" href={`mailto:${contacts.email}`}>{contacts.email}</a>
+        <ul class="footer-socials" aria-label="Мы в соцсетях">
+          {footer.socials.map((s) => (
+            <li>
+              <a class="round-glass footer-social" href={s.href} target="_blank" rel="noopener" aria-label={s.label} title={s.label}>
+                {socialIcon[s.label]
+                  ? <svg viewBox="0 0 24 24" aria-hidden="true" set:html={socialIcon[s.label]} />
+                  : <span aria-hidden="true">{s.label[0]}</span>}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {groups.map((g) => (
+        <details class="footer-group" open data-footer-group>
+          <summary class="footer-group-title">
+            {g.title}
+            <svg viewBox="0 0 20 20" aria-hidden="true" set:html={chevron} />
+          </summary>
+          <ul class="footer-links">
+            {g.links.map((l) => <li><a class="footer-link" href={l.href}>{l.label}</a></li>)}
+          </ul>
+        </details>
+      ))}
+    </div>
+
+    <div class="footer-bottom">
+      <ul class="footer-legal">
+        <li>© {year} {brand.name}</li>
+        {footer.legal.map((l) => <li><a class="footer-link" href={url(l.href)}>{l.label}</a></li>)}
+      </ul>
+      <p class="footer-disclaimer">{typo(footer.disclaimer)}</p>
     </div>
   </div>
 
-  <div class="footer-sub">
-    <div class="container">
-      <div class="footer-cols">
-        <nav class="footer-col">
-          <h3 class="footer-col-title footer-col-title--sm">{services.menuTitle}</h3>
-          <ul class="footer-links">
-            {categories.map((c) => (
-              <li><a href={`#cat-${c.id}`}>{c.title}</a></li>
-            ))}
-          </ul>
-        </nav>
-
-        <nav class="footer-col">
-          <h3 class="footer-col-title footer-col-title--sm">{footer.company.title}</h3>
-          <ul class="footer-links">
-            {footer.company.links.map((l) => (
-              <li><a href={url(l.href)}>{l.label}</a></li>
-            ))}
-          </ul>
-        </nav>
-
-        <nav class="footer-col">
-          <h3 class="footer-col-title footer-col-title--sm">Документы</h3>
-          <ul class="footer-links">
-            {footer.legal.map((l) => (
-              <li><a href={url(l.href)}>{l.label}</a></li>
-            ))}
-          </ul>
-        </nav>
-      </div>
-
-      <div class="footer-bottom">
-        <span>© {year} {brand.name}</span>
-        <p class="footer-disclaimer">{typo(footer.disclaimer)}</p>
-      </div>
-    </div>
+  <div class="footer-mark-wrap container" aria-hidden="true">
+    <span class="footer-mark brand-logo" data-footer-mark>{brand.name}</span>
   </div>
 </footer>
 
+<script>
+  /* Колонки ссылок: на телефоне — раскрывающиеся плашки (закрыты), на десктопе всегда открыты */
+  const mq = matchMedia('(max-width: 760px)');
+  const groups = document.querySelectorAll<HTMLDetailsElement>('[data-footer-group]');
+  const syncGroups = () => groups.forEach((d) => { d.open = !mq.matches; });
+  syncGroups();
+  mq.addEventListener('change', syncGroups);
+  groups.forEach((d) => d.querySelector('summary')?.addEventListener('click', (e) => {
+    if (!mq.matches) e.preventDefault();
+  }));
+
+  /* Логотип во всю ширину — это логотип шапки (тот же кегль, обводка, разрядка), увеличенный
+     целиком через scale: пропорции знака не меняются. Хвостовая разрядка не в счёт */
+  const mark = document.querySelector<HTMLElement>('[data-footer-mark]');
+  if (mark) {
+    const fit = () => {
+      const box = mark.parentElement!;
+      const cs = getComputedStyle(box);
+      const avail = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      const track = parseFloat(getComputedStyle(mark).letterSpacing) || 0;
+      const width = mark.offsetWidth - track;
+      if (width <= 0) return;
+      const s = avail / width;
+      mark.style.transform = `scale(${s})`;
+      box.style.height = `${mark.offsetHeight * s}px`;
+    };
+    document.fonts.ready.then(fit);
+    new ResizeObserver(fit).observe(mark.parentElement!);
+  }
+</script>
+
 <style>
-  .footer { color: var(--color-white); }
+  .footer {
+    color: var(--color-white);
+    background: var(--color-ink);
+    padding-top: var(--sp-120);
+    overflow: hidden;
+  }
   .footer ::selection { background: var(--color-white); color: var(--color-ink); }
 
-  /* Верхний ярус — тот же тон, что основа сайта, скруглённый низ ложится на нижний ярус */
-  .footer-main {
-    position: relative;
-    z-index: 1;
-    background: var(--color-ink);
-    border-radius: 0 0 var(--r-sheet) var(--r-sheet);
-    padding-block: var(--sp-64) var(--sp-80);
+  /* Призыв — заголовок секции крупным кеглем, мера строки на самих элементах */
+  .footer-title {
+    font-size: var(--text-heading-xl);
+    font-weight: var(--w-heading);
+    letter-spacing: var(--track-head);
+    line-height: 1.1;
+    max-width: var(--measure-head);
   }
-  .logo {
-    display: inline-block;
-    font-size: clamp(1.5rem, 2.4vw, 2rem);
+  .footer-lead {
+    margin-top: var(--sp-24);
+    font-size: var(--text-lead);
+    letter-spacing: var(--track-lead);
+    max-width: var(--measure-lead);
   }
-  .footer-top {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--sp-40) var(--sp-48);
-    margin-top: var(--sp-64);
+  .footer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-12);
+    margin-top: var(--sp-40);
   }
 
-  /* Заголовок колонки — служебный интерфейс, жирность здесь разрешена.
-     Капса нет: отличаем кеглем и весом, а не прописными */
-  .footer-col-title {
-    font-size: var(--text-body);
-    font-weight: var(--w-semibold);
-    letter-spacing: 0;
-    line-height: 1.5;
+  /* Контакты + колонки ссылок: 2fr под контакты, по 1fr на колонку */
+  .footer-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+    gap: var(--sp-48);
+    margin-top: var(--sp-120);
+  }
+  .footer-contacts {
+    display: grid;
+    justify-items: start;
+    align-content: start;
+    gap: var(--sp-8);
+    font-size: var(--text-body-lg);
+  }
+  .footer-phone {
+    font-size: var(--text-heading);
+    letter-spacing: var(--track-head);
+    line-height: 1.15;
+    white-space: nowrap;
     margin-bottom: var(--sp-16);
   }
-  .footer-about { max-width: 40ch; }
-  .footer-cta { margin-top: var(--sp-24); }
+  .footer-socials {
+    list-style: none;
+    margin: var(--sp-24) 0 0;
+    padding: 0;
+    display: flex;
+    gap: var(--sp-8);
+  }
+  .footer-social { width: 48px; height: 48px; }
+  .footer-social svg { width: 22px; height: 22px; }
 
-  /* Ссылки приглушены и без линий; наведение — белый текст и подсветка-плашка, как в шапке.
-     Отрицательные поля: плашка шире текста, колонка остаётся на своём месте */
+  /* Заголовок колонки — служебный интерфейс, жирность разрешена; капса нет */
+  .footer-group-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--text-body);
+    font-weight: var(--w-semibold);
+    list-style: none;
+    margin-bottom: var(--sp-16);
+    cursor: default;
+  }
+  .footer-group-title::-webkit-details-marker { display: none; }
+  .footer-group-title svg { display: none; width: 20px; height: 20px; transition: transform 0.3s var(--ease-out); }
+
   .footer-links {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    gap: var(--sp-4);
+    gap: var(--sp-8);
   }
-  .footer-links--lg { font-size: var(--text-body-lg); gap: var(--sp-8); }
-  .footer-links a,
-  .footer-link-muted {
+
+  /* Ссылка — белая; наведение — подсветка-плашка, как в шапке.
+     Отрицательные поля: плашка шире текста, колонка остаётся на своём месте */
+  .footer-link {
     display: inline-block;
     padding: 2px var(--sp-8);
     margin-inline: calc(var(--sp-8) * -1);
     border-radius: var(--r-row);
-    color: var(--color-text-muted);
-    transition: background-color var(--t-hover-out) var(--ease-out), color var(--t-hover-out) var(--ease-out);
+    transition: background-color var(--t-hover-out) var(--ease-out);
   }
-  .footer-links a:hover,
-  .footer-links a:focus-visible,
-  .footer-link-muted:hover,
-  .footer-link-muted:focus-visible {
-    color: var(--color-white);
+  .footer-link:hover,
+  .footer-link:focus-visible {
     background: var(--color-row-hover-dark);
     transition-duration: var(--t-hover-in);
   }
 
-  .footer-contacts { display: grid; justify-items: start; gap: var(--sp-8); align-content: start; }
-  .footer-phone {
-    font-size: var(--text-subhead);
-    white-space: nowrap;
-    margin-bottom: var(--sp-8);
-  }
-  .footer-muted { color: var(--color-text-muted); font-size: var(--text-body-lg); }
-  .footer-link-muted { font-size: var(--text-body-lg); }
-
-  /* Нижний ярус — заезжает под скругление верхнего, чтобы в углах был его цвет */
-  .footer-sub {
-    background: var(--color-coal);
-    margin-top: calc(var(--r-sheet) * -1);
-    padding: calc(var(--r-sheet) + var(--sp-48)) 0 var(--sp-48);
-    font-size: var(--text-caption);
-  }
-  .footer-cols {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--sp-40) var(--sp-48);
-  }
-  .footer-col-title--sm { font-size: var(--text-caption); margin-bottom: var(--sp-8); }
-
   .footer-bottom {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
-    gap: var(--sp-12) var(--sp-48);
-    margin-top: var(--sp-64);
-    color: var(--color-text-muted);
+    gap: var(--sp-16);
+    margin-top: var(--sp-120);
+    font-size: var(--text-caption);
+  }
+  .footer-legal {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-8) var(--sp-32);
   }
   .footer-disclaimer { max-width: var(--measure-text); }
 
-  @media (max-width: 1000px) {
-    .footer-top { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .footer-top > :first-child { grid-column: 1 / -1; }
-    .footer-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Логотип во всю ширину — кегль и всё прочее как в шапке, увеличивает скрипт (scale).
+     Отступ снизу — у самого подвала, у обёртки высоту ставит скрипт */
+  .footer { padding-bottom: var(--sp-24); }
+  .footer-mark-wrap {
+    margin-top: var(--sp-64);
+    line-height: 1;
   }
+  .footer-mark {
+    display: inline-block;
+    font-size: 1.375rem;          /* = .logo в Header.astro */
+    transform-origin: 0 0;
+    user-select: none;
+  }
+
+  @media (max-width: 1000px) {
+    .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .footer-contacts { grid-column: 1 / -1; }
+  }
+
   @media (max-width: 600px) {
-    .footer-main { padding-block: var(--sp-48) var(--sp-64); }
-    .footer-top { grid-template-columns: minmax(0, 1fr); margin-top: var(--sp-40); }
-    .footer-cols { grid-template-columns: minmax(0, 1fr); }
-    .footer-bottom { grid-template-columns: minmax(0, 1fr); margin-top: var(--sp-40); }
+    .footer-mark { font-size: 1.05rem; }   /* = .logo шапки на телефоне */
+  }
+
+  /* Телефон: колонки ссылок — раскрывающиеся плашки на тёмно-серой основе, без линий */
+  @media (max-width: 760px) {
+    .footer { padding-top: var(--sp-80); }
+    .footer-actions .btn { flex: 1 1 100%; }
+    .footer-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--sp-8);
+      margin-top: var(--sp-80);
+    }
+    .footer-contacts { margin-bottom: var(--sp-40); }
+    .footer-group {
+      background: var(--color-tile-dark);
+      border-radius: var(--r-panel);
+      interpolate-size: allow-keywords;
+    }
+    .footer-group-title {
+      font-size: var(--text-body-lg);
+      font-weight: var(--w-regular);
+      padding: var(--sp-20) var(--sp-24);
+      margin: 0;
+      cursor: pointer;
+    }
+    .footer-group-title svg { display: block; }
+    .footer-group[open] .footer-group-title svg { transform: rotate(180deg); }
+    .footer-group::details-content {
+      block-size: 0;
+      overflow: hidden;
+      transition: block-size 0.3s var(--ease-out), content-visibility 0.3s allow-discrete;
+    }
+    .footer-group[open]::details-content { block-size: auto; }
+    .footer-links {
+      padding: 0 var(--sp-24) var(--sp-24);
+      gap: var(--sp-12);
+      font-size: var(--text-body-lg);
+    }
+    .footer-bottom { margin-top: var(--sp-64); }
+    .footer-legal { flex-direction: column; }
+    .footer-mark-wrap { margin-top: var(--sp-48); }
   }
 </style>

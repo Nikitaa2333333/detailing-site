@@ -28,9 +28,10 @@ function initReveal() {
   items.forEach((el) => io.observe(el));
 }
 
-/* Фон страницы по прокрутке — как porsche.com (19.10.2026): у секций data-bg; цвет body
-   переключается, когда верх следующей секции доходит до середины экрана, и меняется
-   плавной анимацией по времени (transition в global.css), а не тянется за прокруткой */
+/* Фон страницы по прокрутке — как porsche.com (19.10.2026). У секций data-bg; секция,
+   чей верх поднялся выше линии BG_LINE, задаёт цвет body и тему html[data-bg-theme].
+   Смена — плавной анимацией по времени (transition в global.css), не тянется за прокруткой.
+   Всё остальное (текст, кнопки, точки) перекрашивает CSS по теме — здесь только это */
 function initBgScroll() {
   const secs = [...document.querySelectorAll('[data-bg]')];
   if (secs.length < 2) return;
@@ -38,26 +39,30 @@ function initBgScroll() {
   root.classList.add('bg-scroll');
   let raf = 0;
   let current = '';
+  // линия срабатывания — доля высоты экрана: верх новой секции поднялся выше неё — фон меняется.
+  // 0.25 (19.10.2026; было 0.5): переход — когда блок уже занял экран, а не на подходе;
+  // иначе над ним торчала белая секция с резкой границей
+  const BG_LINE = 0.25;
   const paint = () => {
     raf = 0;
-    const line = innerHeight * 0.5;
+    const line = innerHeight * BG_LINE;
     let i = 0;
     for (let k = 0; k < secs.length; k++) if (secs[k].getBoundingClientRect().top <= line) i = k;
-    // активна секция у середины экрана; содержимое остальных гаснет (их приём:
-    // на новом фоне не остаётся «чужих» кнопок и точек, нарисованных под прежний фон)
-    secs.forEach((s, k) => s.classList.toggle('is-active', k === i));
     const color = secs[i].dataset.bg;
     if (color === current) return;
     current = color;
     document.body.style.backgroundColor = color;
     root.style.backgroundColor = color;
-    // светлый или тёмный фон сейчас — по нему перекрашиваются точки лент и т. п.
-    root.dataset.bgTheme = secs[i].dataset.bg.toLowerCase() === '#ffffff' ? 'light' : 'dark';
+    root.dataset.bgTheme = color.toLowerCase() === '#ffffff' ? 'light' : 'dark';
   };
   const queue = () => { if (!raf) raf = requestAnimationFrame(paint); };
   addEventListener('scroll', queue, { passive: true });
   addEventListener('resize', queue);
+  // первый цвет — сразу, без анимации: иначе страница с белым верхом (калькулятор) при
+  // каждой загрузке 1,8 с перетекала из тёмного фона сайта в белый (19.10.2026)
+  root.classList.add('bg-instant');
   paint();
+  requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('bg-instant')));
 }
 
 function init() {

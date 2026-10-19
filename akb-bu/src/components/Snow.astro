@@ -1,0 +1,96 @@
+---
+/* Снег (19.10.2026, секция зимних пакетов) — canvas с падающими хлопьями, два слоя:
+   back  — фоном секции (слот bg у Section + class="has-snow"): мелкий и частый, за карточками;
+   front — поверх карточек, редкий и крупный, и только по краям: маска гасит его в середине,
+           чтобы не шёл по тексту. Кладётся последним в контент секции.
+   Рисуется, только пока блок на экране; «меньше движения» в системе — снега нет.
+   Ручки: --snow-opacity (0.4–1) — заметность; плотность и размер — props ниже */
+interface Props {
+  layer?: 'back' | 'front';
+}
+const { layer = 'back' } = Astro.props;
+// площадь на одно хлопье (px²) и множитель размера: передний слой — в 6 раз реже, вдвое крупнее
+const cfg = layer === 'front' ? { area: 54000, scale: 2 } : { area: 9000, scale: 1 };
+---
+
+<canvas class:list={['snow', `snow--${layer}`]} data-snow data-area={cfg.area} data-scale={cfg.scale} aria-hidden="true"></canvas>
+
+<script>
+  document.querySelectorAll<HTMLCanvasElement>('[data-snow]').forEach((canvas) => {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const area = Number(canvas.dataset.area) || 9000;
+    const scale = Number(canvas.dataset.scale) || 1;
+    type Flake = { x: number; y: number; r: number; v: number; drift: number; phase: number; a: number };
+    let flakes: Flake[] = [];
+    let w = 0, h = 0, raf = 0, last = 0, visible = false;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    const make = (anyY: boolean): Flake => {
+      const r = (0.6 + Math.random() ** 2 * 2.4) * scale;   // много мелких, мало крупных
+      return {
+        x: Math.random() * w,
+        y: anyY ? Math.random() * h : -r * 2,
+        r,
+        v: 18 + r * 14 + Math.random() * 10,                 // px/с: крупные падают быстрее
+        drift: 8 + Math.random() * 14,                       // размах покачивания
+        phase: Math.random() * Math.PI * 2,
+        a: 0.35 + Math.random() * 0.55,
+      };
+    };
+    const resize = () => {
+      w = canvas.clientWidth;
+      h = canvas.clientHeight;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const n = Math.max(1, Math.round((w * h) / area));
+      flakes = Array.from({ length: n }, () => make(true));
+    };
+    const frame = (t: number) => {
+      raf = 0;
+      const dt = Math.min((t - (last || t)) / 1000, 0.05);
+      last = t;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = '#fff';
+      for (const f of flakes) {
+        f.y += f.v * dt;
+        f.phase += dt * 0.8;
+        if (f.y > h + f.r * 2) Object.assign(f, make(false));
+        ctx.globalAlpha = f.a;
+        ctx.beginPath();
+        ctx.arc(f.x + Math.sin(f.phase) * f.drift, f.y, f.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (visible) raf = requestAnimationFrame(frame);
+    };
+    new ResizeObserver(resize).observe(canvas);
+    new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting;
+      if (visible && !raf) { last = 0; raf = requestAnimationFrame(frame); }
+    }).observe(canvas);
+  });
+</script>
+
+<style>
+  .snow {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: var(--snow-opacity, 0.85);
+  }
+  /* Передний слой — над карточками, но виден только у краёв: по бокам полосой ~12%,
+     сверху и снизу — растворением. Середина, где текст, чистая */
+  .snow--front {
+    z-index: 2;
+    -webkit-mask-image:
+      linear-gradient(to right, #000 0%, transparent 14%, transparent 86%, #000 100%),
+      linear-gradient(to bottom, #000 0%, transparent 18%, transparent 82%, #000 100%);
+    mask-image:
+      linear-gradient(to right, #000 0%, transparent 14%, transparent 86%, #000 100%),
+      linear-gradient(to bottom, #000 0%, transparent 18%, transparent 82%, #000 100%);
+  }
+</style>

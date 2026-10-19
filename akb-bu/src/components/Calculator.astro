@@ -65,10 +65,6 @@ const cats = siteCategories
   }))
   .filter((c) => c.sheets.length);
 
-// сколько первых плиток растянуть, чтобы ряд закрылся: в три колонки и в две
-const wide3 = (3 - (cats.length % 3)) % 3; // остаток 2 — одна плитка на две колонки, остаток 1 — две
-const wide2 = cats.length % 2;
-
 for (const c of cats) {
   const all = c.sheets.flatMap((s) => s.groups.flatMap((g) => g.services));
   c.count = all.length;
@@ -78,50 +74,75 @@ for (const c of cats) {
 
 const searchIcon =
   '<circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m13.5 13.5 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>';
+const chevron = '<path d="m8 5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
 ---
 
-<div class="wiz" data-calc data-step="1" data-note-from={t.noteFrom} data-note-request={t.noteRequest} data-no-car={t.noCar}>
-  <!-- Шаги сверху: пройденный можно открыть снова -->
-  <div class="wiz-head">
+<!-- Раскладка (19.10.2026, «минимализм, уже»): на ПК слева тонкий список этапов, справа узкая
+     колонка шага; ниже 1100px этапов нет — где ты, видно по самому шагу -->
+<div class="wiz" data-calc data-step="1" data-note-from={t.noteFrom} data-note-request={t.noteRequest} data-no-car={t.noCar} data-tip-first={t.tipFirst}>
+  <!-- Этапы: просто текст, текущий — весом и точкой; пройденный можно открыть снова -->
+  <nav class="wiz-head" aria-label="Этапы расчёта">
     <ol class="wiz-steps">
       {t.steps.map((label, i) => (
         <li>
           <button class="wiz-step" type="button" data-go={i + 1} disabled={i > 0}>
-            <span class="wiz-step-num"><span class="wiz-step-digit">{i + 1}</span></span>
             <span class="wiz-step-label" data-step-label={i + 1}>{label}</span>
           </button>
+          {/* разделы направления — подсписком под «Услуги», только на шаге 3: липкая
+              навигация по ленте живёт здесь, а не полосой под шапкой (19.10.2026) */}
+          {i === 2 && (
+            <div class="wiz-sections">
+              {cats.filter((c) => c.sheets.length > 1).map((c) => (
+                <ul class="wiz-sections-list" data-aside-chips={c.id} hidden>
+                  {c.sheets.map((s) => (
+                    <li>
+                      <button class="wiz-section" type="button" data-sheet-pick={s.id}>
+                        <span>{s.title}</span>
+                        <span class="chip-count" data-sheet-picked hidden></span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ))}
+            </div>
+          )}
         </li>
       ))}
     </ol>
-  </div>
+  </nav>
 
+  <div class="wiz-main">
   <div class="wiz-body" data-body>
+    <!-- Контекст шагов 2–3: машина (цены посчитаны для неё; клик — сменить) и поиск услуги.
+         Поиск — наверху, где его видно, а не в нижнем доке -->
+    <div class="wiz-context" data-context hidden>
+      <!-- машина — пилюлями «марка | модель класс», как в тизере главной; клик — сменить -->
+      <button class="wiz-car" type="button" data-go="1" aria-label="Сменить машину">
+        <span class="wiz-pill" data-car-brand-pill></span>
+        <span class="wiz-pill"><span data-car-head></span><span class="wiz-pill-class" data-car-head-class></span></span>
+      </button>
+      <div class="wiz-find" data-find-box>
+        <svg class="icon-search" viewBox="0 0 20 20" aria-hidden="true" set:html={searchIcon} />
+        <input class="field wiz-find-input" type="search" placeholder={t.searchPlaceholder} aria-label="Поиск услуги" data-find />
+      </div>
+    </div>
+
     <!-- 1. Машина -->
     <section class="wiz-panel" data-panel="1">
       <h3 class="wiz-title">{t.carTitle}</h3>
       <CarCombo id="calc-car" placeholder={t.carPlaceholder} label={t.carTitle} />
     </section>
 
-    <!-- 2. Направление. Сверху крупно — выбранная машина: цены ниже посчитаны для неё -->
+    <!-- 2. Направление — вертикальный список: название, цена «от» для класса, стрелка -->
     <section class="wiz-panel" data-panel="2" hidden>
-      <div class="wiz-car">
-        <p class="wiz-car-name" data-car-head></p>
-        <p class="wiz-car-meta">
-          <span data-car-head-class></span>
-          <button class="wiz-car-change" type="button" data-go="1" data-car-head-change>изменить</button>
-        </p>
-      </div>
       <h3 class="wiz-title">{t.catsTitle}</h3>
-      <p class="wiz-lead">{t.catsNote}</p>
       <div class="cats">
-        {cats.map((c, i) => (
-          <button class:list={['cat', i < wide3 && 'cat--wide3', i < wide2 && 'cat--wide2']} type="button" data-cat={c.id}>
-            <span class="cat-top">
-              <!-- число услуг в направлении снято 16.10.2026 («не пишем количество») -->
-              <span class="cat-picked" data-cat-picked hidden></span>
-            </span>
+        {cats.map((c) => (
+          <button class="cat" type="button" data-cat={c.id}>
             <span class="cat-title">{c.title}</span>
+            <span class="cat-picked" data-cat-picked hidden></span>
             <span class="cat-price" data-cat-price>{c.from == null ? 'по запросу' : `от ${rub(c.from)}`}</span>
+            <svg class="cat-arrow" viewBox="0 0 20 20" aria-hidden="true" set:html={chevron} />
           </button>
         ))}
       </div>
@@ -136,7 +157,9 @@ const searchIcon =
       <h3 class="wiz-title" data-cat-title></h3>
       <!-- Поиск по задаче: «поцарапали дверь» → что это и что обычно берут. Заполняет скрипт -->
       <div class="find-hints" data-find-hints hidden></div>
-      {cats.map((c) => (
+      <!-- чипы разделов — только если разделов больше одного: иначе заголовок направления
+           уже всё сказал («Химчистка» → «Химчистка салона» было дублем, 19.10.2026) -->
+      {cats.filter((c) => c.sheets.length > 1).map((c) => (
         <div class="chips" data-chips={c.id} hidden>
           {c.sheets.map((s) => (
             <button class="chip-btn" type="button" data-sheet-pick={s.id}>
@@ -149,8 +172,8 @@ const searchIcon =
 
       {cats.map((c) =>
         c.sheets.map((s) => (
-          <div class="sheet" id={`calc-sheet-${s.id}`} data-sheet={s.id} data-sheet-cat={c.id} hidden>
-            <h4 class="sheet-title">{c.title} · {s.title}</h4>
+          <div class:list={['sheet', c.sheets.length === 1 && 'sheet--solo']} id={`calc-sheet-${s.id}`} data-sheet={s.id} data-sheet-cat={c.id} hidden>
+            <h4 class="sheet-title"><span class="sheet-cat">{c.title} · </span>{s.title}</h4>
             {s.groups.map((g) => (
               <div class="group" data-group>
                 {g.title && <p class="group-title">{g.title}</p>}
@@ -160,20 +183,29 @@ const searchIcon =
                       <label class="svc-main">
                         <input class="svc-input" type="checkbox" value={svc.key} />
                         <span class="svc-check" aria-hidden="true"></span>
+                        <!-- три уровня (19.10.2026): название и цена, суть, служебная строка
+                             мелко — время; условия и состав — внутри «Что входит» -->
                         <span class="svc-body">
                           <span class="svc-name">{svc.name}</span>
                           {svc.desc && <span class="svc-desc">{svc.desc}</span>}
-                          {svc.duration && <span class="svc-time">{svc.duration}</span>}
-                          {svc.terms.length > 0 && <span class="svc-terms">{svc.terms.join(' ')}</span>}
+                          {svc.duration && (
+                            <span class="svc-time">
+                              <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 6.5V10l2.5 1.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                              {svc.duration}
+                            </span>
+                          )}
                         </span>
                         <span class="svc-price" data-price>{svc.min == null ? 'по запросу' : `от ${rub(svc.min)}`}</span>
                       </label>
-                      {svc.steps.length > 0 && (
+                      {(svc.steps.length > 0 || svc.terms.length > 0) && (
                         <details class="svc-more">
                           <summary>{t.more}</summary>
-                          <ul class="bullets">
-                            {svc.steps.map((step) => <li>{step}</li>)}
-                          </ul>
+                          {svc.steps.length > 0 && (
+                            <ul class="bullets">
+                              {svc.steps.map((step) => <li>{step}</li>)}
+                            </ul>
+                          )}
+                          {svc.terms.length > 0 && <p class="svc-terms">{svc.terms.join(' ')}</p>}
                         </details>
                       )}
                     </li>
@@ -188,22 +220,29 @@ const searchIcon =
     </section>
 
     <!-- 4. Заявка -->
+    <!-- Один столбец (19.10.2026: «всё слипается»): расчёт → итог строкой → «добавить» ссылкой →
+         с отступом отдельный блок «оставьте номер» с формой на белом, без тёмной карточки -->
     <section class="wiz-panel" data-panel="4" hidden>
       <h3 class="wiz-title">{t.orderTitle}</h3>
+      <!-- Расчёт — серая карточка: машина мелко сверху, строки услуг, итог тем же шрифтом
+           крупнее. Под карточкой — «Добавить услуги» кнопкой-стеклом -->
       <div class="order">
-        <div class="order-sum">
-          <p class="order-car" data-order-car></p>
-          <ul class="order-list" data-order-list></ul>
-          <p class="order-empty" data-order-empty>{t.orderEmpty}</p>
-          <div class="order-total" data-order-total>
-            <p class="order-total-label"><span>{t.total}</span><span data-order-count></span></p>
-            <p class="order-total-value" data-order-value></p>
+        <div class="order-block">
+          <div class="order-sum">
+            <p class="order-car" data-order-car></p>
+            <ul class="order-list" data-order-list></ul>
+            <p class="order-empty" data-order-empty>{t.orderEmpty}</p>
+            <div class="order-total" data-order-total>
+              <p class="order-total-label">{t.total}<span class="order-count"> · <span data-order-count></span></span></p>
+              <p class="order-total-value" data-order-value></p>
+            </div>
             <p class="order-note" data-order-note hidden></p>
           </div>
-          <button class="wiz-link" type="button" data-go="2">{t.addMore}</button>
+          <button class="btn btn--glass order-add" type="button" data-go="2">{t.addMore}</button>
         </div>
 
         <div class="order-form">
+          <h4 class="order-form-title">{t.formTitle}</h4>
           <form class="form" data-form novalidate>
             <input class="field" type="text" name="name" placeholder={t.name} autocomplete="name" />
             <input class="field" type="tel" name="phone" placeholder={t.phone} autocomplete="tel" inputmode="tel" required data-phone />
@@ -215,7 +254,11 @@ const searchIcon =
             <p class="form-error" data-form-error hidden></p>
           </form>
           <p class="form-success" data-form-success hidden>{t.success}</p>
-          <a class="form-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+          <!-- звонок — отдельной строкой ниже формы, крупно (19.10.2026: был мелко под кнопкой) -->
+          <div class="form-call">
+            <p>Если удобнее — позвоните напрямую</p>
+            <a class="form-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+          </div>
         </div>
       </div>
     </section>
@@ -223,19 +266,17 @@ const searchIcon =
 
   <!-- Нижний док: прибит к низу экрана, пока калькулятор на виду; ушёл калькулятор — уезжает.
        Стоит на растворении (контент под ним уходит в цвет полосы), не на блюре.
-       В нём поиск услуги (шаги 2–3) и кнопка дальше: «Продолжить» с машиной на шаге 1,
-       сумма и «К заявке», когда услуги отмечены -->
+       В нём кнопка дальше: «Продолжить» с машиной на шаге 1, сумма и «К заявке», когда
+       услуги отмечены. Над ней — подсказка по ходу (после первой отметки) -->
   <div class="wiz-dock" data-dock hidden>
     <div class="dock-inner" data-dock-inner>
-      <div class="wiz-find" data-find-box hidden>
-        <svg class="icon-search" viewBox="0 0 20 20" aria-hidden="true" set:html={searchIcon} />
-        <input class="field wiz-find-input" type="search" placeholder={t.searchPlaceholder} aria-label="Поиск услуги" data-find />
-      </div>
+      <p class="wiz-tip" data-tip hidden></p>
       <div class="wiz-foot" data-foot hidden>
         <p class="foot-info"><span class="foot-small" data-foot-small></span><span class="foot-main" data-foot-main></span></p>
         <button class="btn btn--primary foot-next" type="button" data-next data-label-next={t.next} data-label-continue={t.continue}>{t.next}</button>
       </div>
     </div>
+  </div>
   </div>
 </div>
 
@@ -277,6 +318,7 @@ const searchIcon =
       // ищем по всему тексту карточки, группе и «направление · раздел» — как в автотесте
       find: haystack([
         $('.svc-body', el).textContent,
+        el.querySelector('.svc-more')?.textContent, // состав и условия — тоже ищутся
         el.closest('[data-group]')?.querySelector('.group-title')?.textContent,
         el.closest('[data-sheet]')?.querySelector('.sheet-title')?.textContent,
       ]),
@@ -308,7 +350,7 @@ const searchIcon =
     /* ---------- Переход между шагами: высота карточки перетекает ---------- */
     const body = $('[data-body]');
     const panels = $$('[data-panel]');
-    const findBox = $('[data-find-box]');
+    const context = $('[data-context]');
     const findInput = $<HTMLInputElement>('[data-find]');
 
     /* Смена шага читается как движение: текущий шаг уезжает и гаснет, новый въезжает с другой
@@ -320,7 +362,7 @@ const searchIcon =
       const prev = state.step;
       state.step = step;
       root.dataset.step = String(step);
-      findBox.hidden = step !== 2 && step !== 3;
+      context.hidden = step !== 2 && step !== 3; // машина и поиск — над шагами 2–3
       if (step !== 3 && findInput.value) {
         findInput.value = '';
         filter();
@@ -417,30 +459,47 @@ const searchIcon =
     }
 
     /* ---------- 2–3. Направление и его разделы ---------- */
+    /* Направление — одна непрерывная лента (19.10.2026): все его разделы подряд, у каждого
+       заголовок; чипы разделов липнут сверху и подсвечивают тот, что сейчас на экране.
+       Клик по чипу — прокрутка к разделу. sheet — с какого раздела начать (ссылка из меню) */
     function openCat(cat: string, sheet?: string) {
       state.cat = cat;
       $('[data-cat-title]').textContent = $(`[data-cat="${cat}"] .cat-title`).textContent;
       $$('[data-chips]').forEach((c) => (c.hidden = c.dataset.chips !== cat));
-      // по умолчанию — раздел, где уже есть отметки, иначе первый
-      const first = rows.find((r) => r.cat === cat && r.input.checked)?.sheet ?? $(`[data-chips="${cat}"] [data-sheet-pick]`).dataset.sheetPick!;
-      showSheet(sheet ?? first);
-      if (state.step !== 3) go(3);
+      $$('[data-aside-chips]').forEach((c) => (c.hidden = c.dataset.asideChips !== cat));
+      $$('[data-sheet]').forEach((s) => (s.hidden = s.dataset.sheetCat !== cat));
+      markSheet(sheet ?? $(`[data-sheet-cat="${cat}"]`).dataset.sheet!);
+      const first = state.step !== 3;
+      if (first) go(3);
+      // к нужному разделу — когда шаг уже показан (смена шага идёт ~0.2 с)
+      if (sheet && sheet !== $(`[data-sheet-cat="${cat}"]`).dataset.sheet) setTimeout(() => toSheet(sheet), first ? 420 : 0);
     }
-    function showSheet(id: string) {
+    function markSheet(id: string) {
       state.sheet = id;
       $$('[data-sheet-pick]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sheetPick === id)));
-      $$('[data-sheet]').forEach((s) => (s.hidden = s.dataset.sheet !== id));
+    }
+    function toSheet(id: string) {
+      markSheet(id);
+      $(`[data-sheet="${id}"]`).scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
     }
     $$('[data-cat]').forEach((tile) => tile.addEventListener('click', () => openCat(tile.dataset.cat!)));
-    $$('[data-sheet-pick]').forEach((b) =>
-      b.addEventListener('click', () => {
-        const from = body.offsetHeight;
-        showSheet(b.dataset.sheetPick!);
-        if (!reduced) {
-          const to = body.offsetHeight;
-          body.animate([{ height: `${from}px` }, { height: `${to}px` }], { duration: 240, easing: 'cubic-bezier(0.2, 0, 0, 1)' });
-        }
-      })
+    $$('[data-sheet-pick]').forEach((b) => b.addEventListener('click', () => toSheet(b.dataset.sheetPick!)));
+    // какой раздел сейчас под липкими чипами — тот и подсвечен
+    let spyRaf = 0;
+    addEventListener(
+      'scroll',
+      () => {
+        if (spyRaf || state.step !== 3 || root.classList.contains('is-finding') || !state.cat) return;
+        spyRaf = requestAnimationFrame(() => {
+          spyRaf = 0;
+          // линия — чуть ниже шапки сайта: раздел, чей верх выше неё, — текущий
+          const line = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 88) + 80;
+          let cur = '';
+          for (const s of $$(`[data-sheet-cat="${state.cat}"]`)) if (s.getBoundingClientRect().top <= line) cur = s.dataset.sheet!;
+          if (cur && cur !== state.sheet) markSheet(cur);
+        });
+      },
+      { passive: true }
     );
 
     /* Поиск по всем направлениям: разделы-чипы гаснут, видны только совпадения.
@@ -490,7 +549,7 @@ const searchIcon =
         $$('[data-chips]').forEach((c) => (c.hidden = true));
         $('[data-cat-title]').textContent = !any ? '' : found.length ? found[0].title : 'Нашли';
       } else if (state.step === 3) {
-        if (state.cat) openCat(state.cat, state.sheet ?? undefined);
+        if (state.cat) openCat(state.cat);
         else go(2, { scroll: false });
       }
       findEmpty.hidden = !q || any;
@@ -564,12 +623,15 @@ const searchIcon =
         badge.hidden = !n;
       });
 
-      // шаг 2: машина крупно — цены на плитках посчитаны для неё
+      // плашка машины над шагами 2–3: слева машина, справа класс — цены посчитаны для него
       const model = state.car?.model ? `${state.car.brand} ${state.car.model}` : '';
       const cls = state.car ? classText(state.car.cls) : '';
-      $('[data-car-head]').textContent = model || cls || 'Машина не выбрана';
-      $('[data-car-head-class]').textContent = model ? cls : state.car ? '' : 'показываем цены «от»';
-      $('[data-car-head-change]').textContent = state.car ? 'изменить' : 'указать машину';
+      const brandPill = $('[data-car-brand-pill]');
+      brandPill.textContent = state.car?.model ? state.car.brand ?? '' : '';
+      brandPill.hidden = !brandPill.textContent;
+      $('.wiz-car').classList.toggle('is-empty', !state.car); // машины нет — серая «Укажите машину»
+      $('[data-car-head]').textContent = state.car?.model || cls || 'Укажите машину';
+      $('[data-car-head-class]').textContent = model ? cls : state.car ? '' : 'цены «от»';
 
       // нижний док: шаг 1 — машина и «Продолжить», шаги 2–3 — поиск, сумма и «К заявке»
       const first = state.step === 1;
@@ -579,7 +641,8 @@ const searchIcon =
       $('[data-foot-small]').textContent = first ? (model ? cls : state.car ? '' : 'цены «от»') : services(list.length);
       $('[data-foot-main]').textContent = first ? model || cls || 'Без машины' : totalText;
       next.textContent = first ? next.dataset.labelContinue! : next.dataset.labelNext!;
-      $('[data-dock]').hidden = foot.hidden && findBox.hidden;
+      $('[data-dock]').hidden = foot.hidden;
+      if (foot.hidden) tip.hidden = true;
 
       // шаг 4
       $('[data-order-car]').textContent = carName(state.car);
@@ -622,10 +685,25 @@ const searchIcon =
       $('[data-order-note]').hidden = !notes.length;
     }
 
+    /* Подсказка по ходу: первая отметка — над итогом в доке всплывает «можно ещё», на 5 с.
+       Один раз за визит: дальше человек уже знает */
+    const tip = $('[data-tip]');
+    let tipShown = false;
+    let tipTimer = 0;
+    function showTip(text: string) {
+      tip.textContent = text;
+      tip.hidden = false;
+      clearTimeout(tipTimer);
+      tipTimer = window.setTimeout(() => (tip.hidden = true), 5000);
+    }
     rows.forEach((r) =>
       r.input.addEventListener('change', () => {
         update();
         save();
+        if (r.input.checked && !tipShown && picked().length === 1) {
+          tipShown = true;
+          showTip(root.dataset.tipFirst!);
+        }
       })
     );
     // шаг 1 — туда, где человек остановился; дальше — к заявке
@@ -765,69 +843,67 @@ const searchIcon =
     --wiz-foot-btn-hover: var(--color-ink-hover);  }
   :global(.on-dark) .wiz ::selection { background: var(--color-white); color: var(--color-ink); }
 
-  /* ---------- Карточка мастера ---------- */
+  /* ---------- Раскладка мастера (19.10.2026) ----------
+     Узкая колонка шага --wiz-col по центру; на ПК слева от неё — тонкий список этапов
+     (--wiz-aside), липкий. Ниже 1100px этапов нет, колонка одна */
   .wiz {
+    --wiz-col: 760px;     /* ширина колонки шага: 680–820 */
+    --wiz-aside: 180px;   /* колонка этапов на ПК */
     position: relative;
-    max-width: 1120px;
-    margin-inline: auto;
-    border-radius: var(--r-panel);
-    background: var(--wiz-bg);
+    display: grid;
+    grid-template-columns: var(--wiz-aside) minmax(0, var(--wiz-col)) var(--wiz-aside);
+    justify-content: center;
+    gap: var(--sp-48);
     color: var(--wiz-fg);
     scroll-margin-top: calc(var(--header-h) + var(--sp-16));
   }
   .wiz [hidden] { display: none !important; }
+  .wiz-main { grid-column: 2; min-width: 0; }
 
-  /* Шаги сверху */
+  /* Этапы — просто текст: текущий весом и точкой, пройденные кликаются, без кружков и цифр */
   .wiz-head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sp-16) var(--sp-24);
-    padding: var(--sp-24) var(--sp-32) 0;
+    grid-column: 1;
+    position: sticky;
+    top: calc(var(--header-h) + var(--sp-24));
+    align-self: start;
+    padding-top: 6px;
   }
-  .wiz-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--sp-4); }
+  .wiz-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
   .wiz-step {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--sp-8);
-    padding: 6px 14px 6px 6px;
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 8px 12px 8px 22px;
     border: none;
-    border-radius: var(--r-pill);
+    border-radius: var(--r-row);
     background: transparent;
     color: inherit;
-    font-size: var(--text-caption);
-    font-weight: var(--w-medium);
+    font-size: var(--text-body);
+    text-align: left;
     cursor: pointer;
     transition: background-color var(--t-hover-out) var(--ease-out);
   }
   .wiz-step:disabled { cursor: default; }
   .wiz-step:not(:disabled):hover { background: var(--wiz-hover); transition-duration: var(--t-hover-in); }
-  .wiz-step-num {
-    display: grid;
-    place-content: center;
-    flex: none; /* без этого флекс поджимает кружок рядом с длинной подписью — выходит овал */
-    width: 26px;
-    height: 26px;
+  .wiz-step.is-current { font-weight: var(--w-semibold); }
+  .wiz-step.is-current::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    box-shadow: inset 0 0 0 1.5px var(--wiz-line);
-    font-weight: var(--w-semibold);
-    font-variant-numeric: tabular-nums;
+    background: currentColor;
+    translate: 0 -50%;
   }
-  /* Цифру центрируем по её собственной высоте (линия прописных — базовая линия), а не по
-     строке шрифта: у Onest нижний вынос больше верхнего, и по строке цифра стоит выше центра */
-  .wiz-step-digit { line-height: 1; text-box: trim-both cap alphabetic; }
-  .wiz-step.is-done .wiz-step-num { background: var(--wiz-field-hover); box-shadow: none; }
-  .wiz-step.is-current .wiz-step-num { background: var(--wiz-sel-bg); color: var(--wiz-sel-fg); box-shadow: none; }
-  .wiz-step-label { max-width: 22ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .wiz-step:disabled:not(.is-current) .wiz-step-label { text-decoration: none; }
+  .wiz-step-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  .wiz-find { position: relative; flex: 1 1 320px; min-width: 0; }
-  /* В доке поле стоит на сплошном фоне растворения — заливка и обводка, чтобы читалось полем */
+  .wiz-find { position: relative; min-width: 0; }
   .wiz-find-input {
     padding: 15px 20px 15px 50px;
-    background: var(--wiz-field);
-    border-color: var(--wiz-line);
+    background: var(--color-tile);
+    border-color: transparent;
     font-size: var(--text-body);
   }
   /* Поля мастера живут на его фоне: текст и рамка фокуса — цвета мастера, не глобального .field */
@@ -855,24 +931,26 @@ const searchIcon =
     pointer-events: none;
   }
 
-  .wiz-body { padding: var(--sp-32) var(--sp-32) var(--sp-24); }
-  .wiz-panel { display: grid; gap: var(--sp-16); align-content: start; }
-  .wiz-title { font-size: var(--text-tile); max-width: var(--measure-head); }
-  .wiz-lead { max-width: var(--measure-lead); margin-top: calc(var(--sp-8) * -1); }
-  /* вторичное действие — кнопка в ободке, не подчёркнутая ссылка */
+  .wiz-body { padding-bottom: var(--sp-24); }
+  .wiz-panel { display: grid; gap: var(--sp-20); align-content: start; }
+  .wiz-title { font-size: var(--text-tile); font-weight: var(--w-heading); letter-spacing: var(--track-head); max-width: var(--measure-head); }
+  /* вторичное действие — тихая текстовая кнопка, без обводки */
   .wiz-link {
     justify-self: start;
-    padding: 8px 16px;
+    padding: 6px 12px;
+    margin-left: -12px;
     border: none;
-    border-radius: var(--r-pill);
+    border-radius: var(--r-row);
     background: transparent;
-    box-shadow: inset 0 0 0 1.5px var(--wiz-line);
     color: inherit;
-    font-weight: var(--w-medium);
+    font-size: var(--text-body);
     cursor: pointer;
     transition: background-color var(--t-hover-out) var(--ease-out);
   }
   .wiz-link:hover { background: var(--wiz-hover); transition-duration: var(--t-hover-in); }
+
+  /* ---------- Контекст шагов 2–3: машина и поиск ---------- */
+  .wiz-context { display: grid; gap: var(--sp-8); margin-bottom: var(--sp-32); }
 
   /* ---------- 1. Машина ---------- */
   /* Поле — components/CarCombo.astro, цвета — калькулятора */
@@ -888,58 +966,68 @@ const searchIcon =
     --combo-sel-hover: var(--wiz-sel-hover);
   }
 
-  /* ---------- 2. Направления — семь плиток ---------- */
-  /* Машина над плитками — крупно, как заголовок: человек сразу видит, для чего цены */
-  .wiz-car { display: grid; gap: var(--sp-4); padding-bottom: var(--sp-8); }
-  .wiz-car-name {
-    font-size: var(--text-heading);
-    font-weight: var(--w-semibold);
-    letter-spacing: -0.03em;
-    line-height: 1.05;
-    overflow-wrap: anywhere;
-  }
-  .wiz-car-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-8) var(--sp-12); font-weight: var(--w-medium); }
-  .wiz-car-meta span:empty { display: none; }
-  /* действие внутри плашки — кнопка в ободке, не подчёркнутая ссылка (решение 22.09.2026) */
-  .wiz-car-change {
-    padding: 6px 14px;
+  /* Машина — пилюли «марка | модель класс», как плашки выбранной машины в тизере главной.
+     Вся пара — одна кнопка «сменить машину» */
+  .wiz-car {
+    justify-self: start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-8);
+    padding: 0;
     border: none;
-    border-radius: var(--r-pill);
-    background: transparent;
-    box-shadow: inset 0 0 0 1.5px var(--wiz-line);
+    background: none;
     color: inherit;
-    font-size: var(--text-caption);
-    font-weight: var(--w-medium);
     cursor: pointer;
+  }
+  .wiz-pill {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--sp-12);
+    min-height: 48px;
+    align-content: center;
+    padding: 11px 22px;
+    border-radius: var(--r-pill);
+    /* машина уже выбрана — пилюли чёрные, цвет «выбрано» (19.10.2026) */
+    background: var(--color-ink);
+    color: var(--color-white);
+    font-size: var(--text-body-lg);
+    line-height: 1.4;
+    white-space: nowrap;
     transition: background-color var(--t-hover-out) var(--ease-out);
   }
-  .wiz-car-change:hover { background: var(--wiz-hover); transition-duration: var(--t-hover-in); }
+  .wiz-car:hover .wiz-pill { background: var(--color-ink-hover); transition-duration: var(--t-hover-in); }
+  .wiz-car.is-empty .wiz-pill { background: var(--color-tile); color: var(--color-ink); }
+  .wiz-car.is-empty:hover .wiz-pill { background: var(--color-tile-hover); }
+  .wiz-pill-class { font-size: var(--text-caption); }
+  .wiz-pill-class:empty { display: none; }
 
-  .cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-12); padding-top: var(--sp-8); }
-  /* Сетка без дыр при любом числе направлений: первые плитки растягиваются на две колонки,
-     сколько нужно (wide3 / wide2 считаются во frontmatter из числа направлений) */
-  .cat--wide3 { grid-column: span 2; }
+  /* ---------- 2. Направления — вертикальный список ---------- */
+  .cats { display: grid; gap: var(--sp-8); }
   .cat {
     display: grid;
-    grid-template-rows: auto 1fr auto;
-    gap: var(--sp-12);
-    min-height: 168px;
-    padding: var(--sp-20) var(--sp-24);
+    grid-template-columns: minmax(0, 1fr) auto auto 20px;
+    align-items: center;
+    gap: var(--sp-16);
+    padding: 20px 20px 20px 24px;
     border: none;
-    border-radius: var(--r-tile);
-    background: var(--wiz-field);
+    border-radius: var(--r-input);
+    background: var(--color-tile);
     color: inherit;
     text-align: left;
     cursor: pointer;
     transition: background-color var(--t-hover-out) var(--ease-out);
   }
-  .cat:hover { background: var(--wiz-field-hover); transition-duration: var(--t-hover-in); }
-  .cat.has-picked { background: var(--wiz-sel-bg); color: var(--wiz-sel-fg); }
-  .cat.has-picked:hover { background: var(--wiz-sel-hover); }
-  .cat-top { display: flex; justify-content: space-between; gap: var(--sp-8); font-size: var(--text-caption); font-weight: var(--w-medium); }
-  .cat-picked { padding: 2px 10px; border-radius: var(--r-pill); background: var(--wiz-sel-fg); color: var(--wiz-sel-bg); font-weight: var(--w-semibold); }
-  .cat-title { align-self: end; font-size: var(--text-subhead); font-weight: var(--w-semibold); letter-spacing: -0.03em; line-height: 1.1; }
-  .cat-price { font-weight: var(--w-semibold); }
+  .cat:hover { background: var(--color-tile-hover); transition-duration: var(--t-hover-in); }
+  .cat-title { font-size: var(--text-lead); letter-spacing: var(--track-lead); line-height: 1.2; }
+  .cat-picked {
+    padding: 2px 10px;
+    border-radius: var(--r-full);
+    background: var(--color-ink);
+    color: var(--color-white);
+    font-size: var(--text-caption);
+  }
+  .cat-price { white-space: nowrap; }
+  .cat-arrow { width: 20px; height: 20px; }
 
   /* ---------- 3. Услуги направления ---------- */
   .wiz-back {
@@ -961,23 +1049,59 @@ const searchIcon =
   .wiz-back svg { width: 16px; height: 16px; }
   .is-finding .wiz-back { display: none; }
 
-  .chips { display: flex; flex-wrap: wrap; gap: var(--sp-8); padding-bottom: var(--sp-8); }
+  /* Чипы разделов — липкая навигация по ленте направления: под шапкой сайта, на фоне
+     страницы; подсвечен раздел, который сейчас на экране */
+  /* Чипы разделов — одной строкой в начале направления, не липнут (липкая полоса под шапкой
+     выглядела обрубком — снято 19.10.2026). На ПК их заменяет подсписок в колонке этапов */
+  .chips {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--sp-8);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip-btn { flex: none; white-space: nowrap; }
+  @media (min-width: 1101px) {
+    .chips { display: none; }
+  }
+
+  /* Подсписок разделов в колонке этапов — только на шаге 3 и не в поиске */
+  .wiz-sections { display: none; }
+  .wiz[data-step='3']:not(.is-finding) .wiz-sections { display: block; }
+  .wiz-sections-list { list-style: none; margin: 2px 0 var(--sp-8); padding: 0 0 0 22px; display: grid; gap: 0; }
+  .wiz-section {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-8);
+    width: 100%;
+    padding: 6px 10px;
+    border: none;
+    border-radius: var(--r-row);
+    background: transparent;
+    color: inherit;
+    font-size: var(--text-caption);
+    line-height: 1.35;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .wiz-section:hover { background: var(--wiz-hover); transition-duration: var(--t-hover-in); }
+  .wiz-section[aria-pressed='true'] { background: var(--color-tile); }
   .chip-btn {
     display: inline-flex;
     align-items: center;
     gap: var(--sp-8);
     padding: 9px 16px;
     border: none;
-    border-radius: var(--r-pill);
-    background: transparent;
-    box-shadow: inset 0 0 0 1.5px var(--wiz-line);
+    border-radius: var(--r-full);
+    background: var(--color-tile);
     color: inherit;
-    font-weight: var(--w-medium);
     cursor: pointer;
-    transition: background-color var(--t-hover-out) var(--ease-out);
+    transition: background-color var(--t-hover-out) var(--ease-out), color var(--t-hover-out) var(--ease-out);
   }
-  .chip-btn:hover { background: var(--wiz-hover); transition-duration: var(--t-hover-in); }
-  .chip-btn[aria-pressed='true'] { background: var(--wiz-sel-bg); color: var(--wiz-sel-fg); box-shadow: none; }
+  .chip-btn:hover { background: var(--color-tile-hover); transition-duration: var(--t-hover-in); }
+  .chip-btn[aria-pressed='true'] { background: var(--color-ink); color: var(--color-white); }
   .chip-count {
     display: grid;
     place-content: center;
@@ -992,25 +1116,39 @@ const searchIcon =
   }
   .chip-btn[aria-pressed='true'] .chip-count { background: var(--wiz-sel-fg); color: var(--wiz-sel-bg); }
 
-  .sheet { display: grid; gap: var(--sp-12); scroll-margin-top: calc(var(--header-h) + var(--sp-16)); }
-  /* Заголовок раздела нужен только в поиске — в обычном режиме его заменяет чип */
-  .sheet-title { display: none; font-size: var(--text-body-lg); padding-top: var(--sp-8); }
-  .is-finding .sheet-title { display: block; }
+  /* Разделы направления — подряд одной лентой; следующий отделён чертой и заголовком
+     (19.10.2026: «листать не прерываясь», черта — по прямой просьбе) */
+  .sheet { display: grid; gap: var(--sp-12); scroll-margin-top: calc(var(--header-h) + var(--sp-24)); }
+  .wiz-section .chip-count { margin-left: auto; flex: none; }
+  .sheet:not([hidden]) ~ .sheet:not([hidden]) {
+    margin-top: var(--sp-24);
+    padding-top: var(--sp-32);
+    border-top: 1px solid var(--color-line-ink);
+  }
+  .sheet-title { font-size: var(--text-subhead); font-weight: var(--w-heading); letter-spacing: var(--track-lead); line-height: 1.2; }
+  /* «Направление · » — только в поиске, где разделы разных направлений идут вперемешку */
+  .sheet-cat { display: none; }
+  .is-finding .sheet-cat { display: inline; }
+  /* у направления с одним разделом заголовок раздела дублирует заголовок шага */
+  .sheet--solo .sheet-title { display: none; }
+  .is-finding .sheet--solo .sheet-title { display: block; }
   .group { display: grid; gap: var(--sp-8); }
   .group-title { font-weight: var(--w-medium); padding-top: var(--sp-8); }
   .svc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-8); }
 
-  /* Карточка услуги: вся карточка — чекбокс. Отмеченная инвертируется в чёрную */
-  .svc { border-radius: var(--r-tile); background: var(--wiz-field); transition: background-color var(--t-hover-out) var(--ease-out); }
-  .svc:hover { background: var(--wiz-field-hover); transition-duration: var(--t-hover-in); }
-  .svc:has(.svc-input:checked) { background: var(--wiz-sel-bg); color: var(--wiz-sel-fg); }
-  .svc:has(.svc-input:focus-visible) { outline: 2px solid var(--wiz-sel-bg); outline-offset: 2px; }
+  /* Карточка услуги — по карточке модели porsche.com: вся карточка — чекбокс, серая плашка.
+     Отмеченная — чуть темнее и с залитой чёрной галочкой. Сплошную чёрную инверсию и контур
+     2px сняли 19.10.2026: тяжело и «жёсткая обводка» */
+  .svc { border-radius: var(--r-panel); background: var(--color-tile); transition: background-color var(--t-hover-out) var(--ease-out); }
+  .svc:hover,
+  .svc:has(.svc-input:checked) { background: var(--color-tile-hover); transition-duration: var(--t-hover-in); }
+  .svc:has(.svc-input:focus-visible) { outline: 2px solid var(--color-ink); outline-offset: 2px; }
   .svc-main {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     gap: var(--sp-16);
     align-items: start;
-    padding: var(--sp-16) var(--sp-20);
+    padding: var(--sp-24);
     cursor: pointer;
   }
   .svc-input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
@@ -1028,37 +1166,43 @@ const searchIcon =
     width: 6px;
     height: 11px;
     margin-top: -3px;
-    border: solid var(--wiz-sel-bg);
+    border: solid var(--color-white);
     border-width: 0 2px 2px 0;
     rotate: 45deg;
     opacity: 0;
   }
-  .svc:has(.svc-input:checked) .svc-check { background: var(--wiz-sel-fg); box-shadow: none; }
+  .svc-check { background: var(--color-page); }
+  .svc:has(.svc-input:checked) .svc-check { background: var(--color-ink); box-shadow: none; }
   .svc:has(.svc-input:checked) .svc-check::after { opacity: 1; }
-  .svc-body { display: grid; gap: var(--sp-4); }
-  .svc-name { font-size: var(--text-body-lg); font-weight: var(--w-medium); line-height: 1.3; }
-  .svc-desc { font-size: var(--text-caption); line-height: 1.45; max-width: var(--measure-text); }
-  .svc-time { font-size: var(--text-caption); font-weight: var(--w-medium); }
-  /* Условия и оговорки — отдельной строкой после сути, чтобы не заслоняли её */
-  .svc-terms { font-size: var(--text-caption); line-height: 1.45; max-width: var(--measure-text); padding-top: var(--sp-4); }
-  .svc-price { font-size: var(--text-body-lg); font-weight: var(--w-semibold); white-space: nowrap; line-height: 1.3; }
+  /* Два стиля, как у их карточки: заголовок (название и цена — 20, обычный вес) и наборный
+     (16) — всё остальное: суть, время со значком, ссылка «Что входит» */
+  .svc-body { display: grid; gap: var(--sp-12); }
+  .svc-name { font-size: var(--text-lead); letter-spacing: var(--track-lead); line-height: 1.25; }
+  .svc-desc { font-size: var(--text-body); line-height: 1.5; }
+  /* Время — серым целиком, значок и текст (19.10.2026, прямая просьба: исключение из правила
+     «текст только контрастный» — служебная метка, не наборный текст) */
+  .svc-time { display: inline-flex; align-items: center; gap: var(--sp-8); font-size: var(--text-body); color: var(--color-grey-text); }
+  .svc-time svg { flex: none; width: 18px; height: 18px; }
+  .svc-price { font-size: var(--text-lead); letter-spacing: var(--track-lead); white-space: nowrap; line-height: 1.25; }
 
-  .svc-more { padding: 0 var(--sp-20) var(--sp-16) calc(var(--sp-20) + 26px + var(--sp-16)); font-size: var(--text-caption); }
+  /* «Что входит» — их ссылка: подчёркнутый текст, под курсором проявляется серая подложка */
+  .svc-more { padding: 0 var(--sp-24) var(--sp-20) calc(var(--sp-24) + 26px + var(--sp-16)); font-size: var(--text-body); margin-top: calc(var(--sp-4) * -1); }
   .svc-more summary {
-    display: inline-flex;
-    padding: 4px 12px;
-    margin-left: -12px;
-    border-radius: var(--r-pill);
-    font-weight: var(--w-medium);
+    display: inline-block;
+    padding: 2px 8px;
+    margin-left: -8px;
+    border-radius: var(--r-row);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
     cursor: pointer;
     list-style: none;
+    transition: background-color var(--t-hover-out) var(--ease-out);
   }
+  .svc-more summary:hover { background: var(--glass-light); transition-duration: var(--t-hover-in); }
+  .svc-terms { padding-top: var(--sp-12); line-height: 1.5; }
   .svc-more summary::-webkit-details-marker { display: none; }
-  .svc-more summary::after { content: '+'; margin-left: 6px; }
-  .svc-more[open] summary::after { content: '−'; }
-  .svc-more summary:hover { background: var(--wiz-hover); }
-  .svc:has(.svc-input:checked) .svc-more summary:hover { background: var(--wiz-sel-row-hover); }
-  .svc-more .bullets { padding-top: var(--sp-8); max-width: var(--measure-text); }
+  .svc-more .bullets { padding-top: var(--sp-12); font-size: var(--text-body); }
   /* Лид первой задачи прижат к заголовку шага, как .wiz-lead; вторая задача — отдельным блоком */
   .find-hints { display: grid; gap: var(--sp-20); margin-top: calc(var(--sp-8) * -1); }
   .find-hint { display: grid; gap: var(--sp-4); }
@@ -1066,10 +1210,20 @@ const searchIcon =
   .find-hint-lead { max-width: var(--measure-lead); }
   .find-empty { padding: var(--sp-24); border-radius: var(--r-tile); background: var(--wiz-field); }
 
-  /* ---------- 4. Заявка: слева расчёт, справа тёмная плашка с янтарной искрой ---------- */
-  .order { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-24); align-items: start; padding-top: var(--sp-8); }
-  .order-sum { display: grid; gap: var(--sp-12); }
-  .order-car { font-weight: var(--w-medium); }
+  /* ---------- 4. Заявка: один узкий столбец (--order-w) ----------
+     Расчёт серой карточкой → «Добавить услуги» → с отступом форма. Один шрифт на строки
+     и итог (итог крупнее), без разнобоя начертаний */
+  .order { --order-w: 560px; display: grid; gap: var(--sp-64); max-width: var(--order-w); }
+  .order-block { display: grid; gap: var(--sp-12); justify-items: start; }
+  .order-sum {
+    justify-self: stretch;
+    display: grid;
+    gap: var(--sp-16);
+    padding: var(--sp-24);
+    border-radius: var(--r-panel);
+    background: var(--color-tile);
+  }
+  .order-car { font-size: var(--text-caption); }
   .order-list { list-style: none; margin: 0 calc(var(--sp-8) * -1); padding: 0; display: grid; gap: 2px; }
   .order-list :global(.order-item) {
     display: grid;
@@ -1078,9 +1232,10 @@ const searchIcon =
     align-items: center;
     padding: 8px var(--sp-8);
     border-radius: var(--r-row);
+    font-size: var(--text-body-lg);
   }
-  .order-list :global(.order-item:hover) { background: var(--wiz-hover); }
-  .order-list :global(.order-item-price) { font-weight: var(--w-semibold); white-space: nowrap; }
+  .order-list :global(.order-item:hover) { background: var(--color-tile-hover); }
+  .order-list :global(.order-item-price) { white-space: nowrap; }
   .order-list :global(.order-item-drop) {
     display: grid;
     place-content: center;
@@ -1089,54 +1244,38 @@ const searchIcon =
     padding: 0;
     border: none;
     border-radius: 50%;
-    background: var(--wiz-field);
+    background: var(--color-page);
     color: inherit;
     cursor: pointer;
   }
-  .order-list :global(.order-item-drop:hover) { background: var(--wiz-field-hover); }
+  .order-list :global(.order-item-drop:hover) { background: var(--color-tile); }
   .order-list :global(.order-item-drop svg) { width: 12px; height: 12px; }
-  .order-total { display: grid; gap: var(--sp-4); padding-top: var(--sp-12); }
-  .order-total-label { display: flex; justify-content: space-between; font-size: var(--text-caption); font-weight: var(--w-medium); }
-  .order-total-value { font-size: var(--text-heading); font-weight: var(--w-semibold); letter-spacing: -0.03em; line-height: 1.05; }
+  /* Итог — строка того же шрифта, крупнее: «Итого · 6 услуг» слева, сумма справа;
+     правый край суммы — под ценами строк (место крестика оставлено) */
+  .order-total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-16);
+    padding-right: calc(24px + var(--sp-12));
+    font-size: var(--text-subhead);
+    letter-spacing: var(--track-lead);
+  }
+  .order-count { font-size: var(--text-body); letter-spacing: 0; }
+  .order-total-value { white-space: nowrap; }
   .order-note { font-size: var(--text-caption); }
 
-  .order-form {
-    position: relative;
-    overflow: hidden;
-    display: grid;
-    gap: var(--sp-16);
-    padding: var(--sp-28);
-    border-radius: var(--r-tile);
-    background: var(--wiz-form);
-    color: var(--color-white);
-    isolation: isolate;
-  }
-  .order-form::before {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    width: 320px;
-    height: 320px;
-    right: -120px;
-    top: -150px;
-    border-radius: 50%;
-    background: radial-gradient(circle, var(--color-orange) 0%, var(--color-ember) 45%, transparent 70%);
-    filter: blur(40px);
-    opacity: 0.55;
-    pointer-events: none;
-  }
-  /* На тёмной карточке форма стоит прямо на ней: без своей подложки, отступов и искры */
-  :global(.on-dark) .order-form { padding: 0; overflow: visible; }
-  :global(.on-dark) .order-form::before { display: none; }
-  .order-form ::selection { background: var(--color-white); color: var(--color-ink); }
+  /* Форма — отдельный узкий блок на белом: заголовок, поля, кнопка */
+  .order-form { display: grid; gap: var(--sp-16); max-width: 440px; }
+  .order-form-title { font-size: var(--text-subhead); font-weight: var(--w-heading); letter-spacing: var(--track-lead); line-height: 1.25; max-width: 32ch; }
   .form { display: grid; gap: var(--sp-8); }
-  .order-form .btn--primary { background: var(--color-white); color: var(--color-ink); }
-  .order-form .btn--primary:hover { background: var(--color-tile); }
+  .form .field { background: var(--color-tile); border-color: transparent; }
   .form-submit { width: 100%; margin-top: var(--sp-8); }
-  .form-error { font-size: var(--text-caption); font-weight: var(--w-medium); color: var(--color-amber); }
-  .form-success { padding: var(--sp-16); border-radius: var(--r-input); background: var(--veil-fill); font-weight: var(--w-medium); }
-  .form-phone { justify-self: start; font-weight: var(--w-medium); font-size: var(--text-caption); }
-  .form-phone:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .form-error { font-size: var(--text-caption); font-weight: var(--w-medium); }
+  .form-success { padding: var(--sp-16); border-radius: var(--r-input); background: var(--color-tile); font-weight: var(--w-medium); }
+  .form-call { display: grid; justify-items: start; gap: var(--sp-4); margin-top: var(--sp-24); }
+  .form-phone { font-size: var(--text-tile); letter-spacing: var(--track-head); line-height: 1.15; white-space: nowrap; }
+  .form-phone:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.15em; }
   .consent {
     display: flex;
     align-items: flex-start;
@@ -1153,7 +1292,7 @@ const searchIcon =
     height: 18px;
     margin: 1px 0 0;
     border-radius: 50%;
-    border: 1.5px solid var(--veil-line-strong);
+    border: 1.5px solid var(--color-ink);
     display: grid;
     place-content: center;
     cursor: pointer;
@@ -1163,7 +1302,7 @@ const searchIcon =
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--color-white);
+    background: var(--color-ink);
     transform: scale(0);
     transition: transform 0.15s var(--ease-out);
   }
@@ -1211,12 +1350,21 @@ const searchIcon =
   }
   .dock-inner {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    gap: var(--sp-12);
-    max-width: 880px;
-    margin-inline: auto;
+    gap: var(--sp-8);
     pointer-events: auto;
+  }
+  /* Подсказка по ходу — тёмная плашка над итогом, всплывает и через 5 с уходит */
+  .wiz-tip {
+    max-width: 52ch;
+    padding: 10px 16px;
+    border-radius: var(--r-input);
+    background: var(--color-tile);
+    font-size: var(--text-caption);
+    line-height: 1.45;
+    text-align: left;
+    animation: dock-in 0.3s var(--ease-out) both;
   }
 
   /* Кнопка дальше — белая капсула: слева что выбрано, справа действие */
@@ -1236,49 +1384,35 @@ const searchIcon =
   .foot-main { font-size: var(--text-body-lg); font-weight: var(--w-semibold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .foot-next { flex: none; margin-left: auto; }
   /* капсула и поиск выезжают снизу при каждом появлении — видно, что появилось действие */
-  .wiz-foot, .wiz-find { animation: dock-in 0.4s var(--ease-out) both; }
+  .wiz-foot { animation: dock-in 0.4s var(--ease-out) both; }
   @keyframes dock-in {
     from { opacity: 0; transform: translateY(16px); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .wiz-foot, .wiz-find { animation: none; }
+    .wiz-foot, .wiz-tip { animation: none; }
   }
   .wiz-foot .btn--primary { background: var(--wiz-sel-fg); color: var(--wiz-sel-bg); }
   .wiz-foot .btn--primary:hover { background: var(--wiz-foot-btn-hover); }
 
-  @media (max-width: 1024px) {
-    .cats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .cat--wide3 { grid-column: auto; }
-    .cat--wide2 { grid-column: span 2; }
+  /* Ниже 1100px — одна колонка, этапов нет */
+  @media (max-width: 1100px) {
+    .wiz { grid-template-columns: minmax(0, var(--wiz-col)); }
+    .wiz-head { display: none; }
+    .wiz-main { grid-column: 1; }
   }
   @media (max-width: 760px) {
-    .wiz-head { padding: var(--sp-16) var(--sp-16) 0; }
-    .wiz-step-label { display: none; }
-    .wiz-step.is-current .wiz-step-label { display: inline; max-width: 16ch; }
-    /* шаги всегда в одну строку: длинное имя машины в подписи сжимается многоточием,
-       а не выталкивает последний кружок на вторую строку */
-    .wiz-steps { flex-wrap: nowrap; min-width: 0; }
-    .wiz-steps li { flex: none; min-width: 0; }
-    .wiz-steps li:has(.is-current) { flex: 0 1 auto; }
-    .wiz-step { max-width: 100%; }
-    .wiz-step-label { min-width: 0; }
-    .wiz-body { padding: var(--sp-24) var(--sp-16) var(--sp-16); }
-    .cat { min-height: 132px; padding: var(--sp-16); }
-    .chips { flex-wrap: nowrap; overflow-x: auto; margin-inline: calc(var(--sp-16) * -1); padding-inline: var(--sp-16); scrollbar-width: none; }
-    .chip-btn { flex: none; }
+    .cat { padding: 16px 16px 16px 20px; gap: var(--sp-12); grid-template-columns: minmax(0, 1fr) auto 20px; }
+    .cat-picked { grid-column: 1; grid-row: 2; justify-self: start; }
+    .chips { margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); }
     .svc-main { grid-template-columns: auto minmax(0, 1fr); padding: var(--sp-16); gap: var(--sp-12); }
     .svc-price { grid-column: 2; }
     .svc-more { padding: 0 var(--sp-16) var(--sp-16) calc(var(--sp-16) + 26px + var(--sp-12)); }
-    .order { grid-template-columns: minmax(0, 1fr); }
-    .order-form { padding: var(--sp-20); }
-    /* Телефон: док внутри карточки (выход за её края ломал силуэт — капсула торчала за
-       карточку). Поиск и кнопка друг под другом, обе во всю ширину карточки */
+    .order { gap: var(--sp-48); }
     .wiz-dock {
-      padding-inline: var(--sp-8);
+      padding-inline: 0;
       padding-bottom: max(var(--sp-8), env(safe-area-inset-bottom));
     }
-    .dock-inner { flex-direction: column; align-items: stretch; gap: var(--sp-8); }
-    .wiz-find { flex: none; }
+    .dock-inner { align-items: stretch; }
     .wiz-foot { padding-left: var(--sp-20); }
     .foot-next { padding: 12px 18px; }
   }

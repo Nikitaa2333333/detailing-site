@@ -10,6 +10,7 @@ import Calculator from '../components/Calculator.astro';
 import Faq from '../components/Faq.astro';
 import CalcTeaser from '../components/CalcTeaser.astro';
 import SeasonPacks from '../components/SeasonPacks.astro';
+import Snow from '../components/Snow.astro';
 import seasonPacks from '../data/season-packs.json';
 import Guarantees from '../components/Guarantees.astro';
 import Reviews from '../components/Reviews.astro';
@@ -32,21 +33,25 @@ const calcHref = url('/calc/');
 
   <!-- Тизер калькулятора: видео-демо + поле машины → /calc/?car=… -->
   <!-- Тизер калькулятора — на светлом (19.10.2026) -->
-  <Section id="calc-teaser" sheet>
+  <!-- section--solid: свой белый фон, без анимированного перехода (19.10.2026) -->
+  <Section id="calc-teaser" sheet class="section--solid">
     <CalcTeaser />
   </Section>
 
   <!-- Услуги — тёмная полоса; на телефоне плашка переворачивается тапом -->
-  <Section id="services" title={services.title} sheet reveal={false}>
+  <Section id="services" title={services.title} sheet reveal={false} class="section--solid">
     <!-- призыв «Не знаете, с чего начать?» снят 16.10.2026: повторял тизер калькулятора -->
     <ServiceTiles more={services.more} href={calcHref} />
   </Section>
 
   <!-- Сезонные пакеты (осень — зима): данные и суммы — season-packs.json + прайс -->
-  <!-- Снег (Snow.astro, slot="bg", class="has-snow") снят 16.10.2026: игриво -->
+  <!-- Снег (Snow.astro) — фоном секции зимних пакетов (снимали 16.10, вернули 19.10.2026) -->
   <!-- 19.10.2026: светлые — только тизер и плашки после первого экрана, дальше всё тёмное -->
-  <Section id="season" dark label={seasonPacks.season.label} title={seasonPacks.season.title}>
+  <Section id="season" dark label={seasonPacks.season.label} title={seasonPacks.season.title} class="has-snow">
+    <Snow slot="bg" />
     <SeasonPacks href={calcHref} />
+    <!-- передний снег — поверх карточек, только по краям блока -->
+    <Snow layer="front" />
   </Section>
 
   <!-- Гарантии — их «Drive.»: тёмная полоса, заголовок по центру, лента карточек со
