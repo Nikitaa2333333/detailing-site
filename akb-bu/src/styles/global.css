@@ -86,6 +86,10 @@
   --w-bold: 700;
   --w-black: 800;
   --w-heading: 400;             /* заголовки — обычного веса, как у Porsche */
+  /* Разрядка (19.10.2026, вариант Б): Onest шире Porsche Next — поджимаем крупное.
+     Заголовки −0.02…−0.04, лиды −0.01…−0.02, наборный текст — 0 */
+  --track-head: -0.03em;
+  --track-lead: -0.015em;
 
   /* Кегль — шкала Porsche (typescale), резиновая. В скобках — значение на экране 1280 */
   --text-caption: 0.875rem;                                    /* 14 */
@@ -165,7 +169,7 @@ h1, h2, h3, h4 {
   margin: 0;
   font-weight: var(--w-heading);
   line-height: 1.15;
-  letter-spacing: -0.01em;
+  letter-spacing: var(--track-head);
 }
 
 p { margin: 0; }
@@ -299,7 +303,7 @@ mark {
   line-height: 1.05;
   max-width: 18ch;
 }
-.section-lead { font-size: var(--text-lead); line-height: 1.45; max-width: var(--measure-lead); }
+.section-lead { font-size: var(--text-lead); line-height: 1.45; max-width: var(--measure-lead); letter-spacing: var(--track-lead); }
 /* Заголовок секции по центру над тёмной полосой (их «Drive.») */
 .section-head--hero { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; }
 .section-head--hero .section-title { text-wrap: balance; }
