@@ -155,6 +155,9 @@ html {
 /* Основа сайта тёмная: светлое — только листы-вставки (.section--sheet) */
 body {
   margin: 0;
+  /* ленты карточек выходят до края экрана — страница не должна уезжать вбок
+     (19.10.2026: на телефоне сдвигалась и резала левый край секций) */
+  overflow-x: clip;
   background: var(--color-ink);
   color: var(--color-white);
   font-family: var(--font-body);
