@@ -43,7 +43,8 @@ const calcHref = url('/calc/');
 
   <!-- Сезонные пакеты (осень — зима): данные и суммы — season-packs.json + прайс -->
   <!-- Снег (Snow.astro, slot="bg", class="has-snow") снят 16.10.2026: игриво -->
-  <Section id="season" dark label={seasonPacks.season.label} title={seasonPacks.season.title}>
+  <!-- Светлая полоса после тёмных плашек — как второй блок главной porsche.com (19.10.2026) -->
+  <Section id="season" sheet label={seasonPacks.season.label} title={seasonPacks.season.title}>
     <SeasonPacks href={calcHref} />
   </Section>
 

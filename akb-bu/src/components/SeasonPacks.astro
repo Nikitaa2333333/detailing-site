@@ -89,7 +89,7 @@ const href = Astro.props.href ?? '#calc';
 <div class="packs">
   {packs.map((p) => (
     <article
-      class:list={['pack', p.accent ? 'pack--accent' : 'on-dark']}
+      class:list={['pack', p.accent && 'pack--accent on-dark']}
       id={`pack-${p.id}`}
     >
       <span class="chip">{typo(season.chip)}</span>
@@ -150,8 +150,9 @@ const href = Astro.props.href ?? '#calc';
     gap: var(--sp-20);
     padding: var(--sp-24) var(--sp-20) var(--sp-20);
     border-radius: var(--r-tile);
-    background: var(--color-tile-dark);
-    color: var(--color-white);
+    /* на белой полосе — серые карточки, как у Porsche на светлых страницах (19.10.2026) */
+    background: var(--color-tile);
+    color: var(--color-ink);
     /* Иней (16.10.2026): холодная кромка по контуру и изморозь у верхнего края —
        зернистый шум, тающий книзу. Декор под текстом, контент — над ним */
     --frost: rgba(225, 240, 255, 0.55);
@@ -207,18 +208,11 @@ const href = Astro.props.href ?? '#calc';
   .pack-note { font-size: var(--text-caption); }
   .pack-btn { margin-top: var(--sp-12); width: 100%; }
 
-  /* Акцент — светлый лист на тёмной полосе. Полоса даёт предкам .on-dark, поэтому чип
-     и первичную кнопку возвращаем к светлой схеме явно */
+  /* Акцент — тёмная карточка на белой полосе; .on-dark переключает чип и кнопку */
   .pack.pack--accent {
-    background: var(--color-page);
-    color: var(--color-ink);
-    box-shadow: none;
+    background: var(--color-ink);
+    color: var(--color-white);
   }
-  /* голубой иней на светлой карточке снят 16.10.2026 — «девичье» */
-  .pack.pack--accent::before { display: none; }
-  .pack.pack--accent .chip { box-shadow: inset 0 0 0 1px var(--color-line-ink); }
-  .pack.pack--accent .btn--primary { background: var(--color-ink); color: var(--color-white); }
-  .pack.pack--accent .btn--primary:hover { background: var(--color-ink-hover); }
 
   /* Планшет: сетка 2×2, лента выключена */
   @media (min-width: 700px) {
