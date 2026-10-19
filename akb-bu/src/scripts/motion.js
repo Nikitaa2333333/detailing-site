@@ -28,30 +28,24 @@ function initReveal() {
   items.forEach((el) => io.observe(el));
 }
 
-/* Фон страницы по прокрутке (как porsche.com): у секций data-bg, цвет body плавно
-   смешивается между текущей и следующей секцией, когда следующая подходит к линии
-   на 55% высоты экрана. Зона смешивания — 25% высоты экрана: проходит серые оттенки */
+/* Фон страницы по прокрутке — как porsche.com (19.10.2026): у секций data-bg; цвет body
+   переключается, когда верх следующей секции доходит до середины экрана, и меняется
+   плавной анимацией по времени (transition в global.css), а не тянется за прокруткой */
 function initBgScroll() {
   const secs = [...document.querySelectorAll('[data-bg]')];
   if (secs.length < 2) return;
-  const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-  const cols = secs.map((s) => rgb(s.dataset.bg));
   const root = document.documentElement;
   root.classList.add('bg-scroll');
   let raf = 0;
+  let current = '';
   const paint = () => {
     raf = 0;
-    const probe = innerHeight * 0.55;
-    const zone = innerHeight * 0.25;
+    const line = innerHeight * 0.5;
     let i = 0;
-    for (let k = 0; k < secs.length; k++) if (secs[k].getBoundingClientRect().top <= probe) i = k;
-    let c = cols[i];
-    const next = secs[i + 1];
-    if (next) {
-      const t = Math.min(1, Math.max(0, 1 - (next.getBoundingClientRect().top - probe) / zone));
-      c = c.map((v, j) => Math.round(v + (cols[i + 1][j] - v) * t));
-    }
-    const color = `rgb(${c.join(',')})`;
+    for (let k = 0; k < secs.length; k++) if (secs[k].getBoundingClientRect().top <= line) i = k;
+    const color = secs[i].dataset.bg;
+    if (color === current) return;
+    current = color;
     document.body.style.backgroundColor = color;
     root.style.backgroundColor = color;
   };

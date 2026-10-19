@@ -238,6 +238,8 @@ a, button { -webkit-tap-highlight-color: transparent; }
    (белый → серые оттенки → тёмный). Секции прозрачные — пока скрипт работает (html.bg-scroll) */
 html.bg-scroll .section--dark,
 html.bg-scroll .section--sheet { background-color: transparent; }
+/* смена цвета — анимацией по времени, их длительность и кривая */
+html.bg-scroll, html.bg-scroll body { transition: background-color 0.8s var(--ease-porsche); }
 /* Содержимое секции проявляется при входе на экран и гаснет при уходе (их прозрачность) */
 @keyframes section-fade {
   0% { opacity: 0; }
