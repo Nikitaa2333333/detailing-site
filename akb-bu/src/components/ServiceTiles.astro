@@ -159,6 +159,8 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
   }
   .tile-foot { display: grid; gap: var(--sp-16); }
   .tile-chips { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
+  /* чипы лежат на фото — всегда тёмное стекло, на какой бы полосе ни стояла плашка */
+  .tile .chip { background: var(--glass-dark); }
   .tile-row {
     display: flex;
     align-items: center;
