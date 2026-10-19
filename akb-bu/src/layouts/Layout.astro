@@ -10,7 +10,6 @@ import '@fontsource-variable/geist-mono';
 import '../styles/global.css';
 import content from '../data/content.json';
 import { asset } from '../lib/paths.js';
-import ChatWidget from '../components/ChatWidget.astro';
 
 const {
   title = content.meta.title,
@@ -54,7 +53,6 @@ const ogImage = new URL(asset(image), Astro.site ?? Astro.url.origin).href;
   </head>
   <body>
     <slot />
-    <ChatWidget />
     <script src="../scripts/motion.js"></script>
   </body>
 </html>

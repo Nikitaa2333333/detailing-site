@@ -15,7 +15,7 @@
    cars-base.json — мировой справочник (npm run cars-base): всё, чего нет ни в прайсе,
    ни в car-extra. Класс считается по сегменту — правила в car-base-rules.json.
    Порядок доверия: прайс → car-extra (ручной аналог) → мировая база (по сегменту). */
-import { classes } from './services.js';
+import prices from '../data/prices.json';
 import aliases from '../data/car-aliases.json';
 import extra from '../data/car-extra.json';
 import base from '../data/cars-base.json';
@@ -24,6 +24,8 @@ import spell from '../data/car-base-aliases.json';
 import codes from '../data/car-codes.json';
 import overrides from '../data/car-overrides.json';
 import { normalize } from './car-search.js';
+
+const { classes } = prices;
 
 const keysOf = (...lists) => [...new Set(lists.flat().map(normalize).filter(Boolean))];
 

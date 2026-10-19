@@ -29,7 +29,6 @@
 | [prices.json](akb-bu/src/data/prices.json) | 27 разделов прайса, 162 услуги, цены по 5 классам, сноски | импортёр из xlsx заказчика |
 | [car-overrides.json](akb-bu/src/data/car-overrides.json) | **класс каждой машины** (~3900) из таблицы заказчика `Классы_машин.xlsx`; «отдельно» = премиум | импортёр из его таблицы |
 | [content.json](akb-bu/src/data/content.json) | тексты сквозных блоков, цифры о компании, контакты, границы категорий | руками |
-| `services.json` | карта ТЗ: категории → 39 услуг → URL, title/description, разделы прайса | **ещё не создан** |
 | [service-texts.json](akb-bu/src/data/service-texts.json) | клиентские тексты услуг: суть, «что входит», условия | мы, заказчик вычитывает |
 | [service-intents.json](akb-bu/src/data/service-intents.json) | «беда → услуги»: 30 ситуаций, фразы, подборки | мы, заказчик вычитывает |
 | [cars-base.json](akb-bu/src/data/cars-base.json) | мировой справочник (cars-base.ru, каталог auto.ru): марки, модели, поколения, габариты | `npm run cars-base` |
@@ -154,7 +153,8 @@
 
 ## Инфраструктура
 
-- [ ] `services.json` — карта URL из ТЗ; из неё меню, крошки, «смежные услуги», sitemap.
+- [ ] Карта страниц (URL, меню, крошки, «смежные услуги», sitemap) — от таблицы услуг и
+      [docs/pages-plan.md](docs/pages-plan.md); карта по ТЗ (`services.json`) удалена 19.10.2026.
 - [ ] `npm run prices` — импорт + проверки (нет строк «не для сайта», все разделы нашлись,
       услуг не меньше, чем было). Падает — сборка не идёт.
 - [ ] `@astrojs/sitemap` (robots.txt уже печатается на сборке).
