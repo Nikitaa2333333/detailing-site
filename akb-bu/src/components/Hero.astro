@@ -6,14 +6,23 @@ const { hero, services } = content;
 /* Раскадровка: кадры одной сцены с разным состоянием света.
    Кадры включаются по мере прокрутки (scroll-driven), в браузерах без поддержки — по таймеру. */
 const frames = hero.frames ?? [hero.media];
+/* С 19.10.2026 — промо-ролик (монтаж из генераций, docs/photo-brief.md). Есть hero.video —
+   вместо раскадровки играет ролик по кругу; постер — кадр полировки, он же остаётся при
+   «уменьшить движение». Раскадровку не удаляем: убрать video из content.json — вернётся она */
+const video = hero.video;
 ---
 
 <!-- Первый экран «липкий»: пока пользователь прокручивает --hero-travel, кадр стоит на месте,
      а свет включается ступенями. Фото 16:9 на всю ширину, кроп только по высоте (пол). -->
-<section class="hero on-dark" data-bg="#010205">
+<section class:list={['hero on-dark', video && 'hero--video']} data-bg="#010205">
   <div class="hero-sticky">
     <div class="hero-media">
-      {frames.map((src, i) => {
+      {video && <img class="hero-poster" src={asset(hero.poster)} alt="" fetchpriority="high" decoding="async" />}
+      {video && (
+        <video class="hero-video" muted loop playsinline preload="auto" poster={asset(hero.poster)} aria-hidden="true"
+          data-src={asset(video)} data-src-small={asset(hero.videoSmall)}></video>
+      )}
+      {!video && frames.map((src, i) => {
         /* Размеры под реальный экран: 1440 — ноутбуки 1×, 1920 — 1280 CSS-px при DPR 1.5,
            2048 — предел исходника (выше не растягиваем). AVIF 4:4:4 — без «песка» на зерне
            и цветных кромках, WebP — фолбэк */
@@ -63,6 +72,20 @@ const frames = hero.frames ?? [hero.media];
   </div>
 </section>
 
+<!-- Ролик: источник подставляем скриптом — атрибут media у <source> внутри <video> Chrome не
+     понимает. muted + playsinline — иначе iOS не запустит автоплей; Safari верит только
+     свойству muted, не атрибуту. Автоплей запрещён (энергосбережение) — остаётся постер -->
+<script is:inline>
+  (function () {
+    var v = document.querySelector('.hero-video');
+    if (!v || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    v.src = matchMedia('(max-width: 860px)').matches ? v.dataset.srcSmall : v.dataset.src;
+    v.muted = true;
+    var p = v.play();
+    if (p && p.catch) p.catch(function () {});
+  })();
+</script>
+
 <style>
   .hero {
     /* Сколько прокрутки занимает включение света. 100svh — сам экран, остальное — «путь».
@@ -108,6 +131,20 @@ const frames = hero.frames ?? [hero.media];
     backface-visibility: hidden;
   }
   .hero-frame--first { opacity: 1; }
+
+  /* Ролик: без «пути» прокрутки — блок ровно в экран. Постер лежит под видео и виден, пока
+     оно грузится. Кадры ролика — сюжет справа, слева тёмный графит под текст.
+     --hero-video-x — что держать в кадре на узком экране (крутить 50–80%) */
+  .hero--video { --hero-travel: 0svh; --hero-video-x: 70%; }
+  .hero-poster,
+  .hero-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--hero-video-x) center;
+  }
   @keyframes hero-frame-in {
     to { opacity: 1; }
   }
@@ -244,5 +281,6 @@ const frames = hero.frames ?? [hero.media];
   @media (prefers-reduced-motion: reduce) {
     .hero { height: 100svh; }
     .hero-frame { animation: none; opacity: 1; transform: none; }
+    .hero-video { display: none; }
   }
 </style>

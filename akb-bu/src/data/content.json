@@ -115,6 +115,9 @@
     "text": "Оклейка плёнкой, полировка, керамика, химчистка и удаление вмятин без покраски. Стоимость — по классу автомобиля, точная цифра — после осмотра.",
     "cta": "Выбрать услугу",
     "media": "/img/hero-3.webp",
+    "video": "/video/hero-promo.mp4",
+    "videoSmall": "/video/hero-promo-sm.mp4",
+    "poster": "/img/hero-polish.webp",
     "frames": [
       "/img/hero-1.webp",
       "/img/hero-2.webp",
