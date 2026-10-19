@@ -230,7 +230,8 @@ const frames = hero.frames ?? [hero.media];
     }
     .hero-text { padding-top: 0; }
     .hero-sticky::after, .hero-down { display: none; }
-    .hero-actions { position: static; padding-bottom: var(--sp-24); }
+    .hero-actions { position: static; flex-direction: column; padding-bottom: var(--sp-24); }
+    .hero-actions .btn { width: 100%; }
   }
   @media (prefers-reduced-motion: reduce) {
     .hero { height: 100svh; }
