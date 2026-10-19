@@ -91,15 +91,8 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
     gap: var(--tile-gap);
   }
   .tiles-row { display: flex; gap: var(--tile-gap); }
-  .tile-cell {
-    flex: 1 1 0;
-    min-width: 0;
-    transition: flex-grow 0.6s cubic-bezier(0, 0, 0.2, 1);
-  }
-  /* Наведение (их приём): карточка шире на ~17%, соседняя уступает */
-  @media (hover: hover) and (min-width: 901px) {
-    .tile-cell:hover { flex-grow: 1.17; }
-  }
+  /* Расширение карточки при наведении (приём Porsche) снято 19.10.2026: «не нужна» */
+  .tile-cell { flex: 1 1 0; min-width: 0; }
   .tile {
     position: relative;
     overflow: hidden;
@@ -202,10 +195,9 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
   }
   /* ссылка растянута на всю плашку: клик в любом месте — в калькулятор */
   .tile-go::after { content: ''; position: absolute; inset: 0; }
+  /* Раскрытие стрелки в «Рассчитать →» снято 19.10.2026 вместе с расширением карточки */
   @media (hover: hover) {
-    .tile:hover .tile-go { gap: var(--sp-8); padding-inline: 18px 14px; }
-    .tile:hover .tile-go-label { max-width: 8em; opacity: 1; }
-    .tile-go:hover { background: var(--glass-dark-hover); }
+    .tile:hover .tile-go { background: var(--glass-dark-hover); }
   }
 
   /* Оборот — «стекло» поверх фото: размытая плашка с тёмной заливкой. Без трансформов:
