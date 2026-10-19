@@ -6,8 +6,9 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "astro dev",
-    "build": "node scripts/test-search.mjs && astro build",
+    "dev": "node scripts/asset-versions.mjs && astro dev",
+    "build": "node scripts/asset-versions.mjs && node scripts/test-search.mjs && astro build",
+    "assets": "node scripts/asset-versions.mjs",
     "test:search": "node scripts/test-search.mjs",
     "preview": "astro preview",
     "astro": "astro",

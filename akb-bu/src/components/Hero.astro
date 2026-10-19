@@ -26,10 +26,11 @@ const video = hero.video;
         /* Размеры под реальный экран: 1440 — ноутбуки 1×, 1920 — 1280 CSS-px при DPR 1.5,
            2048 — предел исходника (выше не растягиваем). AVIF 4:4:4 — без «песка» на зерне
            и цветных кромках, WebP — фолбэк */
+        /* варианты собираем из исходного пути, а не из asset(): он добавляет ?v=хеш */
         const file = asset(src);
-        const base = file.replace(/\.webp$/, '');
-        const avif = [1440, 1920, 2048].map((w) => `${base}-${w}.avif ${w}w`).join(', ');
-        const webp = [`${base}-1440.webp 1440w`, `${base}-1920.webp 1920w`, `${file} 2048w`].join(', ');
+        const base = src.replace(/\.webp$/, '');
+        const avif = [1440, 1920, 2048].map((w) => `${asset(`${base}-${w}.avif`)} ${w}w`).join(', ');
+        const webp = [`${asset(`${base}-1440.webp`)} 1440w`, `${asset(`${base}-1920.webp`)} 1920w`, `${file} 2048w`].join(', ');
         return (
           <picture>
             <source type="image/avif" srcset={avif} sizes="100vw" />

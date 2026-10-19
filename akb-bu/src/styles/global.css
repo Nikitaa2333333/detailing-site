@@ -494,6 +494,73 @@ mark {
 .round-glass:hover { background: var(--glass-dark-hover); transition-duration: var(--t-hover-in); }
 .round-glass svg { width: 20px; height: 20px; }
 
+/* Ссылка-действие «плюс в кружке + подчёркнутый текст» — одна на сайт (19.10.2026):
+   «Добавить услуги» в калькуляторе, «Что входит» в прайсе. Под курсором — серая подложка.
+   Раскрывающая кнопка с aria-expanded="true" — плюс поворачивается в крестик.
+   Разметка: <button class="link-plus"><svg … круг+плюс …/><span>Текст</span></button> */
+.link-plus {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-8);
+  padding: 6px 10px;
+  margin-left: -10px;
+  border: none;
+  border-radius: var(--r-row);
+  background: transparent;
+  color: inherit;
+  font-size: var(--text-body);
+  cursor: pointer;
+  transition: background-color var(--t-hover-out) var(--ease-out);
+}
+.link-plus svg { flex: none; width: 20px; height: 20px; transition: transform 0.25s var(--ease-porsche); }
+.link-plus span { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+.link-plus:hover { background: var(--color-tile); transition-duration: var(--t-hover-in); }
+.on-dark .link-plus:hover { background: var(--glass-dark); }
+.link-plus[aria-expanded='true'] svg { transform: rotate(45deg); }
+
+/* Шторка снизу — один компонент на сайт (19.10.2026, «Что входит» в прайсе на телефоне):
+   <dialog class="sheet"> с панелью, скруглённой сверху (--r-panel), подложка --backdrop,
+   круглая кнопка-крестик. Открывается showModal(); html.sheet-open держит страницу под ней.
+   Ручки: --sheet-max (высота панели), --sheet-pad (поля) */
+.sheet {
+  --sheet-max: 82svh;
+  --sheet-pad: var(--sp-24);
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: grid;
+  align-items: end;
+  color: var(--color-ink);
+}
+.sheet:not([open]) { display: none; }
+.sheet::backdrop { background: var(--backdrop); }
+.sheet-panel {
+  position: relative;
+  max-height: var(--sheet-max);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--sheet-pad) var(--sheet-pad) calc(var(--sheet-pad) + env(safe-area-inset-bottom));
+  border-radius: var(--r-panel) var(--r-panel) 0 0;
+  background: var(--color-page);
+  animation: sheet-in 0.32s var(--ease-porsche);
+}
+@keyframes sheet-in { from { transform: translateY(100%); } }
+.sheet-close { position: absolute; top: var(--sp-16); right: var(--sp-16); background: var(--glass-light); color: var(--color-ink); }
+.sheet-close:hover { background: var(--glass-light-hover); }
+.sheet-kicker { font-size: var(--text-caption); font-weight: var(--w-medium); padding-right: 56px; }
+.sheet-title { margin-top: var(--sp-8); font-size: var(--text-subhead); padding-right: 56px; }
+.sheet-body { display: grid; gap: var(--sp-12); margin-top: var(--sp-20); }
+.sheet-body .bullets { --bullet-gap: 6px; }
+html.sheet-open { overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { .sheet-panel { animation: none; } }
+
 /* Чип — «стекло», без обводки */
 .chip {
   display: inline-flex;

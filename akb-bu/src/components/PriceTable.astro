@@ -2,7 +2,13 @@
 /* Таблица прайса — обязательный блок страниц услуг и направлений (docs/site-structure.md, §5).
    Печатается в готовом HTML: поисковик видит все цены по классам. Выбрали машину —
    lib/page-car.js ставит <html data-car-cls> и столбец класса подсвечивается (без заливок
-   строк, замечание заказчика). На телефоне таблица листается вбок, колонка услуги стоит.
+   строк, замечание заказчика).
+
+   Телефон (19.10.2026, «таблица нечитабельна»): не таблица, а список — услуга слева, цена
+   справа, одна колонка класса; какой класс показывать — чипы над списком (класс машины
+   подставляется сам). «Что входит» на телефоне открывает шторку снизу (.sheet из global.css),
+   на ПК раскрывается строкой под услугой. Разметка одна: таблица перестраивается стилями,
+   все пять цен остаются в HTML.
 
    groups — [{ title, rows: [{ key, name, lead, includes, terms, cells }] }] из lib/pages.js.
    С 19.10.2026 таблица — справочная «по всем классам»; записаться — в карточках ServiceVariants. */
@@ -14,7 +20,12 @@ const cols = Array.from({ length: classes }, (_, i) => i + 1);
 const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.value) : `от ${rub(c.value)}`);
 ---
 
-<div class="ptable-scroll">
+<div class="ptable-scroll" data-cls="1" data-ptable>
+  <!-- Телефон: какой класс показывать. На ПК скрыто — там все пять колонок -->
+  <div class="ptable-cls" role="group" aria-label="Класс автомобиля">
+    <span class="ptable-cls-label">Класс</span>
+    {cols.map((n) => <button class="ptable-cls-btn" type="button" data-cls-btn={n} aria-pressed={n === 1 ? 'true' : 'false'}>{n}-й</button>)}
+  </div>
   <table class="ptable">
     <thead>
       <tr>
@@ -35,14 +46,12 @@ const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.va
             const id = `more-${r.key.replace(/[^a-z0-9]+/gi, '-')}`;
             return (
               <>
-                <tr>
+                <tr class="ptable-row">
                   <th scope="row" class="ptable-name">
                     <span class="ptable-svc">{typo(r.name)}</span>
                     {more && (
-                      <button class="ptable-more" type="button" aria-expanded="false" aria-controls={id} data-more={id}>
-                        <span class="round-glass ptable-more-icon" aria-hidden="true">
-                          <svg viewBox="0 0 12 12"><path d="M6 1.5v9M1.5 6h9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                        </span>
+                      <button class="link-plus ptable-more" type="button" aria-expanded="false" aria-controls={id} data-more={id} data-svc={r.name}>
+                        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 6.5v7M6.5 10h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                         <span class="ptable-more-text">Что входит</span>
                       </button>
                     )}
@@ -71,11 +80,65 @@ const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.va
 </div>
 
 <script>
-  /* «Что входит» — показать/спрятать строку состава под услугой */
+  const PHONE = matchMedia('(max-width: 760px)');
+
+  /* Телефон: чипы класса → одна видимая колонка цен. Класс выбранной машины подставляется
+     сам (html[data-car-cls] из lib/page-car.js), пока человек не ткнул чип руками */
+  const tables = document.querySelectorAll<HTMLElement>('[data-ptable]');
+  const setCls = (t: HTMLElement, cls: string) => {
+    t.dataset.cls = cls;
+    for (const b of t.querySelectorAll<HTMLButtonElement>('[data-cls-btn]')) {
+      b.setAttribute('aria-pressed', String(b.dataset.clsBtn === cls));
+    }
+  };
+  const fromCar = () => {
+    const cls = document.documentElement.dataset.carCls;
+    if (!cls || !/^[1-5]$/.test(cls)) return;
+    for (const t of tables) if (!t.dataset.clsManual) setCls(t, cls);
+  };
+  for (const t of tables) {
+    for (const b of t.querySelectorAll<HTMLButtonElement>('[data-cls-btn]')) {
+      b.addEventListener('click', () => { t.dataset.clsManual = '1'; setCls(t, b.dataset.clsBtn!); });
+    }
+  }
+  fromCar();
+  document.addEventListener('car:change', fromCar);
+
+  /* «Что входит»: на ПК — строка под услугой; на телефоне — шторка снизу (одна на страницу) */
+  let sheet: HTMLDialogElement | null = null;
+  const getSheet = () => {
+    if (sheet) return sheet;
+    sheet = document.createElement('dialog');
+    sheet.className = 'sheet';
+    sheet.innerHTML =
+      '<div class="sheet-panel">' +
+      '<button class="round-glass sheet-close" type="button" aria-label="Закрыть"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>' +
+      '<p class="sheet-kicker"></p><h3 class="sheet-title"></h3><div class="sheet-body"></div></div>';
+    document.body.append(sheet);
+    const close = () => sheet!.close();
+    sheet.querySelector('.sheet-close')!.addEventListener('click', close);
+    sheet.addEventListener('click', (e) => { if (e.target === sheet) close(); }); // тап по подложке
+    sheet.addEventListener('close', () => document.documentElement.classList.remove('sheet-open'));
+    return sheet;
+  };
+  const openSheet = (b: HTMLButtonElement, row: HTMLElement) => {
+    const s = getSheet();
+    const table = b.closest<HTMLElement>('[data-ptable]')!;
+    const cls = table.dataset.cls!;
+    const tr = b.closest('tr')!;
+    const cell = tr.querySelector<HTMLElement>(`[data-col='${cls}']`);
+    s.querySelector('.sheet-kicker')!.textContent = cell ? `${cls}-й класс · ${cell.textContent}` : '';
+    s.querySelector('.sheet-title')!.textContent = b.dataset.svc ?? '';
+    s.querySelector('.sheet-body')!.innerHTML = row.querySelector('.ptable-more-body')!.innerHTML;
+    document.documentElement.classList.add('sheet-open');
+    s.showModal();
+  };
+
   for (const b of document.querySelectorAll<HTMLButtonElement>('[data-more]')) {
     const row = document.getElementById(b.dataset.more!);
     if (!row) continue;
     b.addEventListener('click', () => {
+      if (PHONE.matches) { openSheet(b, row); return; }
       const open = row.hidden;
       row.hidden = !open;
       b.setAttribute('aria-expanded', String(open));
@@ -86,7 +149,7 @@ const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.va
 
 <style>
   /* Ширина колонок: услуга — сколько дадут, классы — ровные. Ручки: --ptable-name-min
-     (колонка услуги на телефоне), --ptable-col (минимум колонки цены) */
+     (колонка услуги), --ptable-col (минимум колонки цены) */
   .ptable-scroll {
     --ptable-name-min: 220px;
     --ptable-col: 108px;
@@ -95,6 +158,7 @@ const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.va
     margin-inline: calc(var(--gutter) * -1);
     padding-inline: var(--gutter);
   }
+  .ptable-cls { display: none; }
   .ptable {
     width: 100%;
     min-width: calc(var(--ptable-name-min) + var(--ptable-col) * 5);
@@ -123,7 +187,6 @@ const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.va
     padding-left: 0 !important;
   }
   .ptable-svc { display: block; font-size: var(--text-body-lg); }
-  .ptable-lead { margin-top: var(--sp-12); max-width: 52ch; }
   .ptable-price {
     min-width: var(--ptable-col);
     white-space: nowrap;
@@ -140,30 +203,9 @@ const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.va
     letter-spacing: var(--track-head);
   }
 
-  /* «Что входит» — круглая кнопка-«стекло» с плюсом (как .round-glass сайта) и текст рядом,
-     без пилюли (19.10.2026); раскрыто — плюс поворачивается в крестик. Ручка — --more-size */
-  .ptable-more {
-    --more-size: 28px;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--sp-8);
-    margin-top: var(--sp-8);
-    padding: 0;
-    border: 0;
-    background: none;
-    color: inherit;
-    font-size: var(--text-caption);
-    cursor: pointer;
-  }
-  .ptable-more-icon {
-    width: var(--more-size);
-    height: var(--more-size);
-    background: var(--glass-light);
-    color: var(--color-ink);
-  }
-  .ptable-more:hover .ptable-more-icon { background: var(--glass-light-hover); transition-duration: var(--t-hover-in); }
-  .ptable-more-icon svg { width: 12px; height: 12px; transition: transform 0.25s var(--ease-porsche); }
-  .ptable-more[aria-expanded='true'] .ptable-more-icon svg { transform: rotate(45deg); }
+  /* «Что входит» — общий .link-plus из global.css, тот же, что «Добавить услуги» в
+     калькуляторе (19.10.2026: «берём одни компоненты»); раскрыто — плюс поворачивается в крестик */
+  .ptable-more { margin-top: var(--sp-4); }
   /* Строка состава — без верхней линии (продолжение строки услуги), текст во всю ширину */
   .ptable tbody tr.ptable-more-row { border-top: 0; }
   .ptable-more-row td { padding-top: 0; padding-left: 0 !important; }
@@ -188,24 +230,56 @@ const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.va
     border-radius: var(--r-row) var(--r-row) 0 0;
   }
 
-  /* Телефон: колонка услуги стоит, цены листаются */
+  /* ---- Телефон: список «услуга — цена одного класса», чипы класса сверху --------------- */
   @media (max-width: 760px) {
-    .ptable-scroll { --ptable-name-min: 180px; --ptable-col: 96px; }
-    .ptable-name {
-      position: sticky;
-      left: 0;   /* край экрана: прокрутка выходит за поля контейнера */
-      z-index: 1;
-      background: var(--color-page);
-      padding-left: var(--gutter) !important;
-      box-shadow: 1px 0 0 var(--color-line-ink);
+    .ptable-scroll { overflow: visible; margin-inline: 0; padding-inline: 0; }
+    .ptable-cls {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-8);
+      margin-bottom: var(--sp-16);
+      font-size: var(--text-caption);
     }
-    .ptable-group th { position: sticky; left: 0; }
-    /* состав — в ширину экрана и «прилипает» к левому краю, пока таблица листается вбок */
-    .ptable-more-body {
-      position: sticky;
-      left: 0;
-      width: auto;
-      max-width: calc(100vw - var(--gutter) * 2 - var(--sp-16) * 2);
+    .ptable-cls-label { margin-right: var(--sp-4); }
+    /* Чипы: серое «стекло», активный — чёрная заливка (их каталог: первый чип чёрный) */
+    .ptable-cls-btn {
+      padding: 6px 12px;
+      border: 0;
+      border-radius: var(--r-full);
+      background: var(--glass-light);
+      color: inherit;
+      font: inherit;
+      font-size: var(--text-caption);
+      cursor: pointer;
     }
+    .ptable-cls-btn[aria-pressed='true'] { background: var(--color-ink); color: var(--color-white); }
+
+    .ptable, .ptable tbody, .ptable tr, .ptable th, .ptable td { display: block; min-width: 0; }
+    .ptable thead { display: none; }
+    .ptable { min-width: 0; }
+    .ptable-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--sp-4) var(--sp-16);
+      align-items: start;
+      padding-block: var(--sp-16);
+    }
+    .ptable th, .ptable td { padding: 0; }
+    .ptable-name { width: auto; }
+    /* видна только колонка выбранного класса; подсветку столбца с ПК снимаем */
+    .ptable td.ptable-price { display: none; background: none !important; padding: 0 !important; }
+    .ptable-scroll[data-cls='1'] .ptable-row [data-col='1'],
+    .ptable-scroll[data-cls='2'] .ptable-row [data-col='2'],
+    .ptable-scroll[data-cls='3'] .ptable-row [data-col='3'],
+    .ptable-scroll[data-cls='4'] .ptable-row [data-col='4'],
+    .ptable-scroll[data-cls='5'] .ptable-row [data-col='5'] {
+      display: block;
+      font-size: var(--text-body-lg);
+      text-align: right;
+    }
+    .ptable-group th { padding-top: var(--sp-24); padding-bottom: 0; }
+    .ptable tbody tr.ptable-group { border-top: 0; }
+    /* состав — только в шторке */
+    .ptable-more-row { display: none !important; }
   }
 </style>
