@@ -241,8 +241,8 @@ mark {
    перехода добавляем к верхнему отступу. Длина — ручка --blend-h (240–480px) */
 /* Обратный переход — со светлой полосы на тёмную: верх секции белый и плавно темнеет */
 .section.section--blend-from-light {
-  --blend-h: clamp(240px, 42vh, 440px);
-  padding-top: calc(var(--section-gap) + var(--blend-h));
+  --blend-h: clamp(160px, 24vh, 260px);   /* длина перехода; 19.10: было до 440 — «огромные дыры» */
+  padding-top: var(--blend-h);   /* контент — сразу за переходом, без второго отступа */
   background-color: var(--color-ink);
   background-image: linear-gradient(to bottom,
     rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.987) 8.1%, rgba(255, 255, 255, 0.951) 15.5%,
@@ -266,8 +266,8 @@ mark {
 }
 /* Полоса после белой секции: сверху плавно темнеет (те же ступени, что у blend-from-light) */
 .section.section--band.section--from-light {
-  --blend-h: clamp(200px, 34vh, 360px);
-  padding-top: calc(var(--section-gap) + var(--blend-h));
+  --blend-h: clamp(160px, 24vh, 260px);
+  padding-top: var(--blend-h);   /* контент — сразу за переходом, без второго отступа */
   background:
     linear-gradient(to bottom,
       rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.951) 15.5%, rgba(255, 255, 255, 0.825) 29%,
@@ -291,8 +291,8 @@ mark {
 
 /* два класса — сильнее .section--sheet, чей `background` ниже по файлу сбрасывал градиент */
 .section.section--blend-from-dark {
-  --blend-h: clamp(240px, 42vh, 440px);
-  padding-top: calc(var(--section-gap) + var(--blend-h));
+  --blend-h: clamp(160px, 24vh, 260px);   /* длина перехода; 19.10: было до 440 — «огромные дыры» */
+  padding-top: var(--blend-h);   /* контент — сразу за переходом, без второго отступа */
   background-color: var(--color-page);
   background-image: linear-gradient(to bottom,
     rgba(1, 2, 5, 1) 0%, rgba(1, 2, 5, 0.987) 8.1%, rgba(1, 2, 5, 0.951) 15.5%,
