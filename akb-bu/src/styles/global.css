@@ -1,71 +1,90 @@
-/* КАРКАС (ветка redesign, 19.10.2026). Дизайн начинаем с нуля: модули, иерархия и логика
-   на месте, стиль снят — нейтральная серая шкала, системный шрифт, одинаковые малые радиусы,
-   фото заменены плашками-заглушками. Имена токенов прежние: новый дизайн = новые значения.
-   Прежний стиль (сине-чёрный, Onest, оранжевый акцент) — коммит b04a771 в main. */
+/* СТИЛЬ PORSCHE (ветка redesign, 19.10.2026). Референс — porsche.com, значения из их открытой
+   дизайн-системы и замеров страниц: refs/porsche/STYLE.md (в git не идёт). Почти чёрный
+   и белый без цветного акцента, «стекло» (blur 32 + полупрозрачная серая заливка), крупные
+   заголовки обычного веса, большие радиусы у фото и карточек. Шрифт — Onest (решено 19.10).
+   Прежний стиль (сине-чёрный, оранжевый акцент) — коммит b04a771 в main. */
 
 :root {
-  /* Цвета — серая шкала: тёмные полосы остаются тёмными, светлые листы — светлыми */
-  --color-page: #f2f2f2;        /* светлый лист и поля на нём */
-  --color-tile: #e6e6e6;        /* плашка на светлом */
-  --color-tile-hover: #dcdcdc;
-  --color-tile-dark: #2a2a2a;   /* плашка на тёмной полосе */
-  --color-tile-back: #333333;   /* оборот плашки */
+  /* Цвета — почти чёрный и белый, серые плашки. Цветного акцента нет */
+  --color-page: #ffffff;        /* светлый лист */
+  --color-tile: #eff0f2;        /* плашка на светлом, серая колонка меню */
+  --color-tile-hover: #e4e5e9;
+  --color-tile-dark: #19191c;   /* плашка на тёмной полосе (карточка без фото) */
+  --color-tile-back: #232327;   /* оборот плашки, если под ним нет фото */
   --color-white: #ffffff;
-  --color-ink: #161616;         /* фон сайта, тёмные полосы; текст на светлом */
-  --color-coal: #1f1f1f;        /* нижний ярус подвала */
-  --color-grey-text: #8a8a8a;   /* ТОЛЬКО плейсхолдеры */
-  --color-grey-text-dark: #c4c4c4;
-  --color-text-muted: #c4c4c4;
-  --color-line-ink: rgba(0, 0, 0, 0.12);
-  --color-line-white: rgba(255, 255, 255, 0.14);
-  --color-ink-hover: #2a2a2a;   /* наведение на тёмную кнопку */
-  --color-void: #111111;        /* канва под первым экраном */
-  --color-photo-black: #111111;
+  --color-ink: #010205;         /* фон сайта, тёмные полосы; текст на светлом */
+  --color-coal: #0b0c10;        /* нижний ярус подвала */
+  --color-grey-text: #8a8b93;   /* ТОЛЬКО плейсхолдеры */
+  --color-grey-text-dark: #c4c4c8;
+  --color-text-muted: #ffffff;  /* приглушённого текста нет — правило проекта */
+  --color-line-ink: rgba(1, 2, 5, 0.14);
+  --color-line-white: rgba(255, 255, 255, 0.16);
+  --color-ink-hover: #26272c;   /* наведение на тёмную кнопку */
+  --color-void: #010205;        /* канва под первым экраном */
+  --color-photo-black: #010205;
+
+  /* «Стекло» — полупрозрачная серая заливка + размытие подложки. Один приём на чипы,
+     кнопки, круглые стрелки, переключатели. Крутить прозрачность в пределах 0.2–0.4 */
+  --glass-blur: blur(32px);
+  --glass-dark: rgba(156, 156, 159, 0.3);        /* на тёмном и на фото */
+  --glass-dark-hover: rgba(156, 156, 159, 0.45);
+  --glass-light: rgba(100, 101, 114, 0.18);      /* на светлом */
+  --glass-light-hover: rgba(100, 101, 114, 0.28);
 
   /* Полупрозрачные слои на тёмном фоне: подложки контролов и волосяные обводки.
      Четыре ступени на весь сайт — новых значений rgba(255,255,255,…) не заводим */
-  --veil-fill: rgba(255, 255, 255, 0.14);        /* подложка чипа, поля, кружка */
-  --veil-fill-hover: rgba(255, 255, 255, 0.3);   /* её наведение */
+  --veil-fill: var(--glass-dark);                /* подложка чипа, поля, кружка */
+  --veil-fill-hover: var(--glass-dark-hover);    /* её наведение */
   --veil-fill-soft: rgba(255, 255, 255, 0.1);    /* наведение на кнопку-обводку */
   --veil-line: rgba(255, 255, 255, 0.4);         /* обводка кнопки и чипа */
   --veil-line-strong: rgba(255, 255, 255, 0.6);  /* обводка чекбокса — должна читаться */
   /* Подсветка строки списка под курсором — плашка вместо подчёркивания */
   --color-row-hover-dark: rgba(255, 255, 255, 0.12);
-  --color-row-hover-light: rgba(10, 10, 11, 0.06);
+  --color-row-hover-light: #eff0f2;
 
-  /* Акцент в каркасе — без цвета: главное действие белое на тёмном, чёрное на светлом.
-     Цвет акцента выбираем заново вместе с дизайном */
-  --color-amber: #e5e5e5;
+  /* Акцент — без цвета: главное действие белое на тёмном, чёрное на светлом */
+  --color-amber: #e4e5e9;
   --color-orange: #ffffff;
   --color-ember: #9a9a9a;
   --color-accent: var(--color-orange);
   --color-accent-hover: var(--color-amber);
-  --color-on-accent: #111111;
+  --color-on-accent: #010205;
   --cut: 0px;
   --cut-sm: 0px;
-  --gradient-sparks: linear-gradient(160deg, #3a3a3a 0%, #2a2a2a 100%);
+  --gradient-sparks: linear-gradient(160deg, #26272c 0%, #19191c 100%);
+  /* Растворение фото в тёмную полосу (их приём «фото → чёрное → белое»): 16 ступеней
+     вместо двух, чтобы не было полосы на переходе */
+  --fade-to-ink: linear-gradient(to bottom,
+    rgba(1, 2, 5, 0) 0%, rgba(1, 2, 5, 0.011) 8.1%, rgba(1, 2, 5, 0.05) 15.5%,
+    rgba(1, 2, 5, 0.12) 22.5%, rgba(1, 2, 5, 0.22) 29%, rgba(1, 2, 5, 0.33) 35.3%,
+    rgba(1, 2, 5, 0.44) 41.2%, rgba(1, 2, 5, 0.52) 47.1%, rgba(1, 2, 5, 0.6) 52.9%,
+    rgba(1, 2, 5, 0.67) 58.8%, rgba(1, 2, 5, 0.73) 64.7%, rgba(1, 2, 5, 0.78) 71%,
+    rgba(1, 2, 5, 0.85) 77.5%, rgba(1, 2, 5, 0.92) 84.5%, rgba(1, 2, 5, 0.97) 91.9%,
+    #010205 100%);
 
-  /* Шрифт — системный, без характера: шрифт выбираем заново */
-  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  /* Шрифт — Onest (19.10.2026: «шрифт пока Onest оставим»; ближе к Porsche Next —
+     Sofia Sans, сравнение в refs/porsche/font/specimen.png) */
+  --font-body: 'Onest Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: var(--font-body);   /* моноширинного слоя в этом стиле нет */
   --w-regular: 400;
   --w-medium: 500;
   --w-semibold: 600;
   --w-bold: 700;
-  --w-black: 800;               /* заголовки по референсу (FAQ) — Onest тянет до 900 */
+  --w-black: 800;
+  --w-heading: 400;             /* заголовки — обычного веса, как у Porsche */
 
-  /* Кегль */
-  --text-caption: 0.8125rem;
-  --text-body: 1rem;
-  --text-body-lg: 1.125rem;
-  --text-lead: clamp(1.0625rem, 1.6vw, 1.25rem);          /* лид под h1 и вопрос FAQ: 17 → 20 */
-  --text-subhead: clamp(1.25rem, 1.6vw, 1.5rem);         /* заголовок внутри карточки, над списком */
-  --text-tile: clamp(1.375rem, 2vw, 1.75rem);           /* название в плашке */
-  --text-heading: clamp(1.75rem, 3vw, 2.5rem);           /* заголовок секции */
-  --text-heading-xl: clamp(2rem, 3.4vw, 2.75rem);        /* крупный заголовок блока */
-  --text-question: clamp(1.125rem, 1.6vw, 1.25rem);      /* вопрос FAQ */
-  --text-display: clamp(2rem, 4vw, 3.5rem);              /* h1 */
-  --text-stat: clamp(2.25rem, 4vw, 3.25rem);
+  /* Кегль — шкала Porsche (typescale), резиновая. В скобках — значение на экране 1280 */
+  --text-caption: 0.875rem;                                    /* 14 */
+  --text-body: 1rem;                                           /* 16 */
+  --text-body-lg: 1.125rem;                                    /* 18 */
+  --text-lead: clamp(1.13rem, 0.21vw + 1.08rem, 1.33rem);      /* 20 — лид, вопрос */
+  --text-subhead: clamp(1.27rem, 0.51vw + 1.16rem, 1.78rem);   /* 25 — заголовок в карточке */
+  --text-tile: clamp(1.42rem, 0.94vw + 1.23rem, 2.37rem);      /* 32 — название плашки */
+  --text-heading: clamp(1.6rem, 1.56vw + 1.29rem, 3.16rem);    /* 41 — заголовок секции */
+  --text-heading-xl: clamp(1.8rem, 2.41vw + 1.32rem, 4.21rem); /* 52 — крупный заголовок */
+  --text-question: clamp(1.13rem, 0.21vw + 1.08rem, 1.33rem);  /* 20 — вопрос FAQ */
+  --text-display: clamp(2.03rem, 3.58vw + 1.31rem, 5.61rem);   /* 67 — h1 */
+  --text-stat: clamp(2.03rem, 3.58vw + 1.31rem, 5.61rem);      /* 67 — крупные цифры */
 
   /* Spacing */
   --sp-4: 4px; --sp-8: 8px; --sp-12: 12px; --sp-16: 16px; --sp-20: 20px;
@@ -88,17 +107,19 @@
   --bullet-indent: 16px;        /* отступ текста от левого края пункта */
   --bullet-gap: 6px;            /* между пунктами — меньше, чем между абзацами */
 
-  /* Радиусы — каркас: один малый на всё, лист без скругления */
-  --r-row: 4px;
-  --r-input: 4px;
-  --r-tile: 4px;
-  --r-panel: 4px;
+  /* Радиусы — как у Porsche: крупные у фото и карточек, средние у кнопок */
+  --r-row: 8px;                 /* подсветка строки, пункт меню */
+  --r-input: 12px;
+  --r-tile: 32px;               /* плашки услуг, крупные фото */
+  --r-panel: 24px;              /* панели, карточки внутри секций */
   --r-sheet: 0px;
-  --r-pill: 4px;
+  --r-pill: 12px;               /* кнопки */
+  --r-full: 999px;              /* чипы, круглые кнопки */
 
   /* Движение */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-porsche: cubic-bezier(0.25, 0.1, 0.25, 1);
   /* Отклик на наведение: подсветка загорается мгновенно и гаснет плавно.
      Плавный ВХОД на курсорных состояниях читается как тормоз — не заводить */
   --t-hover-in: 0s;
@@ -124,12 +145,13 @@ body {
   line-height: 1.5;
 }
 
-/* Заголовки — каркас: один вес, обычный трекинг. Характер типографики задаём заново */
+/* Заголовки — крупные и обычного веса (Porsche: 400, трекинг 0). Onest на 400 в крупном
+   кегле чуть разрежен — поджимаем на сотую */
 h1, h2, h3, h4 {
   margin: 0;
-  font-weight: var(--w-bold);
-  line-height: 1.1;
-  letter-spacing: 0;
+  font-weight: var(--w-heading);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
 }
 
 p { margin: 0; }
@@ -137,15 +159,13 @@ a { color: inherit; text-decoration: none; }
 img, video { max-width: 100%; display: block; }
 button, input, textarea, select { font: inherit; }
 
-/* Технический слой — моноширинный: только метки секций, чипы и счётчики.
-   Цены и подписи — на основном шрифте (16.10.2026). Список держим здесь,
-   чтобы «гараж» дозировался в одном месте */
+/* Метки секций и чипы — тем же шрифтом, служебный вес (моноширинный слой снят 19.10.2026) */
 .mono,
 .section-label,
 .chip {
   font-family: var(--font-mono);
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-weight: var(--w-medium);
+  letter-spacing: 0;
 }
 
 /* Срезанные углы-бирки (плашки, пакеты, гарантии, шапка) пробовали 16.10.2026 — сняты
@@ -247,23 +267,22 @@ mark {
 .dark-panel mark { background: var(--color-white); color: var(--color-ink); }
 .dark-panel ::selection { background: var(--color-white); color: var(--color-ink); }
 
-/* Кнопки — пилюли. Первичная инвертируется на тёмном */
+/* Кнопки — прямоугольник с радиусом 12, обычный вес (Porsche: 16/28, 400).
+   Первичная — заливка (чёрная на светлом, белая на тёмном), вторичная — «стекло» */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--sp-8);
-  padding: 14px 24px;
+  padding: 15px 26px;
   border-radius: var(--r-pill);
-  /* плотная кнопка-прямоугольник, как у бюро Горбунова (16.10.2026; было medium) */
-  font-weight: var(--w-semibold);
-  letter-spacing: -0.01em;
+  font-weight: var(--w-regular);
+  letter-spacing: 0;
   font-size: var(--text-body);
   line-height: 1.2;
   cursor: pointer;
   border: none;
   white-space: nowrap;
-  /* Объёмная обводка-фаска на кнопках пробовалась 16.10.2026 — «грязно», снята */
   transition: background-color var(--t-hover-out) var(--ease-out), color var(--t-hover-out) var(--ease-out);
 }
 .btn:hover { transition-duration: var(--t-hover-in); }
@@ -274,30 +293,58 @@ mark {
 .dark-panel .btn--primary:hover,
 .on-dark .btn--primary:hover { background: var(--color-tile); }
 
-.btn--ghost {
-  background: transparent;
+/* Вторичная кнопка — «стекло»: полупрозрачная серая заливка + размытие подложки */
+.btn--ghost,
+.btn--glass {
+  background: var(--glass-light);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   color: inherit;
-  box-shadow: inset 0 0 0 1.5px var(--color-line-ink);
 }
-.btn--ghost:hover { background: rgba(10, 10, 11, 0.05); }
+.btn--ghost:hover,
+.btn--glass:hover { background: var(--glass-light-hover); }
 .dark-panel .btn--ghost,
-.on-dark .btn--ghost { box-shadow: inset 0 0 0 1.5px var(--veil-line); }
+.on-dark .btn--ghost,
+.dark-panel .btn--glass,
+.on-dark .btn--glass { background: var(--glass-dark); }
 .dark-panel .btn--ghost:hover,
-.on-dark .btn--ghost:hover { background: var(--veil-fill-soft); }
+.on-dark .btn--ghost:hover,
+.dark-panel .btn--glass:hover,
+.on-dark .btn--glass:hover { background: var(--glass-dark-hover); }
 
-/* Чип — пилюля с обводкой, без заливки */
+/* Круглая кнопка-стрелка в «стекле» (плашки, прокрутка вниз, закрыть) */
+.round-glass {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-full);
+  border: 0;
+  background: var(--glass-dark);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  color: var(--color-white);
+  cursor: pointer;
+  transition: background-color var(--t-hover-out) var(--ease-out);
+}
+.round-glass:hover { background: var(--glass-dark-hover); transition-duration: var(--t-hover-in); }
+.round-glass svg { width: 20px; height: 20px; }
+
+/* Чип — «стекло», без обводки */
 .chip {
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
-  border-radius: var(--r-pill);
+  padding: 4px 12px;
+  border-radius: var(--r-full);
   font-size: var(--text-caption);
-  font-weight: var(--w-medium);
-  line-height: 1.2;
-  box-shadow: inset 0 0 0 1px var(--color-line-ink);
+  line-height: 1.4;
+  background: var(--glass-light);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
 }
 .dark-panel .chip,
-.on-dark .chip { box-shadow: inset 0 0 0 1px var(--veil-line); }
+.on-dark .chip { background: var(--glass-dark); }
 
 /* Поле формы */
 .field {
@@ -333,22 +380,5 @@ mark {
   [data-reveal] { opacity: 1; transform: none; transition: none; }
 }
 
-/* ===== КАРКАС: заглушки вместо фото и снятые украшения (19.10.2026) =====
-   Фото первого экрана и плашек — серые прямоугольники с подписью «фото», иней сезонных
-   пакетов и тени сняты. Когда будет новый дизайн — этот блок удаляется целиком */
-.hero-media,
-.tile--media { background: var(--color-tile-dark); }
-.hero-frame,
-.tile-bg { opacity: 0 !important; animation: none !important; }
-.hero-media::after,
-.tile--media::after {
-  content: 'фото';
-  position: absolute;
-  top: var(--sp-12);
-  right: var(--sp-12);
-  font: 500 var(--text-caption) / 1 var(--font-mono);
-  color: var(--color-white);
-}
+/* Иней сезонных пакетов — приём старого стиля, снят вместе с каркасом 19.10.2026 */
 .pack::before { display: none !important; }
-.tile--media .tile-title,
-.tile--media .tile-price { text-shadow: none; }

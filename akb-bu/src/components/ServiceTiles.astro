@@ -24,12 +24,17 @@ const { cta, more, href = '#contacts' } = Astro.props;
     >
       {c.media && <img class="tile-bg" src={asset(c.media)} alt="" loading="lazy" />}
       <div class="tile-front">
-        <div class="tile-top">
-          <span class="chip">{c.tag}</span>
-        </div>
-        <div class="tile-headline">
-          <h3 class="tile-title">{c.title}</h3>
-          <p class="tile-price">от {rub(c.from)}</p>
+        <h3 class="tile-title">{c.title}</h3>
+        <div class="tile-foot">
+          <div class="tile-chips">
+            {c.items.slice(0, 3).map((s) => <span class="chip">{s.title}</span>)}
+          </div>
+          <div class="tile-row">
+            <p class="tile-price">от {rub(c.from)}</p>
+            <span class="round-glass tile-arrow" aria-hidden="true">
+              <svg viewBox="0 0 20 20"><path d="M4 10h12m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </div>
         </div>
       </div>
       <div class="tile-back">
@@ -63,21 +68,22 @@ const { cta, more, href = '#contacts' } = Astro.props;
 )}
 
 <style>
-  /* Плашки услуг: ровная сетка 3 колонки, все одного размера. Ниже квадрата — 5:4:
-     квадрат в треть ширины выходил огромным. Ниже 5:4 не опускать — на обороте
-     должен уместиться мини-прайс с кнопкой */
+  /* Плашки услуг — как карточки моделей на главной porsche.com (19.10.2026): две колонки,
+     радиус 32, фото на всю плашку. Пропорция — ручка --tile-ratio (1 / 1 у Porsche; ниже
+     5 / 4 не опускать — на обороте должен уместиться мини-прайс с кнопкой) */
   .tiles {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--sp-12);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-28);
   }
   .tile {
     position: relative;
     overflow: hidden;
-    --tile-ratio: 5 / 4;
+    isolation: isolate;
+    --tile-ratio: 1 / 1;
     aspect-ratio: var(--tile-ratio);
     border-radius: var(--r-tile);
-    background: var(--color-tile-dark);
+    background: var(--gradient-sparks);
     color: var(--color-white);
     /* переход из меню: якорь не должен уезжать под шапку */
     scroll-margin-top: calc(var(--header-h) + var(--sp-24));
@@ -85,9 +91,34 @@ const { cta, more, href = '#contacts' } = Astro.props;
   .tile-bg {
     position: absolute;
     inset: 0;
+    z-index: -1;
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+  /* Фото «отъезжает» при прокрутке (их приём: scale 1.14 → 1 за время появления) */
+  @keyframes tile-zoom {
+    from { transform: scale(1.14); }
+    to { transform: scale(1); }
+  }
+  @supports (animation-timeline: view()) {
+    .tile-bg { animation: tile-zoom linear both; }
+    /* таймлайн — отдельным правилом: минификатор иначе сворачивает его в шорткат,
+       который Chrome не парсит (та же история, что в Hero.astro) */
+    .tiles .tile-bg { animation-timeline: view(); animation-range: entry 0% cover 45%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tile-bg { animation: none; }
+  }
+  /* Низ плашки уходит в тёмное — подписи читаются на любом фото (как у Porsche) */
+  .tile--media::after {
+    content: '';
+    position: absolute;
+    inset: 45% 0 0;
+    z-index: -1;
+    background: var(--fade-to-ink);
+    opacity: 0.85;
+    pointer-events: none;
   }
 
   .tile-front {
@@ -96,53 +127,54 @@ const { cta, more, href = '#contacts' } = Astro.props;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: var(--sp-20);
+    padding: var(--sp-28);
   }
-  .tile-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--sp-8);
-  }
-  .tile-count { font-size: var(--text-caption); font-weight: var(--w-medium); }
-  .tile-headline { display: grid; gap: var(--sp-8); }
   .tile-title {
     font-size: var(--text-tile);
-    max-width: 10ch;
+    max-width: 14ch;
   }
-  /* Цена «от» — витринный ярлык, а не наборный текст: отсюда вес и табличные цифры */
+  .tile-foot { display: grid; gap: var(--sp-16); }
+  .tile-chips { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
+  .tile-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-16);
+  }
+  /* Цена «от» — витринный ярлык, а не наборный текст: отсюда табличные цифры */
   .tile-price {
-    font-size: var(--text-body-lg);
-    font-weight: var(--w-medium);
+    font-size: var(--text-lead);
     font-variant-numeric: tabular-nums;
   }
-  .tile--media .tile-title,
-  .tile--media .tile-price { text-shadow: 0 1px 24px rgba(0, 0, 0, 0.4); }
+  .tile-arrow { width: 44px; height: 44px; transition: background-color var(--t-hover-out) var(--ease-out), translate 0.3s var(--ease-porsche); }
+  @media (hover: hover) {
+    .tile:hover .tile-arrow { background: var(--glass-dark-hover); translate: 4px 0; }
+  }
 
-  /* Оборот плашки — тёмная панель своего оттенка, чтобы не сливалась с полосой. Без трансформов:
-     просто кроссфейд, чтобы кромка второго слоя не просвечивала на скруглённых углах */
+  /* Оборот — «стекло» поверх фото: размытая плашка с тёмной заливкой. Без трансформов:
+     кроссфейд, чтобы кромка второго слоя не просвечивала на скруглённых углах */
   .tile-back {
     position: absolute;
     inset: 0;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    padding: var(--sp-20);
-    background: var(--color-tile-back);
+    padding: var(--sp-28);
+    background: rgba(1, 2, 5, 0.55);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
     color: var(--color-white);
     opacity: 0;
-    transition: opacity 0.2s var(--ease-out);
+    transition: opacity 0.3s var(--ease-porsche);
   }
   /* На обороте лицо плашки скрыто — название категории повторяем меткой.
      Список идёт сразу под ней, ссылка прижата к низу */
   /* Заголовок оборота — самый крупный элемент карточки: он держит,
      о какой категории список, и читается раньше строк прайса */
   .tile-back-title {
-    font-size: var(--text-subhead);
-    font-weight: var(--w-semibold);
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-    margin-bottom: var(--sp-12);
+    font-size: var(--text-tile);
+    line-height: 1.15;
+    margin-bottom: var(--sp-16);
   }
   /* Кнопка прижата к низу, но от последней строки прайса всегда отбита */
   .tile-back .tile-more { margin-top: auto; }
@@ -184,7 +216,9 @@ const { cta, more, href = '#contacts' } = Astro.props;
   }
   .tile-list a:hover,
   .tile-list a:focus-visible { background: var(--color-row-hover-dark); transition-duration: var(--t-hover-in); }
-  .tile-item-name { line-height: 1.2; font-weight: var(--w-semibold); }
+  .tile-list { font-size: var(--text-body-lg); }
+  .tile-list a { padding-block: 8px; }
+  .tile-item-name { line-height: 1.3; }
   .tile-item-price {
     flex: none;
     font-variant-numeric: tabular-nums;
@@ -198,11 +232,7 @@ const { cta, more, href = '#contacts' } = Astro.props;
     font-size: var(--text-body);
   }
 
-  /* Текст — на плашке: название и «от … ₽» (16.10.2026: подпись под фото по Горбунову
-     пробовали — вернули на плашку). Чип и число услуг сняты — минимализм */
   .tile-cell { display: grid; }
-  .tile-top { display: none; }
-  .tile-front { justify-content: flex-end; }
 
   /* Призыв — не плашка и не клетка сетки: текст и кнопка отдельной строкой под плашками */
   .tiles-cta {
@@ -223,12 +253,14 @@ const { cta, more, href = '#contacts' } = Astro.props;
   }
 
   /* Две колонки: при нечётном числе категорий первая во всю ширину, чтобы не было дыры */
-  @media (max-width: 1100px) {
-    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
-  @media (min-width: 561px) and (max-width: 1100px) {
+  @media (min-width: 561px) {
     .tiles--odd .tile-cell:first-child { grid-column: span 2; }
-    .tiles--odd .tile-cell:first-child .tile { --tile-ratio: 5 / 2; }
+    .tiles--odd .tile-cell:first-child .tile { --tile-ratio: 2 / 1; }
+  }
+  @media (max-width: 900px) {
+    .tiles { gap: var(--sp-16); }
+    .tile { --tile-ratio: 4 / 5; }
+    .tile-front, .tile-back { padding: var(--sp-20); }
   }
   /* Телефон: одна колонка, лицо 16:10. Тап переворачивает плашку: на обороте без фото —
      название, мини-прайс, кнопка; высота тянется по списку (16.10.2026: оборот поверх

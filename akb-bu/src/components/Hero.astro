@@ -1,8 +1,8 @@
 ---
 import content from '../data/content.json';
-import { asset } from '../lib/paths.js';
+import { asset, url } from '../lib/paths.js';
 import { typo } from '../lib/typo.js';
-const { hero } = content;
+const { hero, services } = content;
 /* Раскадровка: кадры одной сцены с разным состоянием света.
    Кадры включаются по мере прокрутки (scroll-driven), в браузерах без поддержки — по таймеру. */
 const frames = hero.frames ?? [hero.media];
@@ -46,6 +46,16 @@ const frames = hero.frames ?? [hero.media];
       <h1 class="hero-title">{hero.title}</h1>
       <p class="hero-text">{typo(hero.text)}</p>
     </div>
+
+    <!-- Действия — внизу слева, над полом, не на машине (приём porsche.com: кнопка
+         в «стекле» под заголовком первого экрана). По центру — стрелка прокрутки -->
+    <div class="container hero-actions">
+      <a class="btn btn--primary" href={url('/calc/')}>{services.more}</a>
+      <a class="btn btn--glass" href="#services">{hero.cta}</a>
+    </div>
+    <a class="round-glass hero-down" href="#calc-teaser" aria-label="Прокрутить вниз">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12m-5-5 5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
   </div>
 </section>
 
@@ -138,14 +148,46 @@ const frames = hero.frames ?? [hero.media];
   }
   .hero-title {
     font-size: var(--text-display);
-    max-width: 20ch;
+    line-height: 1.05;
+    max-width: 16ch;
   }
   /* Лид на фото — белый: приглушённый цвет здесь не читается */
   .hero-text {
     font-size: var(--text-lead);
-    line-height: 1.35;
+    line-height: 1.4;
     max-width: 40ch;
-    padding-top: 0.4em;
+    padding-top: 0.6em;
+  }
+
+  /* Низ кадра растворяется в цвет основы — переход к следующей полосе без шва */
+  .hero-sticky::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 22%;
+    background: var(--fade-to-ink);
+    pointer-events: none;
+  }
+  .hero-actions {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: var(--sp-40);
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-12);
+    opacity: 0;
+    animation: hero-text-in 1.1s var(--ease-out-expo) 0.6s forwards;
+  }
+  .hero-down {
+    position: absolute;
+    left: 50%;
+    bottom: var(--sp-40);
+    z-index: 1;
+    width: 48px;
+    height: 48px;
+    translate: -50% 0;
   }
 
   /* Телефон и планшет в портрете: кадр целиком, 16:9 на всю ширину без кропа,
@@ -185,9 +227,11 @@ const frames = hero.frames ?? [hero.media];
       padding-bottom: var(--sp-24);
     }
     .hero-text { padding-top: 0; }
+    .hero-sticky::after, .hero-down { display: none; }
+    .hero-actions { position: static; padding-bottom: var(--sp-24); }
   }
   @media (prefers-reduced-motion: reduce) {
     .hero { height: 100svh; }
-    .hero-frame, .hero-title, .hero-text { animation: none; opacity: 1; transform: none; }
+    .hero-frame, .hero-title, .hero-text, .hero-actions { animation: none; opacity: 1; transform: none; }
   }
 </style>

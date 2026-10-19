@@ -652,6 +652,16 @@ const searchIcon =
         }
       }
     } catch {}
+    // Переход из меню шапки с другой страницы: /calc/?cat=…&sheet=… — сразу в раздел
+    {
+      const q = new URLSearchParams(location.search);
+      const qCat = q.get('cat');
+      const qSheet = q.get('sheet');
+      if (qCat && document.querySelector(`[data-cat="${qCat}"]`)) {
+        state.carSeen = true;
+        openCat(qCat, qSheet && document.querySelector(`[data-sheet="${qSheet}"]`) ? qSheet : undefined);
+      }
+    }
     // /calc/ прячет калькулятор, пока он не восстановил шаг (класс ставит pages/calc.astro)
     document.documentElement.classList.remove('calc-restore');
 
