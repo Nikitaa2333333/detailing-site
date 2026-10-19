@@ -30,7 +30,7 @@ const icon = {
     <a class="logo" href={url('/')}>{brand.logo}<span>{brand.logoAccent}</span></a>
     <div class="header-end">
       <a class="header-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
-      <a class="header-cta" href={calc}>Рассчитать</a>
+      <a class="btn btn--glass header-cta" href={calc}>Рассчитать</a>
     </div>
   </div>
 </header>
@@ -141,19 +141,8 @@ const icon = {
     transition: background-color 0.3s var(--ease-porsche);
   }
   .header--overlay:not(.is-scrolled) { background: transparent; }
-  /* Над фото — затемнение под шапкой (их приём: 148px, чёрный .8 → 0): логотип и «Меню»
-     читаются на любом кадре. После прокрутки шапка с фоном — подложка не нужна */
-  .header--overlay::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto;
-    z-index: -1;
-    height: var(--scrim-top-h);
-    background: linear-gradient(var(--scrim));
-    pointer-events: none;
-    transition: opacity 0.3s var(--ease-porsche);
-  }
-  .header--overlay.is-scrolled::before { opacity: 0; }
+  /* Затемнение под шапкой над первым экраном пробовали 19.10.2026 — снято: «убрать заливку
+     шапки». Над фото шапка полностью прозрачная, фон — только после прокрутки */
   .header-inner {
     height: var(--header-h);
     display: grid;
@@ -192,16 +181,7 @@ const icon = {
     gap: var(--sp-24);
   }
   .header-phone { font-size: var(--text-body); white-space: nowrap; }
-  /* Без подложки (19.10.2026: «убери этот прямоугольник») — слово, как «Меню»;
-     плашка-стекло только под курсором */
-  .header-cta {
-    margin-right: -12px;
-    padding: 8px 12px;
-    border-radius: var(--r-row);
-    white-space: nowrap;
-    transition: background-color var(--t-hover-out) var(--ease-out);
-  }
-  .header-cta:hover { background: var(--glass-dark); transition-duration: var(--t-hover-in); }
+  .header-cta { padding: 10px 20px; }
 
   /* ---------- Меню ---------- */
   .menu {
@@ -354,7 +334,7 @@ const icon = {
   }
   @media (max-width: 600px) {
     .header-phone, .menu-btn-label { display: none; }
-    .header-cta { padding: 8px 10px; }
+    .header-cta { padding: 9px 14px; }
     .logo { font-size: 1.2rem; }
   }
 </style>
