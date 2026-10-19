@@ -37,15 +37,15 @@ const calcHref = url('/calc/');
   </Section>
 
   <!-- Услуги — тёмная полоса; на телефоне плашка переворачивается тапом -->
-  <Section id="services" title={services.title} dark reveal={false}>
+  <Section id="services" title={services.title} sheet reveal={false}>
     <!-- призыв «Не знаете, с чего начать?» снят 16.10.2026: повторял тизер калькулятора -->
     <ServiceTiles more={services.more} href={calcHref} />
   </Section>
 
   <!-- Сезонные пакеты (осень — зима): данные и суммы — season-packs.json + прайс -->
   <!-- Снег (Snow.astro, slot="bg", class="has-snow") снят 16.10.2026: игриво -->
-  <!-- Светлая полоса после тёмных плашек — как второй блок главной porsche.com (19.10.2026) -->
-  <Section id="season" sheet label={seasonPacks.season.label} title={seasonPacks.season.title}>
+  <!-- 19.10.2026: светлые — только тизер и плашки после первого экрана, дальше всё тёмное -->
+  <Section id="season" dark label={seasonPacks.season.label} title={seasonPacks.season.title}>
     <SeasonPacks href={calcHref} />
   </Section>
 
@@ -56,12 +56,12 @@ const calcHref = url('/calc/');
   </Section>
 
   <!-- Отзывы — огромный заголовок-переход (их «Your Porsche journey starts now.») -->
-  <Section id="reviews" title={reviews.title} sheet huge>
+  <Section id="reviews" title={reviews.title} dark huge>
     <Reviews />
   </Section>
 
   <!-- Карта — перед вопросами (16.10.2026): крупный блок, вопросы уже добивают сомнения -->
-  <Section id="contacts" sheet>
+  <Section id="contacts" dark>
     <Contacts />
   </Section>
 

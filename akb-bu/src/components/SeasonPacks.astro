@@ -214,9 +214,13 @@ const href = Astro.props.href ?? '#calc';
   .pack-note { font-size: var(--text-caption); }
   .pack-btn { margin-top: var(--sp-12); width: 100%; }
 
-  /* Акцент — тёмная карточка на белой полосе; .on-dark переключает чип и кнопку */
+  /* Полоса тёмная (19.10.2026): обычные карточки светлые — чип и кнопка в светлой схеме,
+     акцентная — тёмная плашка своего оттенка, .on-dark переключает её чип и кнопку */
+  .pack:not(.pack--accent) .chip { background: var(--glass-light); }
+  .pack:not(.pack--accent) .btn--primary { background: var(--color-ink); color: var(--color-white); }
+  .pack:not(.pack--accent) .btn--primary:hover { background: var(--color-ink-hover); }
   .pack.pack--accent {
-    background: var(--color-ink);
+    background: var(--color-tile-dark);
     color: var(--color-white);
   }
 
