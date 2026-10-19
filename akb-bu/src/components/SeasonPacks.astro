@@ -124,6 +124,12 @@ const href = Astro.props.href ?? '#calc';
     </article>
   ))}
 </div>
+<div class="dots packs-dots" data-packs-dots></div>
+
+<script>
+  import { dots } from '../lib/carousel-dots.js';
+  dots(document.querySelector('.packs'), document.querySelector('[data-packs-dots]'));
+</script>
 
 <style>
   /* Телефон: лента на всю ширину экрана — выходит за поля контейнера и возвращает их
@@ -214,6 +220,10 @@ const href = Astro.props.href ?? '#calc';
     color: var(--color-white);
   }
 
+  /* точки — пока пакеты лентой (до 700px) */
+  @media (max-width: 699px) {
+    .packs-dots { display: flex; }
+  }
   /* Планшет: сетка 2×2, лента выключена */
   @media (min-width: 700px) {
     .packs {

@@ -208,6 +208,38 @@ button, input, textarea, select { font: inherit; }
   }
 }
 
+/* Точки под лентой карточек (lib/carousel-dots.js) — капсула-«стекло» с точками, активная
+   вытянута (их пагинация). Только телефон: на широком экране ленты — сеткой */
+.dots {
+  display: none;
+  justify-self: center;
+  align-items: center;
+  gap: 8px;
+  margin: var(--sp-16) auto 0;
+  padding: 10px 14px;
+  width: max-content;
+  border-radius: var(--r-full);
+  background: var(--glass-light);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+.on-dark .dots { background: var(--glass-dark); }
+.dots .dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-full);
+  background: currentColor;
+  opacity: 0.45;      /* декоративная точка, не текст */
+  cursor: pointer;
+  transition: width 0.3s var(--ease-porsche), opacity 0.3s;
+}
+.dots .dot.is-active { width: 28px; opacity: 1; }
+@media (max-width: 560px) {
+  .dots { display: flex; }
+}
+
 /* Логотип-начертание «DS SEVER» — растянутый, как знак Porsche (19.10.2026, вариант Г4):
    Michroma, утолщение обводкой в цвет буквы (у шрифта одно начертание), плотная разрядка.
    Прописные — само написание знака, правило «капс запрещён» его не касается.
