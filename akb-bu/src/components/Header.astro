@@ -30,7 +30,7 @@ const icon = {
     <a class="logo" href={url('/')}>{brand.logo}<span>{brand.logoAccent}</span></a>
     <div class="header-end">
       <a class="header-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
-      <a class="btn btn--glass header-cta" href={calc}>Рассчитать</a>
+      <a class="header-cta" href={calc}>Рассчитать</a>
     </div>
   </div>
 </header>
@@ -192,7 +192,16 @@ const icon = {
     gap: var(--sp-24);
   }
   .header-phone { font-size: var(--text-body); white-space: nowrap; }
-  .header-cta { padding: 10px 20px; }
+  /* Без подложки (19.10.2026: «убери этот прямоугольник») — слово, как «Меню»;
+     плашка-стекло только под курсором */
+  .header-cta {
+    margin-right: -12px;
+    padding: 8px 12px;
+    border-radius: var(--r-row);
+    white-space: nowrap;
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .header-cta:hover { background: var(--glass-dark); transition-duration: var(--t-hover-in); }
 
   /* ---------- Меню ---------- */
   .menu {
@@ -345,7 +354,7 @@ const icon = {
   }
   @media (max-width: 600px) {
     .header-phone, .menu-btn-label { display: none; }
-    .header-cta { padding: 9px 14px; }
+    .header-cta { padding: 8px 10px; }
     .logo { font-size: 1.2rem; }
   }
 </style>
