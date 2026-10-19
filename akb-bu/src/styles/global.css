@@ -216,6 +216,10 @@ a, button { -webkit-tap-highlight-color: transparent; }
   backdrop-filter: var(--glass-blur);
 }
 .on-dark .dots { background: var(--glass-dark); }
+/* фон страницы сменился, а лента ещё на экране — точки следуют за фоном, а не за секцией */
+html[data-bg-theme='dark'] .dots { background: var(--glass-dark); color: var(--color-white); }
+html[data-bg-theme='light'] .dots { background: var(--glass-light); color: var(--color-ink); }
+.dots { transition: background-color 0.8s var(--ease-porsche), color 0.8s var(--ease-porsche); }
 .dots .dot {
   width: 8px;
   height: 8px;

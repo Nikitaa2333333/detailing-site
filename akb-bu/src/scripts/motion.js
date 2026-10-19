@@ -51,6 +51,8 @@ function initBgScroll() {
     current = color;
     document.body.style.backgroundColor = color;
     root.style.backgroundColor = color;
+    // светлый или тёмный фон сейчас — по нему перекрашиваются точки лент и т. п.
+    root.dataset.bgTheme = secs[i].dataset.bg.toLowerCase() === '#ffffff' ? 'light' : 'dark';
   };
   const queue = () => { if (!raf) raf = requestAnimationFrame(paint); };
   addEventListener('scroll', queue, { passive: true });
