@@ -199,7 +199,10 @@ const chevron = '<path d="m8 5 5 5-5 5" fill="none" stroke="currentColor" stroke
                       </label>
                       {(svc.steps.length > 0 || svc.terms.length > 0) && (
                         <details class="svc-more">
-                          <summary>{t.more}</summary>
+                          <summary class="link-plus">
+                            <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 6.5v7M6.5 10h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                            <span>{t.more}</span>
+                          </summary>
                           {svc.steps.length > 0 && (
                             <ul class="bullets">
                               {svc.steps.map((step) => <li>{step}</li>)}
@@ -1188,23 +1191,9 @@ const chevron = '<path d="m8 5 5 5-5 5" fill="none" stroke="currentColor" stroke
   .svc-time svg { flex: none; width: 18px; height: 18px; }
   .svc-price { font-size: var(--text-lead); letter-spacing: var(--track-lead); white-space: nowrap; line-height: 1.25; }
 
-  /* «Что входит» — их ссылка: подчёркнутый текст, под курсором проявляется серая подложка */
-  .svc-more { padding: 0 var(--sp-24) var(--sp-20) calc(var(--sp-24) + 26px + var(--sp-16)); font-size: var(--text-body); margin-top: calc(var(--sp-4) * -1); }
-  .svc-more summary {
-    display: inline-block;
-    padding: 2px 8px;
-    margin-left: -8px;
-    border-radius: var(--r-row);
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.2em;
-    cursor: pointer;
-    list-style: none;
-    transition: background-color var(--t-hover-out) var(--ease-out);
-  }
-  .svc-more summary:hover { background: var(--glass-light); transition-duration: var(--t-hover-in); }
+  /* «Что входит» — общий .link-plus из global.css (прямоугольник-«стекло»), как в прайсе */
+  .svc-more { padding: 0 var(--sp-24) var(--sp-20) calc(var(--sp-24) + 26px + var(--sp-16)); font-size: var(--text-body); }
   .svc-terms { padding-top: var(--sp-12); line-height: 1.5; }
-  .svc-more summary::-webkit-details-marker { display: none; }
   .svc-more .bullets { padding-top: var(--sp-12); font-size: var(--text-body); }
   /* Лид первой задачи прижат к заголовку шага, как .wiz-lead; вторая задача — отдельным блоком */
   .find-hints { display: grid; gap: var(--sp-20); margin-top: calc(var(--sp-8) * -1); }
@@ -1227,7 +1216,7 @@ const chevron = '<path d="m8 5 5 5-5 5" fill="none" stroke="currentColor" stroke
     background: var(--color-tile);
   }
   .order-car { font-size: var(--text-caption); }
-  /* «Добавить услуги» — общий .link-plus из global.css (плюс в кружке + подчёркнутый текст),
+  /* «Добавить услуги» — общий .link-plus из global.css (плюс в кружке, прямоугольник-«стекло»),
      тот же, что «Что входит» в прайсе страниц услуг (19.10.2026) */
   .order-list { list-style: none; margin: 0 calc(var(--sp-8) * -1); padding: 0; display: grid; gap: 2px; }
   .order-list :global(.order-item) {

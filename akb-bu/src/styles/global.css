@@ -22,6 +22,10 @@
   --color-ink-hover: #26272c;   /* наведение на тёмную кнопку */
   --color-void: #010205;        /* канва под первым экраном */
   --color-photo-black: #010205;
+  /* Фирменный шлейф с фотосерии (19.10.2026, проба): синий → индиго, только декор-свечением
+     на тёмном (.glow), не заливкой кнопок и плашек */
+  --glow-blue: 47, 107, 255;    /* rgb без скобок — для прозрачности в градиентах */
+  --glow-indigo: 92, 62, 245;
 
   /* «Стекло» — полупрозрачная серая заливка + размытие подложки. Один приём на чипы,
      кнопки, круглые стрелки, переключатели. Крутить прозрачность в пределах 0.2–0.4 */
@@ -497,26 +501,31 @@ mark {
 /* Ссылка-действие «плюс в кружке + подчёркнутый текст» — одна на сайт (19.10.2026):
    «Добавить услуги» в калькуляторе, «Что входит» в прайсе. Под курсором — серая подложка.
    Раскрывающая кнопка с aria-expanded="true" — плюс поворачивается в крестик.
-   Разметка: <button class="link-plus"><svg … круг+плюс …/><span>Текст</span></button> */
+   Разметка: <button class="link-plus"><svg … круг+плюс …/><span>Текст</span></button>
+   (или <summary class="link-plus"> в <details>). С 19.10.2026, поздно — прямоугольник-«стекло»
+   с радиусом 8, без подчёркивания (просьба: «не совсем скруглённая пилюля, прозрачная») */
 .link-plus {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-8);
-  padding: 6px 10px;
-  margin-left: -10px;
+  padding: 7px 14px 7px 10px;
   border: none;
   border-radius: var(--r-row);
-  background: transparent;
+  background: var(--glass-light);
   color: inherit;
   font-size: var(--text-body);
+  line-height: 1.4;
   cursor: pointer;
+  list-style: none;              /* то же на <summary> */
   transition: background-color var(--t-hover-out) var(--ease-out);
 }
-.link-plus svg { flex: none; width: 20px; height: 20px; transition: transform 0.25s var(--ease-porsche); }
-.link-plus span { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
-.link-plus:hover { background: var(--color-tile); transition-duration: var(--t-hover-in); }
-.on-dark .link-plus:hover { background: var(--glass-dark); }
-.link-plus[aria-expanded='true'] svg { transform: rotate(45deg); }
+.link-plus::-webkit-details-marker { display: none; }
+.link-plus svg { flex: none; width: 18px; height: 18px; transition: transform 0.25s var(--ease-porsche); }
+.link-plus:hover { background: var(--glass-light-hover); transition-duration: var(--t-hover-in); }
+.on-dark .link-plus { background: var(--glass-dark); }
+.on-dark .link-plus:hover { background: rgba(120, 120, 124, 0.56); }
+.link-plus[aria-expanded='true'] svg,
+details[open] > .link-plus svg { transform: rotate(45deg); }
 
 /* Шторка снизу — один компонент на сайт (19.10.2026, «Что входит» в прайсе на телефоне):
    <dialog class="sheet"> с панелью, скруглённой сверху (--r-panel), подложка --backdrop,
@@ -527,22 +536,24 @@ mark {
 dialog.sheet {
   --sheet-max: 82svh;
   --sheet-pad: var(--sp-24);
+  /* прибита к низу экрана своей высотой, а не растянута на весь экран: на iPhone высота
+     экрана меняется вместе с панелью браузера — растянутая шторка прыгала вверх */
   position: fixed;
-  inset: 0;
+  inset: auto 0 0 0;
   width: 100%;
   max-width: none;
-  height: 100%;
-  max-height: none;
+  height: auto;
+  max-height: var(--sheet-max);
   margin: 0;
   padding: 0;
   border: 0;
   background: transparent;
-  display: grid;
-  align-items: end;
+  overflow: visible;
   color: var(--color-ink);
 }
 dialog.sheet:not([open]) { display: none; }
-dialog.sheet::backdrop { background: var(--backdrop); }
+/* затемнение плотнее общего --backdrop: белая шторка на сером прайсе сливалась */
+dialog.sheet::backdrop { background: rgba(1, 2, 5, 0.62); }
 dialog.sheet .sheet-panel {
   position: relative;
   max-height: var(--sheet-max);
@@ -551,6 +562,7 @@ dialog.sheet .sheet-panel {
   padding: var(--sheet-pad) var(--sheet-pad) calc(var(--sheet-pad) + env(safe-area-inset-bottom));
   border-radius: var(--r-panel) var(--r-panel) 0 0;
   background: var(--color-page);
+  box-shadow: 0 -16px 48px rgba(1, 2, 5, 0.28);
   animation: sheet-in 0.32s var(--ease-porsche);
 }
 @keyframes sheet-in { from { transform: translateY(100%); } }
@@ -562,6 +574,30 @@ dialog.sheet .sheet-body { display: grid; gap: var(--sp-12); margin-top: var(--s
 dialog.sheet .sheet-body .bullets { --bullet-gap: 6px; }
 html.sheet-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { dialog.sheet .sheet-panel { animation: none; } }
+
+/* Шлейф синий → индиго (проба 19.10.2026) — свет с фотосерии на тёмных полосах.
+   <Section class="glow-host"><div slot="bg" class="glow glow--tr" aria-hidden="true" /></Section>
+   Один на секцию, в одном углу. Ручки: --glow-a (сила 0–1), --glow-w (ширина) */
+.glow-host { position: relative; isolation: isolate; overflow-x: clip; }
+.glow {
+  --glow-a: 1;
+  --glow-w: min(1100px, 140vw);
+  position: absolute;
+  z-index: -1;
+  width: var(--glow-w);
+  aspect-ratio: 2.4;
+  pointer-events: none;
+  opacity: var(--glow-a);
+  background:
+    radial-gradient(closest-side, rgba(var(--glow-blue), 0.42), rgba(var(--glow-blue), 0.12) 55%, transparent),
+    radial-gradient(closest-side at 30% 60%, rgba(var(--glow-indigo), 0.45), transparent 75%);
+  filter: blur(36px);
+  transform: rotate(-18deg);
+}
+.glow--tr { top: -12%; right: -38%; }
+.glow--tl { top: -12%; left: -38%; transform: rotate(18deg); }
+.glow--br { bottom: -20%; right: -38%; }
+@media (max-width: 760px) { .glow { --glow-w: 180vw; } }
 
 /* Чип — «стекло», без обводки */
 .chip {

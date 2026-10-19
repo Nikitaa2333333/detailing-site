@@ -119,6 +119,8 @@ const short = page.tab ?? page.h1;
   <main class="spage">
     <!-- 1. Первый экран -->
     <Section dark reveal={false} class="spage-hero">
+      <!-- проба 19.10.2026: шлейф синий→индиго с фотосерии за заголовком -->
+      <div slot="bg" class="glow glow--tl" aria-hidden="true"></div>
       <p class="hero-word" aria-hidden="true">{word}</p>
       <div class="hero-body">
         <nav class="crumbs" aria-label="Навигация">
@@ -352,6 +354,7 @@ const short = page.tab ?? page.h1;
     --spage-hero-r: var(--r-tile);
     position: relative;
     z-index: 1;
+    isolation: isolate;   /* шлейф .glow (z-index: -1) — над чёрным фоном, под текстом */
     overflow: clip;
     padding-top: var(--sp-40);
     padding-bottom: var(--sp-48);
