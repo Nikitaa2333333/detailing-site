@@ -48,11 +48,14 @@ const calcHref = url('/calc/');
     <SeasonPacks href={calcHref} />
   </Section>
 
-  <Section id="guarantees" title={guarantees.title} dark>
+  <!-- Гарантии — их «Drive.»: тёмная полоса, заголовок по центру, лента карточек со
+       стрелками выходит нижней половиной на белое. Сверху — плавный вход с белого -->
+  <Section id="guarantees" title={guarantees.title} dark stage class="section--band section--from-light">
     <Guarantees items={guarantees.items} />
   </Section>
 
-  <Section id="reviews" title={reviews.title} dark>
+  <!-- Отзывы — огромный заголовок-переход (их «Your Porsche journey starts now.») -->
+  <Section id="reviews" title={reviews.title} sheet huge flushTop>
     <Reviews />
   </Section>
 
@@ -61,7 +64,8 @@ const calcHref = url('/calc/');
     <Contacts />
   </Section>
 
-  <Section id="faq" dark>
+  <!-- Вопросы — обратно на тёмное плавным переходом с белого -->
+  <Section id="faq" dark class="section--blend-from-light">
     <Faq title={faq.title} items={faq.items} />
   </Section>
 

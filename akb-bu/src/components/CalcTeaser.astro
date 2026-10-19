@@ -208,11 +208,7 @@ const {
     box-sizing: border-box;
     font-size: var(--text-body-lg);
   }
-  .teaser-form :global(.combo-plate-value) {
-    font-size: var(--text-tile);
-    font-weight: var(--w-black);
-    letter-spacing: -0.02em;
-  }
+  .teaser-form :global(.combo-plate-value) { font-size: var(--text-tile); }
   .teaser-form :global(.combo-class) { font-size: var(--text-body); font-weight: var(--w-medium); letter-spacing: 0; }
 
   /* Металлический блик «вжух» на кнопке пробовали 16.10.2026 — снят: лишнее */
@@ -230,13 +226,10 @@ const {
     color: var(--color-ink);
   }
   .teaser-field::placeholder { color: var(--color-grey-text); }
+  /* Их первичная на тёмном — белая, обычный вес, высота 56 */
   .teaser-form .teaser-btn {
-    height: 60px;
-    padding-inline: var(--sp-28);
     background: var(--color-accent);
     color: var(--color-on-accent);
-    font-size: var(--text-body-lg);
-    font-weight: var(--w-bold);
   }
   .teaser-form .teaser-btn:hover { background: var(--color-accent-hover); }
 

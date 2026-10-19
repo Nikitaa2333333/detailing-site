@@ -1,67 +1,111 @@
 ---
-/* Гарантии (16.10.2026, переделка): крупное фото в фирменном стиле (тёмная студия,
-   балка света) + жёсткий крупный заголовок + одна строка текста. Без номеров и цветных
-   цифр — было «игриво». Фото — content.json → guarantees.items[].media; файла ещё нет —
-   карточка без фото. Сетка: телефон — столбик, планшет — 2×2, десктоп — 4 в ряд. */
+/* Гарантии — лента карточек со стрелками, как блок «Drive.» на странице машины porsche.com
+   (19.10.2026): светлые карточки радиус 32 на тёмной полосе, нижняя половина ряда выходит
+   на белое (фон секции — .section--band). Стрелки ← → справа над лентой, лента листается
+   свайпом и колесом, карточки встают по краю (scroll-snap). Фото — content.json →
+   guarantees.items[].media; файла нет — карточка без фото. */
 import { asset } from '../lib/paths.js';
 import { typo } from '../lib/typo.js';
 import fs from 'node:fs';
 const { items = [] } = Astro.props;
 const exists = (p) => p && fs.existsSync(new URL(`../../public${p}`, import.meta.url));
+const arrow = (d) => `<path d="${d}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
 ---
 
-<ul class="guarantees">
-  {items.map((g) => (
-    <li class="guarantee">
-      {exists(g.media) && <img class="guarantee-img" src={asset(g.media)} alt="" loading="lazy" />}
-      <div class="guarantee-body">
-        <h3 class="guarantee-title">{typo(g.title)}</h3>
-        <p>{typo(g.text)}</p>
-      </div>
-    </li>
-  ))}
-</ul>
+<div class="g-carousel" data-carousel>
+  <div class="g-nav">
+    <button class="g-arrow" type="button" data-prev aria-label="Назад" disabled>
+      <svg viewBox="0 0 20 20" aria-hidden="true" set:html={arrow('M16 10H4m5-5-5 5 5 5')} />
+    </button>
+    <button class="g-arrow" type="button" data-next aria-label="Дальше">
+      <svg viewBox="0 0 20 20" aria-hidden="true" set:html={arrow('M4 10h12m-5-5 5 5-5 5')} />
+    </button>
+  </div>
+  <ul class="g-track" data-track>
+    {items.map((g) => (
+      <li class="g-card">
+        {exists(g.media) && <img class="g-img" src={asset(g.media)} alt="" loading="lazy" />}
+        <div class="g-body">
+          <h3 class="g-title">{typo(g.title)}</h3>
+          <p class="g-text">{typo(g.text)}</p>
+        </div>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-carousel]').forEach((box) => {
+    const track = box.querySelector<HTMLElement>('[data-track]')!;
+    const prev = box.querySelector<HTMLButtonElement>('[data-prev]')!;
+    const next = box.querySelector<HTMLButtonElement>('[data-next]')!;
+    const step = () => (track.firstElementChild as HTMLElement)?.offsetWidth + parseFloat(getComputedStyle(track).columnGap || '0');
+    const sync = () => {
+      prev.disabled = track.scrollLeft < 4;
+      next.disabled = track.scrollLeft + track.clientWidth > track.scrollWidth - 4;
+    };
+    prev.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: 'smooth' }));
+    next.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }));
+    track.addEventListener('scroll', sync, { passive: true });
+    sync();
+  });
+</script>
 
 <style>
-  .guarantees {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  .g-carousel { display: grid; gap: var(--sp-24); }
+  .g-nav { display: flex; justify-content: flex-end; gap: var(--sp-8); }
+  /* Стрелки — просто значок, как у Porsche: без подложки, под курсором — стекло */
+  .g-arrow {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--sp-12);
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: var(--r-full);
+    background: none;
+    color: var(--color-white);
+    cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out), opacity 0.2s;
   }
-  .guarantee {
+  .g-arrow:hover:not(:disabled) { background: var(--glass-dark); transition-duration: var(--t-hover-in); }
+  .g-arrow:disabled { opacity: 0.35; cursor: default; }
+  .g-arrow svg { width: 22px; height: 22px; }
+
+  /* Лента выходит за правое поле контейнера до края окна — видно, что листается дальше */
+  .g-track {
+    list-style: none;
+    margin: 0 calc(var(--gutter) * -1) 0 0;
+    padding: 0 var(--gutter) 0 0;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: min(64%, 820px);
+    column-gap: var(--sp-28);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .g-track::-webkit-scrollbar { display: none; }
+  /* Карточка — их светлая плашка: #EFF0F2, радиус 32, заголовок 32/400, текст 16/24 */
+  .g-card {
+    scroll-snap-align: start;
     display: flex;
     flex-direction: column;
+    justify-content: flex-end;
+    min-height: 380px;
     overflow: hidden;
     border-radius: var(--r-tile);
-    background: var(--color-tile-dark);
-    color: var(--color-white);
+    background: var(--color-tile);
+    color: var(--color-ink);
   }
-  .guarantee-img {
-    display: block;
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-  }
-  .guarantee-body {
-    display: grid;
-    gap: var(--sp-12);
-    padding: var(--sp-24);
-  }
-  /* Заголовок пункта — на ступень меньше заголовка плашки (16.10.2026: на ПК был громадным) */
-  .guarantee-title {
-    font-size: var(--text-subhead);
-    font-weight: var(--w-bold);
-    letter-spacing: -0.015em;
-    line-height: 1.05;
-  }
-  @media (max-width: 1100px) {
-    .guarantees { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
-  @media (max-width: 560px) {
-    .guarantees { grid-template-columns: minmax(0, 1fr); }
-    .guarantee-body { padding: var(--sp-20); }
+  .g-img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+  .g-body { display: grid; gap: var(--sp-16); padding: var(--sp-32) var(--sp-28) var(--sp-28); }
+  .g-title { font-size: var(--text-tile); }
+  .g-text { font-size: var(--text-body); line-height: 1.5; max-width: 52ch; }
+
+  @media (max-width: 860px) {
+    .g-track { grid-auto-columns: 86%; column-gap: var(--sp-12); }
+    .g-card { min-height: 300px; }
+    .g-body { padding: var(--sp-24) var(--sp-20) var(--sp-20); }
   }
 </style>

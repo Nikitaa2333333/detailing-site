@@ -65,11 +65,10 @@ const routeHref = `https://yandex.ru/maps/?rtext=~${lat}%2C${lon}&rtt=auto`;
   }
   .contacts-col { display: grid; gap: var(--sp-12); align-content: start; }
   /* Телефон, адрес, часы — витринные строки одного кегля, как на сайте КТМ */
+  /* Витринные строки — как их цифры и заголовки: крупно, обычный вес */
   .contacts-big {
     font-size: var(--text-tile);
-    font-weight: var(--w-semibold);
-    letter-spacing: -0.02em;
-    line-height: 1.15;
+    line-height: 1.2;
   }
   .contacts-note { font-size: var(--text-body-lg); }
   .contacts-links {
@@ -78,20 +77,22 @@ const routeHref = `https://yandex.ru/maps/?rtext=~${lat}%2C${lon}&rtt=auto`;
     gap: var(--sp-8) var(--sp-20);
     font-size: var(--text-body-lg);
   }
-  /* Без подчёркиваний (16.10.2026): ссылка — по наведению цветом акцента */
+  /* Ссылки — их приём: подчёркнутый текст (как «Technical data and standard equipment»),
+     под курсором подчёркивание уходит */
   .contacts-links a,
   .contacts-route {
     font-size: var(--text-body-lg);
-    font-weight: var(--w-semibold);
-    transition: color var(--t-hover-out) var(--ease-out);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
   }
   .contacts-links a:hover,
-  .contacts-route:hover { color: var(--color-ember); }
+  .contacts-route:hover { text-decoration-color: transparent; }
 
   .contacts-map {
     position: relative;
     overflow: hidden;
-    border-radius: var(--r-panel);
+    border-radius: var(--r-tile);
     background: var(--color-tile);
     height: clamp(300px, 30vw, 420px);   /* было до 600 — «громадная» */
   }

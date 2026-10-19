@@ -20,6 +20,9 @@ const {
   flushTop = false,
   center = false,
   reveal = true,
+  huge = false,     // огромный заголовок-переход (их «Your Porsche journey starts now.»)
+  stage = false,    // заголовок и лид по центру над тёмной полосой (их «Drive.»)
+  lead = '',        // лид под заголовком
   class: klass = '',
 } = Astro.props;
 ---
@@ -38,9 +41,10 @@ const {
   <slot name="bg" />
   <div class="container">
     {title && (
-      <div class:list={['section-head', !label && 'section-head--plain', center && 'section-head--center']} data-reveal={reveal || undefined}>
-        {label && <p class="section-label">{label}</p>}
-        <h2 class="section-title">{title}</h2>
+      <div class:list={['section-head', (!label || huge || stage) && 'section-head--plain', center && 'section-head--center', stage && 'section-head--hero']} data-reveal={reveal || undefined}>
+        {label && !huge && !stage && <p class="section-label">{label}</p>}
+        <h2 class:list={['section-title', huge && 'section-title--huge']}>{title}</h2>
+        {lead && <p class="section-lead">{lead}</p>}
       </div>
     )}
     <slot />

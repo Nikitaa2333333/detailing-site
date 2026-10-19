@@ -31,12 +31,8 @@ const { title, items = [] } = Astro.props;
     gap: var(--sp-24) var(--sp-80);
     align-items: start;
   }
-  /* Заголовок как у референса: 48px и вес 800 — масса, а не размер */
-  .faq-title {
-    font-size: var(--text-heading-xl);
-    font-weight: var(--w-black);
-    letter-spacing: -0.02em;
-  }
+  /* Заголовок — по Porsche: крупно, обычный вес (вес 800 Яндекса снят 19.10.2026) */
+  .faq-title { font-size: var(--text-heading-xl); }
 
   .faq-list { display: grid; }
   .faq-item {
