@@ -521,8 +521,10 @@ mark {
 /* Шторка снизу — один компонент на сайт (19.10.2026, «Что входит» в прайсе на телефоне):
    <dialog class="sheet"> с панелью, скруглённой сверху (--r-panel), подложка --backdrop,
    круглая кнопка-крестик. Открывается showModal(); html.sheet-open держит страницу под ней.
-   Ручки: --sheet-max (высота панели), --sheet-pad (поля) */
-.sheet {
+   Ручки: --sheet-max (высота панели), --sheet-pad (поля).
+   Селекторы только через dialog.sheet: .sheet и .sheet-title есть и в калькуляторе —
+   без привязки к dialog шторка прибивала его список услуг к экрану на телефоне */
+dialog.sheet {
   --sheet-max: 82svh;
   --sheet-pad: var(--sp-24);
   position: fixed;
@@ -539,9 +541,9 @@ mark {
   align-items: end;
   color: var(--color-ink);
 }
-.sheet:not([open]) { display: none; }
-.sheet::backdrop { background: var(--backdrop); }
-.sheet-panel {
+dialog.sheet:not([open]) { display: none; }
+dialog.sheet::backdrop { background: var(--backdrop); }
+dialog.sheet .sheet-panel {
   position: relative;
   max-height: var(--sheet-max);
   overflow-y: auto;
@@ -552,14 +554,14 @@ mark {
   animation: sheet-in 0.32s var(--ease-porsche);
 }
 @keyframes sheet-in { from { transform: translateY(100%); } }
-.sheet-close { position: absolute; top: var(--sp-16); right: var(--sp-16); background: var(--glass-light); color: var(--color-ink); }
-.sheet-close:hover { background: var(--glass-light-hover); }
-.sheet-kicker { font-size: var(--text-caption); font-weight: var(--w-medium); padding-right: 56px; }
-.sheet-title { margin-top: var(--sp-8); font-size: var(--text-subhead); padding-right: 56px; }
-.sheet-body { display: grid; gap: var(--sp-12); margin-top: var(--sp-20); }
-.sheet-body .bullets { --bullet-gap: 6px; }
+dialog.sheet .sheet-close { position: absolute; top: var(--sp-16); right: var(--sp-16); background: var(--glass-light); color: var(--color-ink); }
+dialog.sheet .sheet-close:hover { background: var(--glass-light-hover); }
+dialog.sheet .sheet-kicker { font-size: var(--text-caption); font-weight: var(--w-medium); padding-right: 56px; }
+dialog.sheet .sheet-title { margin-top: var(--sp-8); font-size: var(--text-subhead); padding-right: 56px; }
+dialog.sheet .sheet-body { display: grid; gap: var(--sp-12); margin-top: var(--sp-20); }
+dialog.sheet .sheet-body .bullets { --bullet-gap: 6px; }
 html.sheet-open { overflow: hidden; }
-@media (prefers-reduced-motion: reduce) { .sheet-panel { animation: none; } }
+@media (prefers-reduced-motion: reduce) { dialog.sheet .sheet-panel { animation: none; } }
 
 /* Чип — «стекло», без обводки */
 .chip {
