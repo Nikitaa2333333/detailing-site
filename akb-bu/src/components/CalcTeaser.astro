@@ -173,23 +173,23 @@ const {
     max-width: 560px;
     margin-top: var(--sp-8);
   }
-  /* Поле — CarCombo, цвета для тёмной полосы, как в виджете класса (CarClass.astro) */
+  /* Поле — CarCombo, светлая схема (тизер на светлой полосе с 19.10.2026) */
   .teaser-form :global(.combo) {
-    --combo-fg: var(--color-white);
-    --combo-field: var(--veil-fill-soft);
-    --combo-field-hover: var(--veil-fill);
-    --combo-pop: var(--color-tile-back);
-    --combo-hover: var(--color-row-hover-dark);
-    --combo-line: var(--veil-line);
-    --combo-sel-bg: var(--color-white);
-    --combo-sel-fg: var(--color-ink);
-    --combo-sel-hover: var(--color-tile);
+    --combo-fg: var(--color-ink);
+    --combo-field: var(--color-tile);
+    --combo-field-hover: var(--color-tile-hover);
+    --combo-pop: var(--color-page);
+    --combo-hover: var(--row-hover-light);
+    --combo-line: var(--color-line-ink);
+    --combo-sel-bg: var(--color-ink);
+    --combo-sel-fg: var(--color-white);
+    --combo-sel-hover: var(--color-ink-hover);
     max-width: none;
   }
   /* Скроллбар выдачи — тонкий, в цвет, вместо системного серого */
   .teaser-form :global([data-car-list]) {
     scrollbar-width: thin;
-    scrollbar-color: var(--veil-line) transparent;
+    scrollbar-color: var(--color-line-ink) transparent;
   }
   /* Выбранная машина — крупно (16.10.2026): марка и модель читаются издалека */
   /* Плашки и поле — одной фиксированной высоты: --teaser-row (16.10.2026: плашка марки
@@ -225,12 +225,12 @@ const {
     color: var(--color-ink);
   }
   .teaser-field::placeholder { color: var(--color-grey-text); }
-  /* Их первичная на тёмном — белая, обычный вес, высота 56 */
+  /* Их первичная на светлом — чёрная заливка, обычный вес, высота 56 */
   .teaser-form .teaser-btn {
-    background: var(--color-accent);
-    color: var(--color-on-accent);
+    background: var(--color-ink);
+    color: var(--color-white);
   }
-  .teaser-form .teaser-btn:hover { background: var(--color-accent-hover); }
+  .teaser-form .teaser-btn:hover { background: var(--color-ink-hover); }
 
   /* Телефон: заголовок → описание → видео → форма; видео ~86% ширины */
   @media (max-width: 860px) {
