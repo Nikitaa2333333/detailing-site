@@ -220,32 +220,22 @@ a, button { -webkit-tap-highlight-color: transparent; }
 html[data-bg-theme='dark'] .dots { background: var(--glass-dark); color: var(--color-white); }
 html[data-bg-theme='light'] .dots { background: var(--glass-light); color: var(--color-ink); }
 .dots { transition: background-color var(--bg-fade-t) var(--bg-fade-ease), color var(--bg-fade-t) var(--bg-fade-ease); }
+/* Точка тянется в капсулу по --w (0…1, ставит lib/carousel-dots.js от положения ленты):
+   ширина и яркость — плавно, вслед за пальцем. Ручки: --dot (кружок), --dot-active (капсула) */
+.dots { --dot: 8px; --dot-active: 28px; }
 .dots .dot {
-  width: 8px;
-  height: 8px;
+  --w: 0;
+  flex: none;
+  width: calc(var(--dot) + (var(--dot-active) - var(--dot)) * var(--w));
+  height: var(--dot);
   padding: 0;
   border: 0;
   border-radius: var(--r-full);
   color: inherit;     /* без этого iOS красит кнопку в системный синий */
   background: currentColor;
-  opacity: 0.45;      /* декоративная точка, не текст */
+  opacity: calc(0.4 + 0.6 * var(--w));   /* декоративная точка, не текст */
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-}
-/* Указатель — одна капсула, едет между точками за пальцем (сдвиг ставит lib/carousel-dots.js);
-   под ней точка не видна — капсула непрозрачная */
-.dots { position: relative; }
-.dots .dot-ind {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 22px;
-  height: 8px;
-  margin-top: -4px;
-  border-radius: var(--r-full);
-  background: currentColor;
-  pointer-events: none;
-  will-change: transform;
 }
 @media (max-width: 560px) {
   .dots { display: flex; }

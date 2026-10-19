@@ -1,8 +1,10 @@
-/* Точки-пагинация под лентой карточек на телефоне — как у porsche.com / iOS: ряд точек и одна
-   капсула-указатель, которая плавно едет между ними вслед за пальцем (положение — дробное,
-   по прокрутке ленты). Тап по точке листает к карточке. Ленту листают пальцем (scroll-snap).
-   Раньше активная точка вытягивалась рывком — «змейка» (снято 19.10.2026).
-   dots(track, box, selector): track — прокручиваемая лента, box — пустой контейнер под точки. */
+/* Точки-пагинация под лентой карточек на телефоне — как у porsche.com: активная точка вытянута
+   в капсулу. Ширина и яркость каждой точки считаются от дробного положения ленты, поэтому при
+   свайпе текущая капсула плавно сжимается, а следующая так же плавно растёт — синхронно
+   с пальцем, сумма ширин постоянна, ничего не прыгает и не наезжает.
+   (19.10.2026: рывок между точками — «змейка», капсула поверх точек — «рельса»; оба сняты.)
+   Тап по точке листает к карточке. dots(track, box, selector): track — прокручиваемая лента,
+   box — пустой контейнер под точки. Размеры — --dot / --dot-active в global.css */
 export function dots(track, box, selector) {
   if (!track || !box) return;
   const items = selector ? [...track.querySelectorAll(selector)] : [...track.children];
@@ -19,10 +21,6 @@ export function dots(track, box, selector) {
     box.append(b);
     return b;
   });
-  const ind = document.createElement('span');
-  ind.className = 'dot-ind';
-  ind.setAttribute('aria-hidden', 'true');
-  box.append(ind);
 
   let raf = 0;
   const sync = () => {
@@ -31,20 +29,17 @@ export function dots(track, box, selector) {
     const starts = items.map(pos);
     // дробный номер карточки: между двумя соседними — по доле пройденного пути
     let f = 0;
-    if (left <= starts[0]) f = 0;
-    else if (left >= starts.at(-1)) f = items.length - 1;
-    else {
-      const k = starts.findIndex((s, i) => i < starts.length - 1 && left >= s && left < starts[i + 1]);
-      f = k + (left - starts[k]) / (starts[k + 1] - starts[k] || 1);
-    }
-    // конец ленты: последняя карточка может не доехать до левого края — добираем по остатку прокрутки
     const max = track.scrollWidth - track.clientWidth;
-    if (max > 0 && left >= max - 1) f = items.length - 1;
-    const x0 = buttons[0].offsetLeft + buttons[0].offsetWidth / 2;
-    const step = buttons[1].offsetLeft - buttons[0].offsetLeft;
-    ind.style.transform = `translateX(${x0 + f * step - ind.offsetWidth / 2}px)`;
-    const active = Math.round(f);
-    buttons.forEach((b, i) => b.setAttribute('aria-current', String(i === active)));
+    if (max > 0 && left >= max - 1) f = items.length - 1; // конец ленты
+    else if (left > starts[0]) {
+      const k = starts.findIndex((s, i) => i < starts.length - 1 && left >= s && left < starts[i + 1]);
+      f = k < 0 ? items.length - 1 : k + (left - starts[k]) / (starts[k + 1] - starts[k] || 1);
+    }
+    buttons.forEach((b, i) => {
+      const w = Math.max(0, 1 - Math.abs(i - f)); // 1 — своя карточка на месте, 0 — далеко
+      b.style.setProperty('--w', w.toFixed(3));
+      b.setAttribute('aria-current', String(w > 0.5));
+    });
   };
   track.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(sync); }, { passive: true });
   addEventListener('resize', () => { if (!raf) raf = requestAnimationFrame(sync); });
