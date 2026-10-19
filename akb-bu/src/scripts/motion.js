@@ -30,7 +30,7 @@ function initReveal() {
 
 /* Фон страницы по прокрутке (как porsche.com): у секций data-bg, цвет body плавно
    смешивается между текущей и следующей секцией, когда следующая подходит к линии
-   на 55% высоты экрана. Зона смешивания — 40% высоты экрана: проходит серые оттенки */
+   на 55% высоты экрана. Зона смешивания — 25% высоты экрана: проходит серые оттенки */
 function initBgScroll() {
   const secs = [...document.querySelectorAll('[data-bg]')];
   if (secs.length < 2) return;
@@ -42,7 +42,7 @@ function initBgScroll() {
   const paint = () => {
     raf = 0;
     const probe = innerHeight * 0.55;
-    const zone = innerHeight * 0.4;
+    const zone = innerHeight * 0.25;
     let i = 0;
     for (let k = 0; k < secs.length; k++) if (secs[k].getBoundingClientRect().top <= probe) i = k;
     let c = cols[i];
