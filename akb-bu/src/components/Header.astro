@@ -130,13 +130,20 @@ const icon = {
     position: fixed;
     inset: 0 0 auto;
     z-index: 100;
-    background: var(--color-ink);
     color: var(--color-white);
-    transition: background-color 0.3s var(--ease-porsche);
   }
-  .header--overlay:not(.is-scrolled) { background: transparent; }
-  /* Затемнение под шапкой над первым экраном пробовали 19.10.2026 — снято: «убрать заливку
-     шапки». Над фото шапка полностью прозрачная, фон — только после прокрутки */
+  /* Без сплошной заливки (19.10.2026: «шапка всё ещё залита… линейным градиентом
+     затемнить»): всегда — затемнение сверху вниз до прозрачного, на любом фоне под ней.
+     Высота затемнения — ручка --scrim-top-h в global.css */
+  .header::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: -1;
+    height: var(--scrim-top-h);
+    background: linear-gradient(to bottom, rgba(1, 2, 5, 0.85) 0%, rgba(1, 2, 5, 0.6) 45%, rgba(1, 2, 5, 0) 100%);
+    pointer-events: none;
+  }
   .header-inner {
     height: var(--header-h);
     display: grid;
