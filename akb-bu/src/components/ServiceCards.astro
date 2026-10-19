@@ -1,0 +1,55 @@
+---
+/* Карточки страниц услуг: сетка направления и «смежные услуги». Серая плашка, название,
+   одна строка «что это», цена «от» — её lib/page-car.js переписывает под класс машины
+   (data-cells). Вся карточка — ссылка. */
+import { pageCard } from '../lib/pages.js';
+import { rub } from '../lib/catalog.js';
+import { typo } from '../lib/typo.js';
+import { url } from '../lib/paths.js';
+
+const { slugs = [] } = Astro.props;
+const cards = slugs.map(pageCard).filter(Boolean);
+---
+
+<ul class="scards">
+  {cards.map((c) => (
+    <li>
+      <a class="scard" href={url(`/${c.slug}/`)}>
+        <h3 class="scard-title">{typo(c.title)}</h3>
+        {c.card && <p class="scard-text">{typo(c.card)}</p>}
+        <p class="scard-price" data-cells={JSON.stringify(c.cells)}>{c.from != null ? `от ${rub(c.from)}` : 'по запросу'}</p>
+      </a>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .scards {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: var(--sp-16);
+  }
+  .scard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-8);
+    height: 100%;
+    padding: var(--sp-28) var(--sp-24) var(--sp-24);
+    border-radius: var(--r-panel);
+    background: var(--color-tile);
+    color: var(--color-ink);
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .scard:hover { background: var(--color-tile-hover); transition-duration: var(--t-hover-in); }
+  .scard-title { font-size: var(--text-subhead); }
+  .scard-text { font-size: var(--text-body); }
+  .scard-price {
+    margin-top: auto;
+    padding-top: var(--sp-16);
+    font-size: var(--text-body-lg);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

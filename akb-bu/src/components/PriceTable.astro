@@ -1,0 +1,211 @@
+---
+/* Таблица прайса — обязательный блок страниц услуг и направлений (docs/site-structure.md, §5).
+   Печатается в готовом HTML: поисковик видит все цены по классам. Выбрали машину —
+   lib/page-car.js ставит <html data-car-cls> и столбец класса подсвечивается (без заливок
+   строк, замечание заказчика). На телефоне таблица листается вбок, колонка услуги стоит.
+
+   groups — [{ title, rows: [{ key, name, lead, includes, terms, cells }] }] из lib/pages.js.
+   С 19.10.2026 таблица — справочная «по всем классам»; записаться — в карточках ServiceVariants. */
+import { rub } from '../lib/catalog.js';
+import { typo } from '../lib/typo.js';
+
+const { groups = [], classes = 5 } = Astro.props;
+const cols = Array.from({ length: classes }, (_, i) => i + 1);
+const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.value) : `от ${rub(c.value)}`);
+---
+
+<div class="ptable-scroll">
+  <table class="ptable">
+    <thead>
+      <tr>
+        <th scope="col" class="ptable-name">Услуга</th>
+        {cols.map((n) => <th scope="col" class="ptable-price" data-col={n}>{n}-й класс</th>)}
+      </tr>
+    </thead>
+    <tbody>
+      {groups.map((g) => (
+        <>
+          {g.title && (
+            <tr class="ptable-group">
+              <th scope="rowgroup" colspan={classes + 1}>{typo(g.title)}</th>
+            </tr>
+          )}
+          {g.rows.map((r) => {
+            const more = r.lead || r.includes.length > 0 || r.terms.length > 0;
+            const id = `more-${r.key.replace(/[^a-z0-9]+/gi, '-')}`;
+            return (
+              <>
+                <tr>
+                  <th scope="row" class="ptable-name">
+                    <span class="ptable-svc">{typo(r.name)}</span>
+                    {more && (
+                      <button class="ptable-more" type="button" aria-expanded="false" aria-controls={id} data-more={id}>
+                        <span class="round-glass ptable-more-icon" aria-hidden="true">
+                          <svg viewBox="0 0 12 12"><path d="M6 1.5v9M1.5 6h9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        </span>
+                        <span class="ptable-more-text">Что входит</span>
+                      </button>
+                    )}
+                  </th>
+                  {r.cells.map((c, i) => <td class="ptable-price" data-col={i + 1}>{price(c)}</td>)}
+                </tr>
+                {/* состав — отдельной строкой во всю ширину, не в колонке услуги (19.10.2026) */}
+                {more && (
+                  <tr class="ptable-more-row" id={id} hidden>
+                    <td colspan={classes + 1}>
+                      <div class="ptable-more-body">
+                        {r.lead && <p>{typo(r.lead)}</p>}
+                        {r.includes.length > 0 && <ul class="bullets">{r.includes.map((i) => <li>{typo(i)}</li>)}</ul>}
+                        {r.terms.map((t) => <p class="ptable-terms">{typo(t)}</p>)}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </>
+            );
+          })}
+        </>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  /* «Что входит» — показать/спрятать строку состава под услугой */
+  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-more]')) {
+    const row = document.getElementById(b.dataset.more!);
+    if (!row) continue;
+    b.addEventListener('click', () => {
+      const open = row.hidden;
+      row.hidden = !open;
+      b.setAttribute('aria-expanded', String(open));
+      b.querySelector('.ptable-more-text')!.textContent = open ? 'Свернуть' : 'Что входит';
+    });
+  }
+</script>
+
+<style>
+  /* Ширина колонок: услуга — сколько дадут, классы — ровные. Ручки: --ptable-name-min
+     (колонка услуги на телефоне), --ptable-col (минимум колонки цены) */
+  .ptable-scroll {
+    --ptable-name-min: 220px;
+    --ptable-col: 108px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+  }
+  .ptable {
+    width: 100%;
+    min-width: calc(var(--ptable-name-min) + var(--ptable-col) * 5);
+    border-collapse: collapse;
+    font-size: var(--text-body);
+    line-height: 1.4;
+  }
+  .ptable th,
+  .ptable td {
+    padding: var(--sp-16) var(--sp-16);
+    text-align: left;
+    vertical-align: top;
+    font-weight: var(--w-regular);
+  }
+  /* Линии — только как структура строк таблицы */
+  .ptable tbody tr { border-top: 1px solid var(--color-line-ink); }
+  .ptable thead th {
+    padding-block: var(--sp-12);
+    font-size: var(--text-caption);
+    font-weight: var(--w-medium);
+    white-space: nowrap;
+  }
+  .ptable-name {
+    width: 46%;
+    min-width: var(--ptable-name-min);
+    padding-left: 0 !important;
+  }
+  .ptable-svc { display: block; font-size: var(--text-body-lg); }
+  .ptable-lead { margin-top: var(--sp-12); max-width: 52ch; }
+  .ptable-price {
+    min-width: var(--ptable-col);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    border-radius: 0;
+  }
+  .ptable-price:last-child { padding-right: 0; }
+
+  /* Группа прайса («Новое авто», «Авто с пробегом») — подзаголовок строкой */
+  .ptable-group th {
+    padding-top: var(--sp-32);
+    padding-left: 0;
+    font-size: var(--text-subhead);
+    letter-spacing: var(--track-head);
+  }
+
+  /* «Что входит» — круглая кнопка-«стекло» с плюсом (как .round-glass сайта) и текст рядом,
+     без пилюли (19.10.2026); раскрыто — плюс поворачивается в крестик. Ручка — --more-size */
+  .ptable-more {
+    --more-size: 28px;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-8);
+    margin-top: var(--sp-8);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-size: var(--text-caption);
+    cursor: pointer;
+  }
+  .ptable-more-icon {
+    width: var(--more-size);
+    height: var(--more-size);
+    background: var(--glass-light);
+    color: var(--color-ink);
+  }
+  .ptable-more:hover .ptable-more-icon { background: var(--glass-light-hover); transition-duration: var(--t-hover-in); }
+  .ptable-more-icon svg { width: 12px; height: 12px; transition: transform 0.25s var(--ease-porsche); }
+  .ptable-more[aria-expanded='true'] .ptable-more-icon svg { transform: rotate(45deg); }
+  /* Строка состава — без верхней линии (продолжение строки услуги), текст во всю ширину */
+  .ptable tbody tr.ptable-more-row { border-top: 0; }
+  .ptable-more-row td { padding-top: 0; padding-left: 0 !important; }
+  /* на ПК состав держится в колонке «Услуга» (её 46 %), не расползается под цены (19.10.2026) */
+  .ptable-more-body { display: grid; gap: var(--sp-12); width: 46%; max-width: var(--measure-text); }
+  .ptable-more-body .bullets { --bullet-gap: 6px; }
+
+  /* Столбец класса выбранной машины — серая подложка во всю высоту, шапка — весом */
+  :global(html[data-car-cls='1']) .ptable [data-col='1'],
+  :global(html[data-car-cls='2']) .ptable [data-col='2'],
+  :global(html[data-car-cls='3']) .ptable [data-col='3'],
+  :global(html[data-car-cls='4']) .ptable [data-col='4'],
+  :global(html[data-car-cls='5']) .ptable [data-col='5'] {
+    background: var(--color-tile);
+  }
+  :global(html[data-car-cls='1']) .ptable thead [data-col='1'],
+  :global(html[data-car-cls='2']) .ptable thead [data-col='2'],
+  :global(html[data-car-cls='3']) .ptable thead [data-col='3'],
+  :global(html[data-car-cls='4']) .ptable thead [data-col='4'],
+  :global(html[data-car-cls='5']) .ptable thead [data-col='5'] {
+    font-weight: var(--w-semibold);
+    border-radius: var(--r-row) var(--r-row) 0 0;
+  }
+
+  /* Телефон: колонка услуги стоит, цены листаются */
+  @media (max-width: 760px) {
+    .ptable-scroll { --ptable-name-min: 180px; --ptable-col: 96px; }
+    .ptable-name {
+      position: sticky;
+      left: 0;   /* край экрана: прокрутка выходит за поля контейнера */
+      z-index: 1;
+      background: var(--color-page);
+      padding-left: var(--gutter) !important;
+      box-shadow: 1px 0 0 var(--color-line-ink);
+    }
+    .ptable-group th { position: sticky; left: 0; }
+    /* состав — в ширину экрана и «прилипает» к левому краю, пока таблица листается вбок */
+    .ptable-more-body {
+      position: sticky;
+      left: 0;
+      width: auto;
+      max-width: calc(100vw - var(--gutter) * 2 - var(--sp-16) * 2);
+    }
+  }
+</style>

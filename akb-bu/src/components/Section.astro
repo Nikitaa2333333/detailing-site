@@ -23,6 +23,8 @@ const {
   huge = false,     // огромный заголовок-переход (их «Your Porsche journey starts now.»)
   stage = false,    // заголовок и лид по центру над тёмной полосой (их «Drive.»)
   lead = '',        // лид под заголовком
+  bgLine = null,    // своя линия смены фона (доля экрана), см. scripts/motion.js; 1 — при входе в экран
+  bgSnap = false,   // смена фона на эту секцию — без анимации (первая светлая под тёмным первым экраном)
   class: klass = '',
 } = Astro.props;
 ---
@@ -30,6 +32,8 @@ const {
 <section
   id={id}
   data-bg={sheet ? '#ffffff' : '#010205'}
+  data-bg-line={bgLine ?? undefined}
+  data-bg-snap={bgSnap || undefined}
   class:list={[
     'section',
     dark && 'section--dark',

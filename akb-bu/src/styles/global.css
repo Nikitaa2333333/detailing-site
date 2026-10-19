@@ -258,13 +258,14 @@ html.bg-scroll body {
 html.bg-scroll[data-bg-theme='light'] body { color: var(--color-ink); }
 /* первая покраска при загрузке — без анимации (класс снимает motion.js через кадр) */
 html.bg-instant, html.bg-instant body, html.bg-instant .btn--page { transition: none !important; }
-/* .section--solid — секция со своим фоном, в переходе не участвует: стоит светлой сразу
-   (тизер и плашки услуг под первым экраном, 19.10.2026: «пусть просто белый светлый будет»).
-   Анимированная смена фона — только дальше, при уходе в тёмную часть */
+/* .section--solid — секция со своим фоном, в переходе не участвует: калькулятор на /calc/,
+   прайс на страницах услуг. На главной таких больше нет (19.10.2026): у тизера свой белый
+   давал серую полосу перед плашками, пока фон не добелел */
 html.bg-scroll .section--solid.section--sheet { background: var(--color-page); color: var(--color-ink); }
-/* Первый экран — тёмный лист со скруглёнными нижними углами, лежит на белом тизере
-   (19.10.2026: «как вложенность»). Тизер заходит под скругление на его радиус — в углах белое */
-.hero + .section--solid {
+/* Первый экран — тёмный лист со скруглёнными нижними углами, лежит на тизере
+   (19.10.2026: «как вложенность»). Тизер заходит под скругление на его радиус; его фон — фон
+   страницы, который к этому моменту уже белеет (тизер запускает перекраску при входе в экран) */
+.hero + .section {
   margin-top: calc(var(--r-hero) * -1);
   padding-top: calc(var(--section-gap) + var(--r-hero));
 }
@@ -274,9 +275,9 @@ html.bg-scroll .section--solid.section--sheet { background: var(--color-page); c
    чёрное/белое). --hero-blend — длина перехода, крутить 80–200px */
 @media (max-width: 860px) {
   :root { --r-hero: 0px; }
-  /* вес как у правила белого фона section--solid ниже по каскаду + 1, иначе оно затирает градиент */
-  html .hero + .section--solid.section--sheet,
-  html.bg-scroll .hero + .section--solid.section--sheet {
+  /* вес выше правила «background: transparent» у .section--sheet, иначе оно затирает градиент */
+  html .hero + .section--sheet,
+  html.bg-scroll .hero + .section--sheet {
     --hero-blend: 140px;
     padding-top: calc(var(--section-gap) + var(--hero-blend));
     background-image: linear-gradient(to bottom,

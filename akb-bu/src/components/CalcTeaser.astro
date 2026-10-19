@@ -25,7 +25,7 @@ const {
          Выбор кладётся в память калькулятора (ds-calc-v1), /calc/ открывается сразу на шаге 2 -->
     <form class="teaser-form" action={url('/calc/')} method="get" data-teaser data-calc-url={url('/calc/')}>
       <CarCombo id="teaser-car" placeholder="Марка или модель" label="Марка и модель" />
-      <button class="btn btn--primary teaser-btn" type="submit">
+      <button class="btn btn--primary btn--page teaser-btn" type="submit">
         Рассчитать стоимость
       </button>
     </form>
@@ -228,7 +228,8 @@ const {
     color: var(--color-ink);
   }
   .teaser-field::placeholder { color: var(--color-grey-text); }
-  /* Тизер всегда на белом (section--solid) — кнопка обычная чёрная .btn--primary */
+  /* Тизер на фоне страницы (19.10.2026): кнопка .btn--page — белая, пока фон ещё тёмный,
+     чёрная на белом, перекрашивается вместе с фоном */
 
   /* Телефон: заголовок → описание → видео → форма; видео ~86% ширины */
   @media (max-width: 860px) {

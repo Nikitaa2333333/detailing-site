@@ -43,7 +43,11 @@ const frames = hero.frames ?? [hero.media];
          Лид под заголовком (как у b2b.yandex.ru) пробовали 14.10.2026: ложится на балку,
          приглушённый сине-серый на янтаре грязнит — не повторять -->
     <div class="container hero-content">
-      <h1 class="hero-title">{hero.title}</h1>
+      <!-- H1 — запрос «премиальный детейлинг в Москве», слоган — подзаголовком под ним (19.10.2026) -->
+      <div class="hero-head">
+        <h1 class="hero-title">{hero.title}</h1>
+        {hero.subtitle && <p class="hero-subtitle">{typo(hero.subtitle)}</p>}
+      </div>
       <p class="hero-text">{typo(hero.text)}</p>
     </div>
 
@@ -146,6 +150,14 @@ const frames = hero.frames ?? [hero.media];
     font-size: var(--text-display);
     line-height: 1.05;
     max-width: 16ch;
+  }
+  /* Подзаголовок — кеглем между заголовком и лидом, той же разрядкой, что заголовок */
+  .hero-subtitle {
+    margin-top: var(--sp-16);
+    font-size: var(--text-subhead);
+    letter-spacing: var(--track-head);
+    line-height: 1.2;
+    max-width: 24ch;
   }
   /* Лид на фото — белый: приглушённый цвет здесь не читается */
   .hero-text {

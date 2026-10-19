@@ -1,0 +1,550 @@
+---
+/* Страницы направлений и услуг — один шаблон, данные — data/pages.json через lib/pages.js,
+   карта — docs/site-structure.md, решения и отвергнутое — docs/design-porsche.md.
+   Порядок блоков (19.10.2026, третья итерация — «от задачи человека, компактнее»):
+     1. первый экран по центру: бледное слово направления, крошки, H1, суть простыми
+        словами, «Записаться» + «Цена для моей машины»;
+     3. «Что это и когда нужно»: объяснение, список задач, факты крупно, фото направления;
+     2. цена для машины — сразу: серая полоса, поле машины (выбранная — чёрными плашками),
+        прайс по пяти классам открытой таблицей, столбец класса подсвечен (как у
+        brooklandsdetailing — «тут сразу цены», 19.10.2026); у направления — карточки услуг
+        и разделы без своей страницы с пояснением;
+     4. «Как мы это делаем» — тёмные карточки шагов;
+     5. смежные услуги (включая соседние по направлению) → вопросы → заявка → подвал без призыва.
+   Колонка — --page-max 1120, расстояния между секциями вдвое меньше общих.
+   Цены, тексты, вопросы и крошки — в готовом HTML; машина только меняет цены на месте. */
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Section from '../components/Section.astro';
+import PriceTable from '../components/PriceTable.astro';
+import ServiceCards from '../components/ServiceCards.astro';
+import LeadForm from '../components/LeadForm.astro';
+import Faq from '../components/Faq.astro';
+import CarCombo from '../components/CarCombo.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import content from '../data/content.json';
+import { pageServices, pageDirections, directionSlug, classFrom, directionCells, directionMedia, siblings } from '../lib/pages.js';
+import { rub } from '../lib/catalog.js';
+import { typo } from '../lib/typo.js';
+import { url, asset } from '../lib/paths.js';
+
+export function getStaticPaths() {
+  return [
+    ...pageDirections.filter((d) => d.slug).map((d) => ({ params: { slug: d.slug }, props: { kind: 'direction', page: d } })),
+    ...pageServices.map((p) => ({ params: { slug: p.slug }, props: { kind: 'service', page: p } })),
+  ];
+}
+
+const { kind, page } = Astro.props;
+const { brand, contacts } = content;
+const isDir = kind === 'direction';
+const catId = isDir ? page.cat.id : page.cat;
+const dir = pageDirections.find((d) => d.cat.id === catId);
+const dirSlug = directionSlug(catId);
+// огромное слово первого экрана: «Полировка», «Оклейка»; у длинных названий — короче
+const WORD = { pokrytiya: 'Керамика', pdr: 'PDR' };
+const word = WORD[catId] ?? dir.cat.title.split(' ')[0];
+const media = directionMedia(catId);
+
+/* Крошки: Главная → направление → услуга (у химчистки и PDR направление = эта страница) */
+const crumbs = [{ name: 'Главная', href: url('/') }];
+if (!isDir && dirSlug !== page.slug) crumbs.push({ name: dir.h1 ?? dir.cat.title, href: url(`/${dirSlug}/`) });
+crumbs.push({ name: page.h1, href: url(`/${page.slug}/`) });
+
+const from = page.from;
+const cells = isDir ? directionCells(page) : classFrom(page.groups);
+const fromText = from != null ? `от ${rub(from)}` : 'по запросу';
+const title = `${page.h1} в Москве — цена от ${from != null ? rub(from) : 'по запросу'} | ${brand.name}`;
+
+/* Строки прайса этой страницы: у услуги — её раздел, у направления — разделы без своей страницы */
+const priceBlocks = isDir
+  ? page.sections.map((s) => ({ id: s.id, title: s.title, lead: page.sectionLeads?.[s.id] ?? '', groups: s.groups }))
+  : [{ id: page.section.id, title: '', lead: '', groups: page.groups }];
+const allRows = priceBlocks.flatMap((b) => b.groups.flatMap((g) => g.rows));
+
+const facts = page.facts ?? [];
+const isInt = (v) => /^\d+$/.test(v);
+const nbspNum = (v) => v.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+const calcHref = isDir ? url(`/calc/?cat=${catId}`) : url(`/calc/?cat=${catId}&sheet=${page.section.id}`);
+const site = Astro.site ?? Astro.url.origin;
+const abs = (path) => new URL(path, site).href;
+const prices = [...allRows.flatMap((r) => r.cells.filter(Boolean).map((c) => c.value)), ...(isDir && from != null ? [from] : [])];
+
+const schema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: page.h1,
+    description: page.description,
+    areaServed: { '@type': 'City', name: 'Москва' },
+    provider: {
+      '@type': 'AutoWash',
+      name: brand.name,
+      telephone: contacts.phone,
+      address: { '@type': 'PostalAddress', addressLocality: 'Москва', streetAddress: contacts.address.replace(/^Москва,\s*/, '') },
+    },
+    ...(prices.length
+      ? { offers: { '@type': 'AggregateOffer', priceCurrency: 'RUB', lowPrice: Math.min(...prices), highPrice: Math.max(...prices) } }
+      : {}),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, item: abs(c.href) })),
+  },
+  ...(page.faq?.length
+    ? [{
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: page.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+      }]
+    : []),
+];
+
+const children = isDir ? page.children.map((p) => p.slug) : [];
+/* Смежные: названные в pages.json, затем соседи по направлению — одной лентой, без повторов */
+const related = [...new Set([...(page.related ?? []), ...siblings(catId).map((t) => t.slug)])]
+  .filter((s) => s !== page.slug)
+  .slice(0, 6);
+const steps = isDir ? [] : page.steps ?? [];
+const isPdr = catId === 'pdr';
+const wa = `https://wa.me/${contacts.whatsappHref}`;
+const short = page.tab ?? page.h1;
+---
+
+<Layout title={title} description={page.description} schema={schema}>
+  <Header solid />
+
+  <main class="spage">
+    <!-- 1. Первый экран -->
+    <Section dark reveal={false} class="spage-hero">
+      <p class="hero-word" aria-hidden="true">{word}</p>
+      <div class="hero-body">
+        <nav class="crumbs" aria-label="Навигация">
+          <ol>
+            {crumbs.map((c, i) => (
+              <li>{i < crumbs.length - 1 ? <a href={c.href}>{c.name}</a> : <span aria-current="page">{typo(c.name)}</span>}</li>
+            ))}
+          </ol>
+        </nav>
+        <h1 class="hero-h1">{typo(page.h1)}</h1>
+        <p class="hero-lead">{typo(page.lead)}</p>
+        <div class="hero-actions">
+          {isPdr
+            ? <a class="btn btn--primary" href={wa} target="_blank" rel="noopener">Прислать фото в WhatsApp</a>
+            : <a class="btn btn--primary" href="#zayavka">Записаться</a>}
+          <a class="btn btn--glass" href="#cena">Цена для моей машины</a>
+        </div>
+      </div>
+    </Section>
+
+    <!-- 2. Цена для машины — сразу после первого экрана, прайс открыт (как у brooklandsdetailing, 19.10.2026).
+         bgLine={1}: фон белеет, едва полоса вошла в экран, — к блоку «Что это» ниже он уже белый -->
+    {(priceBlocks.length > 0 || children.length > 0) && (
+      <Section id="cena" sheet reveal={false} bgLine={1} bgSnap class="section--solid band">
+        <div class="price-head">
+          <h2 class="price-title">Цена для вашей машины</h2>
+          <p class="price-note" data-car-note>Цены «от». Выберите машину — покажем цены её класса.</p>
+          <div class="price-car" data-page-car>
+            <CarCombo id="page-car" placeholder="Марка или модель" label="Марка и модель" />
+          </div>
+        </div>
+        {children.length > 0 && (
+          <div class="price-block band-cards">
+            <ServiceCards slugs={children} />
+          </div>
+        )}
+        {priceBlocks.map((b) => (
+          <div class="price-block" id={isDir ? `ceny-${b.id}` : undefined}>
+            {b.title && (
+              <div class="price-block-head">
+                <h3 class="price-block-title">{typo(b.title)}</h3>
+                {b.lead && <p class="price-block-lead">{typo(b.lead)}</p>}
+              </div>
+            )}
+            <div class="price-table">
+              <PriceTable groups={b.groups} />
+            </div>
+          </div>
+        ))}
+        <div class="price-actions">
+          {isPdr
+            ? <a class="btn btn--primary" href={wa} target="_blank" rel="noopener">Прислать фото в WhatsApp</a>
+            : <a class="btn btn--primary" href="#zayavka">Записаться</a>}
+          <a class="btn btn--glass" href={calcHref}>Несколько услуг — в калькулятор</a>
+        </div>
+      </Section>
+    )}
+
+    <!-- 3. Что это и когда нужно — на фоне страницы, без своего белого: ниже тёмная часть,
+         и фон перетекает плавно, а не режется краем (19.10.2026) -->
+    <Section sheet reveal={false}>
+      <div class:list={['intro', !media && 'intro--plain']}>
+        <div class="intro-text" data-reveal-group>
+          {page.about?.map((p, i) => <p class:list={['intro-p', i === 0 && 'intro-p--first']} data-reveal>{typo(p)}</p>)}
+          {page.tasks?.length > 0 && (
+            <div class="tasks" data-reveal>
+              <h2 class="tasks-title">Когда это нужно</h2>
+              <ul class="bullets tasks-list">
+                {page.tasks.map((t) => <li>{typo(t)}</li>)}
+              </ul>
+            </div>
+          )}
+          {facts.length > 0 && (
+            <dl class="facts">
+              {facts.map((f) => (
+                <div class="fact" data-reveal>
+                  <dd class="fact-value">
+                    <span data-count={isInt(f.v) ? f.v : undefined}>{nbspNum(f.v)}</span>
+                    <span class="fact-unit">{f.u}</span>
+                  </dd>
+                  <dt class="fact-label">{typo(f.l)}</dt>
+                </div>
+              ))}
+            </dl>
+          )}
+        </div>
+        {media && (
+          <figure class="intro-photo" data-zoom>
+            <img src={asset(media)} alt="" loading="lazy" decoding="async" />
+          </figure>
+        )}
+      </div>
+    </Section>
+
+    <!-- 4. Как мы это делаем -->
+    {steps.length > 0 && (
+      <Section id="kak" dark title="Как мы это делаем">
+        <ol class="steps" data-reveal-group>
+          {steps.map((s, i) => (
+            <li class="step" data-reveal>
+              <span class="step-num">{String(i + 1).padStart(2, '0')}</span>
+              <p class="step-text">{typo(s)}</p>
+            </li>
+          ))}
+        </ol>
+      </Section>
+    )}
+
+    {related.length > 0 && (
+      <Section dark title="Смежные услуги">
+        <div class="on-dark-cards"><ServiceCards slugs={related} /></div>
+      </Section>
+    )}
+
+    {page.faq?.length > 0 && (
+      <Section id="faq" dark>
+        <Faq title="Вопросы" items={page.faq} />
+      </Section>
+    )}
+
+    <Section dark>
+      <LeadForm title={`Записаться: ${short.toLowerCase()}`} service={page.h1} />
+    </Section>
+  </main>
+  <SiteFooter brand={brand} cta={false} />
+</Layout>
+
+<script>
+  import { loadCars } from '../lib/car-index-client.js';
+  import { carCombo } from '../lib/car-combo.js';
+  import { storedCar, storeCar, applyCar } from '../lib/page-car.js';
+
+  /* Машина — общая память сайта: выбрал — цены страницы меняются на месте, калькулятор её помнит */
+  const box = document.querySelector<HTMLElement>('[data-page-car] [data-car-combo]');
+  let car: any = storedCar();
+  applyCar(car);
+  const flash = () => {
+    for (const el of document.querySelectorAll<HTMLElement>('[data-price]')) {
+      el.classList.remove('is-updated');
+      void el.offsetWidth; // перезапуск анимации
+      el.classList.add('is-updated');
+    }
+  };
+  if (box) {
+    let cars: unknown = null;
+    const combo = carCombo(box, {
+      cars: () => cars,
+      car: () => car,
+      onPick: (picked: any) => {
+        car = picked;
+        storeCar(car);
+        combo.sync();
+        applyCar(car);
+        flash();
+      },
+      missText: (q: string) => `«${q}» нет в списке — цены «от», класс уточнит менеджер`,
+      onMiss: () => {
+        car = null;
+        storeCar(null);
+        applyCar(null);
+        flash();
+      },
+    });
+    loadCars().then((index: unknown) => { cars = index; combo.ready(); }).catch(() => {});
+  }
+
+  /* «Записаться» в карточке варианта → форма вписывает услугу и встаёт в экран */
+  for (const b of document.querySelectorAll<HTMLButtonElement>('[data-book]')) {
+    b.addEventListener('click', () => document.dispatchEvent(new CustomEvent('lead:service', { detail: b.dataset.book })));
+  }
+
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* Цифры — одометр: при появлении считают от нуля, как характеристики у Porsche */
+  const nf = new Intl.NumberFormat('ru-RU');
+  const counters = document.querySelectorAll<HTMLElement>('[data-count]');
+  if (!still && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        io.unobserve(e.target);
+        const el = e.target as HTMLElement;
+        const to = Number(el.dataset.count);
+        const t0 = performance.now();
+        const dur = 1200;
+        const tick = (t: number) => {
+          const k = Math.min(1, (t - t0) / dur);
+          el.textContent = nf.format(Math.round(to * (1 - Math.pow(1 - k, 3))));
+          if (k < 1) requestAnimationFrame(tick);
+        };
+        el.textContent = '0';
+        requestAnimationFrame(tick);
+      }
+    }, { threshold: 0.6 });
+    counters.forEach((el) => io.observe(el));
+  }
+
+  /* Фото «отъезжает»: въезжает крупнее и к середине экрана приходит в 1 (их scale 1.14 → 1) */
+  const photos = [...document.querySelectorAll<HTMLElement>('[data-zoom]')];
+  if (!still && photos.length) {
+    let ticking = false;
+    const frame = () => {
+      ticking = false;
+      const vh = innerHeight;
+      for (const p of photos) {
+        const r = p.getBoundingClientRect();
+        const k = Math.min(1, Math.max(0, (vh - r.top) / (vh * 0.9)));
+        p.style.setProperty('--zoom', String(1.14 - 0.14 * k));
+      }
+    };
+    addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }, { passive: true });
+    frame();
+  }
+</script>
+
+<style>
+  /* Колонка страницы уже общей и секции ближе друг к другу (19.10.2026: «огромные расстояния»).
+     Ручки: --page-max (1040–1200), --section-gap — половина разрыва между секциями */
+  .spage {
+    --page-max: 1120px;
+    --section-gap: clamp(28px, 3.5vw, 48px);
+    padding-top: var(--header-h);
+  }
+
+  /* ---------- 1. Первый экран ---------- */
+  /* Чёрный лист со скруглённым низом, как первый экран главной (19.10.2026: «в чёрном фоне,
+     с закруглёнными краями»); серая полоса цен заходит под углы. Свой фон — в переходе фона
+     по прокрутке не участвует, граница резкая. Ручка радиуса — --spage-hero-r */
+  :global(.section.spage-hero),
+  :global(html.bg-scroll .section.spage-hero) {
+    --spage-hero-r: var(--r-tile);
+    position: relative;
+    z-index: 1;
+    overflow: clip;
+    padding-top: var(--sp-40);
+    padding-bottom: var(--sp-48);
+    background: var(--color-ink);
+    color: var(--color-white);
+    border-radius: 0 0 var(--spage-hero-r) var(--spage-hero-r);
+  }
+  :global(.section.spage-hero + .section) {
+    margin-top: calc(var(--r-tile) * -1);
+    padding-top: calc(var(--section-gap) + var(--r-tile));
+  }
+  /* Огромное бледное слово направления за заголовком — их «GT3» за машиной.
+     Цвет плашки, декор: правило «текст только контрастный» его не касается */
+  .hero-word {
+    position: absolute;
+    inset: var(--sp-8) 0 auto;
+    text-align: center;
+    font-size: clamp(4rem, 12vw, 10rem);
+    line-height: 1;
+    letter-spacing: -0.05em;
+    color: var(--color-tile-dark);   /* на чёрном — чуть светлее фона */
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+    animation: word-in 1.4s var(--ease-out-expo) both;
+  }
+  @keyframes word-in {
+    from { opacity: 0; transform: translateY(24px) scale(0.98); }
+  }
+  .hero-body {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    padding-top: clamp(48px, 7vw, 110px);
+  }
+  .crumbs ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sp-8);
+    font-size: var(--text-caption);
+  }
+  .crumbs li + li::before { content: '/'; margin-right: var(--sp-8); }
+  .crumbs a { text-decoration: underline; text-underline-offset: 3px; }
+  .hero-h1 {
+    margin-top: var(--sp-20);
+    font-size: var(--text-heading-xl);
+    max-width: var(--measure-head);
+    text-wrap: balance;
+  }
+  .hero-lead {
+    margin-top: var(--sp-16);
+    font-size: var(--text-lead);
+    letter-spacing: var(--track-lead);
+    line-height: 1.45;
+    max-width: var(--measure-lead);
+    text-wrap: balance;
+  }
+  .hero-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-12); margin-top: var(--sp-28); }
+
+  /* ---------- 2. Что это и когда нужно ---------- */
+  .intro {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: var(--sp-40) var(--sp-64);
+    align-items: start;
+  }
+  .intro--plain { grid-template-columns: minmax(0, 1fr); }
+  .intro-text { display: grid; gap: var(--sp-24); }
+  .intro-p { font-size: var(--text-body-lg); line-height: 1.6; max-width: var(--measure-text); }
+  .intro-p--first { font-size: var(--text-subhead); line-height: 1.35; letter-spacing: var(--track-lead); max-width: 40ch; }
+  .tasks { margin-top: var(--sp-8); }
+  .tasks-title { font-size: var(--text-lead); margin-bottom: var(--sp-12); }
+  /* пункты в одну-две строки — плотно */
+  .tasks-list { --bullet-gap: 8px; font-size: var(--text-body-lg); line-height: 1.45; max-width: var(--measure-text); }
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-24) var(--sp-48);
+    margin: var(--sp-16) 0 0;
+  }
+  .fact { display: grid; gap: var(--sp-4); }
+  .fact-value { margin: 0; font-size: var(--text-heading-xl); line-height: 1; letter-spacing: var(--track-head); font-variant-numeric: tabular-nums; }
+  .fact-unit { font-size: var(--text-lead); margin-left: 0.15em; }
+  .fact-label { font-size: var(--text-body); max-width: 24ch; }
+  .intro-photo {
+    --zoom: 1.14;
+    margin: 0;
+    aspect-ratio: 4 / 5;
+    border-radius: var(--r-tile);
+    overflow: hidden;
+    background: var(--color-tile-dark);
+  }
+  .intro-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(var(--zoom));
+    will-change: transform;
+  }
+
+  /* ---------- 3. Цена для машины ---------- */
+  :global(html.bg-scroll .section.band.section--solid),
+  :global(.section.band) { background: var(--color-tile); }
+  .price-head {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    gap: var(--sp-8);
+    margin-bottom: var(--sp-32);
+  }
+  .price-title { font-size: var(--text-heading); }
+  .price-car { width: min(100%, 560px); margin-top: var(--sp-8); text-align: left; }
+  /* Поле — белое; выбранная машина — чёрные плашки (19.10.2026: серые сливались с полосой) */
+  .price-car :global(.combo) {
+    --combo-fg: var(--color-ink);
+    --combo-field: var(--color-white);
+    --combo-field-hover: var(--color-white);
+    --combo-pop: var(--color-page);
+    --combo-hover: var(--row-hover-light);
+    --combo-line: var(--color-line-ink);
+    --combo-sel-bg: var(--color-ink);
+    --combo-sel-fg: var(--color-white);
+    --combo-sel-hover: var(--color-ink-hover);
+    max-width: none;
+  }
+  .price-car :global(.combo:not(.is-sheet)) { justify-content: center; }
+  .price-block + .price-block { margin-top: var(--sp-48); }
+  .price-block-head { margin-bottom: var(--sp-16); }
+  .price-block-title { font-size: var(--text-tile); }
+  .price-block-lead { margin-top: var(--sp-8); font-size: var(--text-body-lg); max-width: var(--measure-lead); }
+  /* карточки услуг на серой полосе — белые; наведение — серый темнее полосы (19.10.2026:
+     светло-серое сливалось с полосой, чёрное — «не нужно»). Текст остаётся чёрным — приглушённого
+     текста на сайте нет */
+  .band-cards :global(.scard) { background: var(--color-page); }
+  .band-cards :global(.scard:hover) { background: var(--color-tile-hover); }
+  /* Цена сменилась под класс — короткий подъём, глаз замечает перемену */
+  .spage :global([data-price].is-updated) { animation: price-in 0.6s var(--ease-out-expo); }
+  @keyframes price-in {
+    from { opacity: 0; transform: translateY(10px); }
+  }
+  /* Таблица — белая карточка на серой полосе, открыта сразу */
+  .price-table {
+    padding: var(--sp-8) var(--sp-32) var(--sp-16);
+    border-radius: var(--r-panel);
+    background: var(--color-page);
+    overflow: hidden;
+  }
+  .price-table :global(.ptable-scroll) { margin-inline: 0; padding-inline: 0; }
+  .price-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-12); margin-top: var(--sp-32); }
+
+  /* ---------- 4. Шаги ---------- */
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: var(--sp-12);
+  }
+  .step {
+    display: grid;
+    align-content: space-between;
+    gap: var(--sp-32);
+    min-height: 220px;
+    padding: var(--sp-24) var(--sp-20);
+    border-radius: var(--r-panel);
+    background: var(--color-tile-dark);
+    color: var(--color-white);
+  }
+  .step-num { font-size: var(--text-heading-xl); line-height: 1; letter-spacing: var(--track-head); font-variant-numeric: tabular-nums; }
+  .step-text { font-size: var(--text-body-lg); line-height: 1.45; }
+
+  /* смежные на тёмном — тёмные плашки */
+  .on-dark-cards :global(.scard) { background: var(--color-tile-dark); color: var(--color-white); }
+  .on-dark-cards :global(.scard:hover) { background: var(--color-tile-back); }
+
+  @media (max-width: 860px) {
+    .intro { grid-template-columns: minmax(0, 1fr); }
+    .intro-photo { aspect-ratio: 4 / 3; }
+  }
+  @media (max-width: 560px) {
+    .hero-actions .btn { width: 100%; }
+    .price-table { padding-inline: var(--sp-16); }
+    .price-table :global(.ptable-name) { padding-left: 0 !important; }
+    .price-actions .btn { width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-word { animation: none; }
+    .intro-photo img { transform: none; }
+  }
+</style>

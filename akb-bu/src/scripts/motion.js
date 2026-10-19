@@ -40,17 +40,29 @@ function initBgScroll() {
   let raf = 0;
   let current = '';
   // линия срабатывания — доля высоты экрана: верх новой секции поднялся выше неё — фон меняется.
-  // 0.25 (19.10.2026; было 0.5): переход — когда блок уже занял экран, а не на подходе;
-  // иначе над ним торчала белая секция с резкой границей
-  const BG_LINE = 0.25;
+  // 0.5 — как у porsche.com: меняется цвет всего экрана, у секций своего фона нет, границы нет.
+  // (0.25 ставили, пока плашки услуг были со своим белым фоном и торчала граница — снято 19.10.2026)
+  const BG_LINE = 0.5;
+  // У секции может быть своя линия — data-bg-line (доля экрана). 1 — срабатывает, как только
+  // верх секции вошёл в экран: так первая светлая секция под тёмным первым экраном запускает
+  // перекраску заранее, пока её ещё закрывает первый экран, и к следующей секции фон уже белый
+  // (19.10.2026: при быстрой прокрутке между тизером и плашками показывалась серая полоса)
+  const lineOf = (s) => innerHeight * (s.dataset.bgLine ? Number(s.dataset.bgLine) : BG_LINE);
+  // data-bg-snap — смена фона на эту секцию без анимации: первая светлая секция под тёмным
+  // первым экраном должна стоять белой сразу, как раньше со своим фоном; иначе при быстрой
+  // прокрутке её застают на середине перетекания — серый фон, серый текст (19.10.2026)
+  const snap = () => {
+    root.classList.add('bg-instant');
+    requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('bg-instant')));
+  };
   const paint = () => {
     raf = 0;
-    const line = innerHeight * BG_LINE;
     let i = 0;
-    for (let k = 0; k < secs.length; k++) if (secs[k].getBoundingClientRect().top <= line) i = k;
+    for (let k = 0; k < secs.length; k++) if (secs[k].getBoundingClientRect().top <= lineOf(secs[k])) i = k;
     const color = secs[i].dataset.bg;
     if (color === current) return;
     current = color;
+    if (secs[i].dataset.bgSnap !== undefined) snap();
     document.body.style.backgroundColor = color;
     root.style.backgroundColor = color;
     root.dataset.bgTheme = color.toLowerCase() === '#ffffff' ? 'light' : 'dark';
@@ -60,9 +72,8 @@ function initBgScroll() {
   addEventListener('resize', queue);
   // первый цвет — сразу, без анимации: иначе страница с белым верхом (калькулятор) при
   // каждой загрузке 1,8 с перетекала из тёмного фона сайта в белый (19.10.2026)
-  root.classList.add('bg-instant');
+  snap();
   paint();
-  requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('bg-instant')));
 }
 
 function init() {

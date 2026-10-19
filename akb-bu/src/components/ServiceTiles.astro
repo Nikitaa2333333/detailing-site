@@ -8,7 +8,12 @@
    Призыв «Не знаете, с чего начать?» — отдельным блоком под сеткой, без плашки.
    Данные считаются из прайса в lib/catalog.js, руками цены не проставляем. */
 import { categories, rub } from '../lib/catalog.js';
-import { asset } from '../lib/paths.js';
+import { asset, url } from '../lib/paths.js';
+import { directionSlug, sectionSlug } from '../lib/pages.js';
+
+/* С 19.10.2026 плашка ведёт на страницу направления, строка оборота — на страницу раздела
+   (pages/[slug].astro); калькулятор — оттуда кнопкой «Рассчитать» */
+const pageOf = (slug) => (slug ? url(`/${slug}/`) : null);
 
 const { cta, more, href = '#contacts' } = Astro.props;
 /* Ряды по две: при наведении карточка расширяется, соседняя сужается (их приём,
@@ -39,8 +44,8 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
             <p class="tile-price">от {rub(c.from)}</p>
             <!-- Круглая стрелка; при наведении на плашку раскрывается в «Рассчитать →».
                  Ссылка растянута на всю плашку (::after) — клик в любом месте ведёт в калькулятор -->
-            <a class="tile-go" href={`${href}?cat=${c.id}`} aria-label={`${c.title}: рассчитать стоимость`}>
-              <span class="tile-go-label">Рассчитать</span>
+            <a class="tile-go" href={pageOf(directionSlug(c.id)) ?? `${href}?cat=${c.id}`} aria-label={`${c.title}: услуги и цены`}>
+              <span class="tile-go-label">Услуги и цены</span>
               <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
           </div>
@@ -51,7 +56,7 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
         <ul class="tile-list">
           {c.items.map((s) => (
             <li>
-              <a href={href} data-service={s.title} data-service-id={s.id}>
+              <a href={pageOf(sectionSlug(s.id)) ?? href} data-service={s.title} data-service-id={s.id}>
                 <span class="tile-item-name">{s.title}</span>
                 <span class="tile-item-price">от {rub(s.from)}</span>
               </a>
@@ -74,7 +79,7 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
       <h3 class="tiles-cta-title">{cta.title}</h3>
       <p>{cta.text}</p>
     </div>
-    <a class="btn btn--primary" href={href}>{cta.button}</a>
+    <a class="btn btn--primary btn--page" href={href}>{cta.button}</a>
   </div>
 )}
 
@@ -83,10 +88,11 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
      радиус 32, фото на всю плашку. Пропорция — ручка --tile-ratio (1 / 1 у Porsche; ниже
      5 / 4 не опускать — на обороте должен уместиться мини-прайс с кнопкой) */
   .tiles {
-    --tile-gap: var(--sp-28);
+    --tile-gap: var(--sp-16);   /* было 28 — «расстояния уменьшить» (19.10.2026) */
     /* высота плашки — от ширины колонки (квадрат), а не от своей ширины: при наведении
        ширина меняется, высота стоит на месте */
-    --tile-h: calc((100cqw - var(--tile-gap)) / 2);
+    /* 3:2 (19.10.2026: квадрат на ПК — «очень большие плашки»); крутить 0.6–1 */
+    --tile-h: calc((100cqw - var(--tile-gap)) / 2 * 0.66);
     container-type: inline-size;
     display: grid;
     gap: var(--tile-gap);

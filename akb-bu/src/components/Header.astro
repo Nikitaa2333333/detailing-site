@@ -12,8 +12,10 @@ import { categories, rub } from '../lib/catalog.js';
 import { url } from '../lib/paths.js';
 import { typo } from '../lib/typo.js';
 // light — светлая шапка для страниц с белым верхом (калькулятор): тёмная дымка на белом
-// выглядела серой полосой-«переходом». Постоянная, без анимации и инверсии по прокрутке
-const { overlay = false, light = false } = Astro.props;
+// выглядела серой полосой-«переходом». Постоянная, без анимации и инверсии по прокрутке.
+// solid — страницы услуг (19.10.2026): сплошной чёрный фон, белые знаки, без дымки — светлый
+// верх и тёмный низ под одной шапкой; дымка на такой странице висела белой полосой над чёрным
+const { overlay = false, light = false, solid = false } = Astro.props;
 const { contacts, brand, nav, services } = content;
 const calc = url('/calc/');
 const icon = {
@@ -24,7 +26,7 @@ const icon = {
 };
 ---
 
-<header class:list={['header', overlay && 'header--overlay', light ? 'header--light' : 'on-dark']} id="header">
+<header class:list={['header', overlay && 'header--overlay', solid && 'header--solid', light ? 'header--light' : 'on-dark']} id="header">
   <div class="container header-inner">
     <button class="menu-btn" type="button" id="menu-open" aria-expanded="false" aria-controls="site-menu">
       <svg viewBox="0 0 20 20" aria-hidden="true" set:html={icon.menu} />
@@ -191,6 +193,10 @@ const icon = {
   .header--light .round-glass:hover,
   .header--light .btn--glass:hover { background: var(--glass-light-hover); }
   .header--light .menu-btn:hover { background: var(--glass-light); }
+
+  /* solid — сплошная чёрная полоса вместо дымки (страницы услуг, 19.10.2026) */
+  .header--solid { background: var(--color-ink); }
+  .header--solid::before { display: none; }
   .header-inner {
     height: var(--header-h);
     display: grid;

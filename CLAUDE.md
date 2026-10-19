@@ -41,6 +41,7 @@
 | [content.json](akb-bu/src/data/content.json) | тексты сквозных блоков, цифры о компании, контакты, границы категорий | руками |
 | [service-texts.json](akb-bu/src/data/service-texts.json) | клиентские тексты услуг: суть, «что входит», условия | мы, заказчик вычитывает |
 | [service-intents.json](akb-bu/src/data/service-intents.json) | «беда → услуги»: 30 ситуаций, фразы, подборки | мы, заказчик вычитывает |
+| [pages.json](akb-bu/src/data/pages.json) | страницы направлений и услуг: адреса, H1, тексты, вопросы, какие строки прайса где (разбор — `lib/pages.js`, шаблон — `pages/[slug].astro`) | мы, заказчик вычитывает |
 | [cars-base.json](akb-bu/src/data/cars-base.json) | мировой справочник (cars-base.ru, каталог auto.ru): марки, модели, поколения, габариты | `npm run cars-base` |
 | `car-aliases.json`, `car-codes.json`, `car-extra.json`, `car-base-aliases.json`, `car-base-rules.json` | написания, кузовные коды, машины вне прайса, правила класса | мы — см. [docs/cars-and-classes.md](docs/cars-and-classes.md) |
 

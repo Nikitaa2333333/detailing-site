@@ -1,0 +1,142 @@
+---
+/* Заявка со страницы услуги или направления: имя, телефон +7, согласие. Услуга — название
+   страницы, «Записаться» в таблице прайса подменяет её строкой (событие lead:service).
+   В заявку: услуга, машина и класс из памяти сайта (ds-calc-v1), страница, UTM.
+   Отправка — событие lead:submit, как у калькулятора: доставку (Apps Script → Telegram +
+   Таблица) подключим к нему одной точкой. Стоит на тёмной полосе. */
+import { typo } from '../lib/typo.js';
+import { url } from '../lib/paths.js';
+import content from '../data/content.json';
+
+const { title = 'Записаться', service, button = 'Отправить заявку' } = Astro.props;
+const { contacts } = content;
+---
+
+<div class="lead" id="zayavka">
+  <div class="lead-text">
+    <h2 class="lead-title">{typo(title)}</h2>
+    <p class="lead-sub">Перезвоним, уточним машину и подберём время.</p>
+    <a class="lead-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+    <p class="lead-hours">{typo(contacts.address)}, {contacts.hours}</p>
+  </div>
+
+  <form class="lead-form" data-lead-form data-service={service} novalidate>
+    <p class="lead-service">
+      <span class="chip" data-lead-service>{typo(service)}</span>
+    </p>
+    <input class="field" name="name" type="text" autocomplete="name" placeholder="Имя" aria-label="Имя" />
+    <input class="field" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 (___) ___-__-__" aria-label="Телефон" data-lead-phone required />
+    <label class="lead-consent">
+      <input type="checkbox" name="consent" checked />
+      <span>Согласен на <a href={url('/soglasie/')}>обработку персональных данных</a></span>
+    </label>
+    <p class="lead-error" data-lead-error hidden></p>
+    <button class="btn btn--primary lead-btn" type="submit">{button}</button>
+  </form>
+  <p class="lead-done" data-lead-done hidden>Спасибо! Заявка у нас — перезвоним и уточним детали.</p>
+</div>
+
+<script>
+  import { storedCar } from '../lib/page-car.js';
+
+  const form = document.querySelector<HTMLFormElement>('[data-lead-form]');
+  if (form) {
+    const phone = form.querySelector<HTMLInputElement>('[data-lead-phone]')!;
+    const chip = form.querySelector<HTMLElement>('[data-lead-service]')!;
+    const error = form.querySelector<HTMLElement>('[data-lead-error]')!;
+    let service = form.dataset.service ?? '';
+
+    document.addEventListener('lead:service', (e) => {
+      service = (e as CustomEvent<string>).detail;
+      chip.textContent = service;
+      document.getElementById('zayavka')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      phone.focus({ preventScroll: true });
+    });
+
+    phone.addEventListener('input', (e) => {
+      if ((e as InputEvent).inputType?.startsWith('delete')) return;
+      let d = phone.value.replace(/\D/g, '');
+      if (d.startsWith('8')) d = `7${d.slice(1)}`;
+      if (d && !d.startsWith('7')) d = `7${d}`;
+      const p = d.slice(1, 11);
+      let out = '+7';
+      if (p.length) out += ` (${p.slice(0, 3)}`;
+      if (p.length >= 3) out += `) ${p.slice(3, 6)}`;
+      if (p.length >= 6) out += `-${p.slice(6, 8)}`;
+      if (p.length >= 8) out += `-${p.slice(8, 10)}`;
+      phone.value = out;
+    });
+
+    // UTM с первого захода — на всю сессию, как в калькуляторе
+    const utm = (() => {
+      try {
+        const own = Object.fromEntries([...new URLSearchParams(location.search)].filter(([k]) => k.startsWith('utm_')));
+        if (Object.keys(own).length) sessionStorage.setItem('ds-utm', JSON.stringify(own));
+        return JSON.parse(sessionStorage.getItem('ds-utm') || '{}');
+      } catch {
+        return {};
+      }
+    })();
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const digits = phone.value.replace(/\D/g, '');
+      const consent = form.elements.namedItem('consent') as HTMLInputElement;
+      const problem =
+        digits.length !== 11 ? 'Проверьте номер телефона' : !consent.checked ? 'Нужно согласие на обработку данных' : '';
+      error.textContent = problem;
+      error.hidden = !problem;
+      if (problem) return;
+      const lead = {
+        name: (form.elements.namedItem('name') as HTMLInputElement).value.trim(),
+        phone: phone.value,
+        car: storedCar(),
+        services: [{ name: service }],
+        page: location.href,
+        utm,
+      };
+      document.dispatchEvent(new CustomEvent('lead:submit', { detail: lead }));
+      form.hidden = true;
+      document.querySelector<HTMLElement>('[data-lead-done]')!.hidden = false;
+    });
+  }
+</script>
+
+<style>
+  .lead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+    gap: var(--sp-40) var(--sp-80);
+    align-items: start;
+  }
+  .lead-title { font-size: var(--text-heading-xl); max-width: var(--measure-head); }
+  .lead-sub { margin-top: var(--sp-16); font-size: var(--text-lead); letter-spacing: var(--track-lead); max-width: var(--measure-lead); }
+  .lead-phone {
+    display: inline-block;
+    margin-top: var(--sp-32);
+    font-size: var(--text-tile);
+    letter-spacing: var(--track-head);
+  }
+  .lead-hours { margin-top: var(--sp-8); }
+
+  .lead-form { display: grid; gap: var(--sp-12); }
+  .lead-service { margin-bottom: var(--sp-8); }
+  .lead-consent {
+    display: flex;
+    gap: var(--sp-12);
+    align-items: flex-start;
+    font-size: var(--text-caption);
+    line-height: 1.4;
+    cursor: pointer;
+  }
+  .lead-consent input { margin: 2px 0 0; width: 18px; height: 18px; accent-color: var(--color-white); flex: none; }
+  .lead-consent a { text-decoration: underline; text-underline-offset: 3px; }
+  .lead-btn { margin-top: var(--sp-8); }
+  .lead-error { font-size: var(--text-caption); }
+  .lead-done { font-size: var(--text-lead); align-self: center; }
+
+  @media (max-width: 860px) {
+    .lead { grid-template-columns: minmax(0, 1fr); }
+    .lead-btn { width: 100%; }
+  }
+</style>

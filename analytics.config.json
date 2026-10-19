@@ -1,0 +1,13 @@
+{
+  "site": "https://dssever.ru/",
+  "source": ["akb-bu/src"],
+  "goals": [],
+  "yadro": {
+    "domain": "dssever.ru",
+    "region": 213,
+    "regionName": "msk",
+    "bukvarixRegion": "msk",
+    "lists": "seo-data",
+    "data": "seo-data"
+  }
+}
