@@ -138,12 +138,10 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
     background: linear-gradient(var(--scrim));
     pointer-events: none;
   }
-  /* Низ — длинный плавный линейный градиент (19.10.2026): от почти чёрного у края до
-     прозрачного выше середины. Высота — ручка, 50–70% */
   .tile--media::after {
     inset: auto 0 0;
-    height: 62%;
-    background: linear-gradient(to top, rgba(1, 2, 5, 0.92) 0%, rgba(1, 2, 5, 0.6) 40%, rgba(1, 2, 5, 0) 100%);
+    height: 42%;
+    background: linear-gradient(to top, var(--scrim));
   }
 
   .tile-front {
