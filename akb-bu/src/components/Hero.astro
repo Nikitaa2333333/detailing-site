@@ -10,7 +10,7 @@ const frames = hero.frames ?? [hero.media];
 
 <!-- Первый экран «липкий»: пока пользователь прокручивает --hero-travel, кадр стоит на месте,
      а свет включается ступенями. Фото 16:9 на всю ширину, кроп только по высоте (пол). -->
-<section class="hero on-dark">
+<section class="hero on-dark" data-bg="#010205">
   <div class="hero-sticky">
     <div class="hero-media">
       {frames.map((src, i) => {

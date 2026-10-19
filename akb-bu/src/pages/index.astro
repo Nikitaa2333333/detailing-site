@@ -44,13 +44,13 @@ const calcHref = url('/calc/');
   <!-- Сезонные пакеты (осень — зима): данные и суммы — season-packs.json + прайс -->
   <!-- Снег (Snow.astro, slot="bg", class="has-snow") снят 16.10.2026: игриво -->
   <!-- Светлая полоса после тёмных плашек — как второй блок главной porsche.com (19.10.2026) -->
-  <Section id="season" sheet class="section--blend-from-dark" label={seasonPacks.season.label} title={seasonPacks.season.title}>
+  <Section id="season" sheet label={seasonPacks.season.label} title={seasonPacks.season.title}>
     <SeasonPacks href={calcHref} />
   </Section>
 
   <!-- Гарантии — их «Drive.»: тёмная полоса, заголовок по центру, лента карточек со
        стрелками выходит нижней половиной на белое. Сверху — плавный вход с белого -->
-  <Section id="guarantees" title={guarantees.title} dark stage class="section--band section--from-light">
+  <Section id="guarantees" title={guarantees.title} dark stage class="section--band">
     <Guarantees items={guarantees.items} />
   </Section>
 
@@ -65,7 +65,7 @@ const calcHref = url('/calc/');
   </Section>
 
   <!-- Вопросы — обратно на тёмное плавным переходом с белого -->
-  <Section id="faq" dark class="section--blend-from-light">
+  <Section id="faq" dark>
     <Faq title={faq.title} items={faq.items} />
   </Section>
 

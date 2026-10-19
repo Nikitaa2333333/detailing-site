@@ -17,7 +17,7 @@ const { footer, contacts, services } = content;
 const { brand, year = new Date().getFullYear() } = Astro.props;
 ---
 
-<footer class="footer on-dark" id="footer">
+<footer class="footer on-dark" id="footer" data-bg="#010205">
   <div class="footer-main">
     <div class="container">
       <a class="logo brand-logo" href={url('/')} aria-label={brand.name}>{brand.name}</a>

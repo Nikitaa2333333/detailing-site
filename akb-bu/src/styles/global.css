@@ -176,6 +176,8 @@ p { margin: 0; }
 a { color: inherit; text-decoration: none; }
 img, video { max-width: 100%; display: block; }
 button, input, textarea, select { font: inherit; }
+/* без синей вспышки браузера при тапе — у кнопок своё состояние */
+a, button { -webkit-tap-highlight-color: transparent; }
 
 /* Метки секций и чипы — тем же шрифтом, служебный вес (моноширинный слой снят 19.10.2026) */
 .mono,
@@ -193,20 +195,7 @@ button, input, textarea, select { font: inherit; }
 .btn--accent { background: var(--color-accent); color: var(--color-on-accent); font-weight: var(--w-bold); }
 .btn--accent:hover { background: var(--color-accent-hover); }
 
-/* Телефон: низ экрана плавно уходит в тёмное — закреплённый линейный градиент поверх
-   страницы, кликам не мешает (19.10.2026). Высота — --screen-fade-h (60–140px) */
-@media (max-width: 860px) {
-  body::after {
-    --screen-fade-h: 110px;
-    content: '';
-    position: fixed;
-    inset: auto 0 0;
-    z-index: 90;
-    height: var(--screen-fade-h);
-    background: linear-gradient(to top, rgba(1, 2, 5, 0.85) 0%, rgba(1, 2, 5, 0.45) 45%, rgba(1, 2, 5, 0) 100%);
-    pointer-events: none;
-  }
-}
+/* Градиент внизу экрана на телефоне пробовали 19.10.2026 — снят: «убери снизу экрана градиент» */
 
 /* Точки под лентой карточек (lib/carousel-dots.js) — капсула-«стекло» с точками, активная
    вытянута (их пагинация). Только телефон: на широком экране ленты — сеткой */
@@ -238,6 +227,28 @@ button, input, textarea, select { font: inherit; }
 .dots .dot.is-active { width: 28px; opacity: 1; }
 @media (max-width: 560px) {
   .dots { display: flex; }
+}
+
+
+/* Фон страницы меняется по прокрутке — как на porsche.com (19.10.2026): цвет задан не у
+   секций, а у body; scripts/motion.js плавно смешивает его между data-bg соседних секций
+   (белый → серые оттенки → тёмный). Секции прозрачные — пока скрипт работает (html.bg-scroll) */
+html.bg-scroll .section--dark,
+html.bg-scroll .section--sheet { background-color: transparent; }
+/* Содержимое секции проявляется при входе на экран и гаснет при уходе (их прозрачность) */
+@keyframes section-fade {
+  0% { opacity: 0; }
+  18% { opacity: 1; }
+  86% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@supports (animation-timeline: view()) {
+  html.bg-scroll .section > .container { animation: section-fade linear both; }
+  /* таймлайн отдельным правилом: минификатор сворачивает его в шорткат, Chrome не парсит */
+  html.bg-scroll .section > .container { animation-timeline: view(); animation-range: cover 0% cover 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.bg-scroll .section > .container { animation: none; }
 }
 
 /* Логотип-начертание «DS SEVER» — растянутый, как знак Porsche (19.10.2026, вариант Г4):
@@ -326,7 +337,7 @@ mark {
 .section.section--band {
   --band-cut: calc(var(--section-gap) + 190px);
   background: linear-gradient(to bottom,
-    var(--color-ink) 0, var(--color-ink) calc(100% - var(--band-cut)),
+    transparent 0, transparent calc(100% - var(--band-cut)),
     var(--color-page) calc(100% - var(--band-cut)), var(--color-page) 100%);
   color: var(--color-white);
 }

@@ -331,6 +331,11 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
     }
+    /* при нажатии — та же белая заливка (19.10.2026: «эффект при нажатии ужасный» —
+       срабатывало наведение и кнопка становилась серым стеклом) */
+    .tile:hover .tile-go,
+    .tile-go:hover,
+    .tile-go:active { background: var(--color-white); }
     .tile-go svg { display: none; }
     .tile-go-label { max-width: none; opacity: 1; }
     .tiles-cta { margin-top: var(--sp-48); }
