@@ -89,25 +89,24 @@ const arrow = (d) => `<path d="${d}" fill="none" stroke="currentColor" stroke-wi
   }
   .g-track::-webkit-scrollbar { display: none; }
   /* Карточка — их светлая плашка: #EFF0F2, радиус 32, заголовок 32/400, текст 16/24 */
+  /* По содержимому, текст сверху (19.10.2026: пустота над текстом снята — иконок и фото нет) */
   .g-card {
     scroll-snap-align: start;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    min-height: 380px;
+    justify-content: flex-start;
     overflow: hidden;
     border-radius: var(--r-tile);
     background: var(--color-tile);
     color: var(--color-ink);
   }
   .g-img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
-  .g-body { display: grid; gap: var(--sp-16); padding: var(--sp-32) var(--sp-28) var(--sp-28); }
+  .g-body { display: grid; gap: var(--sp-12); padding: var(--sp-32) var(--sp-28); }
   .g-title { font-size: var(--text-tile); }
   .g-text { font-size: var(--text-body); line-height: 1.5; max-width: 52ch; }
 
   @media (max-width: 860px) {
     .g-track { grid-auto-columns: 86%; column-gap: var(--sp-12); }
-    .g-card { min-height: 300px; }
-    .g-body { padding: var(--sp-24) var(--sp-20) var(--sp-20); }
+    .g-body { padding: var(--sp-24) var(--sp-20); }
   }
 </style>

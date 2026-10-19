@@ -44,6 +44,8 @@ const icon = {
 
 <div class="menu" id="site-menu" aria-hidden="true" data-menu>
   <nav class="menu-main" aria-label="Направления">
+    <!-- логотип в открытом меню — шапка под ним закрыта (19.10.2026) -->
+    <a class="menu-logo brand-logo" href={url('/')} aria-label={brand.name}>{brand.name}</a>
     <ul class="menu-cats">
       {categories.map((c, i) => (
         <li>
@@ -256,6 +258,16 @@ const icon = {
     background: var(--color-page);
     color: var(--color-ink);
   }
+  .menu-main { position: relative; }
+  /* Логотип — в верхнем поле колонки, кегль как в шапке; по высоте — на линии кнопки «закрыть» */
+  .menu-logo {
+    position: absolute;
+    top: 52px;              /* центр круглой «закрыть» (верх 20 + 64/2) */
+    left: 48px;
+    font-size: 1.375rem;
+    line-height: 1;
+    transform: translateY(-50%);
+  }
   .menu-cats { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
   .menu-cat {
     width: 100%;
@@ -415,6 +427,8 @@ const icon = {
     /* телефон: связь не прибита — на высоте экрана телефона прибитый блок закрывал чипы
        ссылок, и не было видно, что ниже есть ещё пункты (19.10.2026). Встаёт после чипов */
     .menu-extra { position: static; margin-bottom: 0; padding: 0; background: none; }
+    /* телефон: крестик — круг 48px с верхом 12px, его центр на 36px; логотип — по этой линии */
+    .menu-logo { top: 36px; left: var(--gutter); font-size: 1.05rem; transform: translateY(-50%); }
     /* в разделах фон серый — крестику белый кружок, иначе он сливается с фоном */
     .menu.is-sub .menu-close { background: var(--color-page); }
   }
