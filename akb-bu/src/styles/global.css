@@ -237,7 +237,8 @@ mark {
 /* Плавный переход с тёмной полосы на светлую (как на porsche.com): верх секции начинается
    цветом основы и по сглаженной кривой уходит в белый. Контент — уже на белом: высоту
    перехода добавляем к верхнему отступу. Длина — ручка --blend-h (240–480px) */
-.section--blend-from-dark {
+/* два класса — сильнее .section--sheet, чей `background` ниже по файлу сбрасывал градиент */
+.section.section--blend-from-dark {
   --blend-h: clamp(240px, 42vh, 440px);
   padding-top: calc(var(--section-gap) + var(--blend-h));
   background-color: var(--color-page);
