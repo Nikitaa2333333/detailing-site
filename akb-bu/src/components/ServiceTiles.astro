@@ -303,7 +303,10 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
     .tiles { --tile-gap: var(--sp-12); }
     .tiles-row { flex-direction: column; }
     .tile { height: auto; }
-    .tile-front { position: relative; aspect-ratio: 16 / 10; }
+    /* все плашки одной высоты, вытянутые — как карточки Porsche на телефоне (было 16:10:
+       чипы налезали на название, высота разная) */
+    .tile-front { position: relative; aspect-ratio: 4 / 5; }
+    .tile-chips .chip:nth-child(n + 3) { display: none; }
     .tile-back,
     .tile:hover .tile-back,
     .tile:focus-within .tile-back {
