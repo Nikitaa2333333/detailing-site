@@ -159,13 +159,14 @@ const frames = hero.frames ?? [hero.media];
     padding-top: 0.6em;
   }
 
-  /* Низ кадра растворяется в цвет основы — переход к следующей полосе без шва */
+  /* Низ кадра темнеет снизу вверх (их приём: 185px, чёрный .8 → 0) — на нём кнопки и
+     стрелка, отсюда переход в тёмную полосу ниже */
   .hero-sticky::after {
     content: '';
     position: absolute;
     inset: auto 0 0;
-    height: 22%;
-    background: var(--fade-to-ink);
+    height: var(--scrim-bottom-h);
+    background: linear-gradient(to top, var(--scrim));
     pointer-events: none;
   }
   .hero-actions {

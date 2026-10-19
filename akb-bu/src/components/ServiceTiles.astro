@@ -110,15 +110,22 @@ const { cta, more, href = '#contacts' } = Astro.props;
   @media (prefers-reduced-motion: reduce) {
     .tile-bg { animation: none; }
   }
-  /* Низ плашки уходит в тёмное — подписи читаются на любом фото (как у Porsche) */
+  /* Как у Porsche: верх плашки темнеет под названием (~20% высоты), низ — под чипами и
+     ценой (~40%). Те же ступени --scrim, что под шапкой и внизу первого экрана */
+  .tile--media::before,
   .tile--media::after {
     content: '';
     position: absolute;
-    inset: 45% 0 0;
+    inset: 0 0 auto;
     z-index: -1;
-    background: var(--fade-to-ink);
-    opacity: 0.85;
+    height: 22%;
+    background: linear-gradient(var(--scrim));
     pointer-events: none;
+  }
+  .tile--media::after {
+    inset: auto 0 0;
+    height: 42%;
+    background: linear-gradient(to top, var(--scrim));
   }
 
   .tile-front {

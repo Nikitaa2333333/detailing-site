@@ -141,6 +141,19 @@ const icon = {
     transition: background-color 0.3s var(--ease-porsche);
   }
   .header--overlay:not(.is-scrolled) { background: transparent; }
+  /* Над фото — затемнение под шапкой (их приём: 148px, чёрный .8 → 0): логотип и «Меню»
+     читаются на любом кадре. После прокрутки шапка с фоном — подложка не нужна */
+  .header--overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: -1;
+    height: var(--scrim-top-h);
+    background: linear-gradient(var(--scrim));
+    pointer-events: none;
+    transition: opacity 0.3s var(--ease-porsche);
+  }
+  .header--overlay.is-scrolled::before { opacity: 0; }
   .header-inner {
     height: var(--header-h);
     display: grid;
@@ -250,6 +263,8 @@ const icon = {
     color: var(--color-ink);
   }
   .menu-panel { display: grid; gap: var(--sp-16); align-content: start; }
+  /* своё display перебивает атрибут hidden — без этого видны разделы всех направлений сразу */
+  .menu-panel[hidden] { display: none; }
   .menu-back { display: none; }
   .menu-photo {
     width: 100%;
