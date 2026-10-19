@@ -43,6 +43,9 @@ function initBgScroll() {
     const line = innerHeight * 0.5;
     let i = 0;
     for (let k = 0; k < secs.length; k++) if (secs[k].getBoundingClientRect().top <= line) i = k;
+    // активна секция у середины экрана; содержимое остальных гаснет (их приём:
+    // на новом фоне не остаётся «чужих» кнопок и точек, нарисованных под прежний фон)
+    secs.forEach((s, k) => s.classList.toggle('is-active', k === i));
     const color = secs[i].dataset.bg;
     if (color === current) return;
     current = color;

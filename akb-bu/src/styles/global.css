@@ -240,20 +240,12 @@ html.bg-scroll .section--dark,
 html.bg-scroll .section--sheet { background-color: transparent; }
 /* смена цвета — анимацией по времени, их длительность и кривая */
 html.bg-scroll, html.bg-scroll body { transition: background-color 0.8s var(--ease-porsche); }
-/* Содержимое секции проявляется при входе на экран и гаснет при уходе (их прозрачность) */
-@keyframes section-fade {
-  0% { opacity: 0; }
-  18% { opacity: 1; }
-  86% { opacity: 1; }
-  100% { opacity: 0; }
-}
-@supports (animation-timeline: view()) {
-  html.bg-scroll .section > .container { animation: section-fade linear both; }
-  /* таймлайн отдельным правилом: минификатор сворачивает его в шорткат, Chrome не парсит */
-  html.bg-scroll .section > .container { animation-timeline: view(); animation-range: cover 0% cover 100%; }
-}
+/* Содержимое неактивных секций гаснет — одновременно со сменой фона (их приём): активна
+   секция у середины экрана (scripts/motion.js ставит .is-active) */
+html.bg-scroll .section > .container { transition: opacity 0.8s var(--ease-porsche); }
+html.bg-scroll .section:not(.is-active) > .container { opacity: 0; }
 @media (prefers-reduced-motion: reduce) {
-  html.bg-scroll .section > .container { animation: none; }
+  html.bg-scroll .section > .container { transition: none; }
 }
 
 /* Логотип-начертание «DS SEVER» — растянутый, как знак Porsche (19.10.2026, вариант Г4):
