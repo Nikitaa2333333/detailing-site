@@ -238,7 +238,10 @@ const chevron = '<path d="m8 5 5 5-5 5" fill="none" stroke="currentColor" stroke
             </div>
             <p class="order-note" data-order-note hidden></p>
           </div>
-          <button class="btn btn--glass order-add" type="button" data-go="2">{t.addMore}</button>
+          <button class="order-add" type="button" data-go="2">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 6.5v7M6.5 10h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span>{t.addMore}</span>
+          </button>
         </div>
 
         <div class="order-form">
@@ -1224,6 +1227,25 @@ const chevron = '<path d="m8 5 5 5-5 5" fill="none" stroke="currentColor" stroke
     background: var(--color-tile);
   }
   .order-car { font-size: var(--text-caption); }
+  /* «Добавить услуги» — ссылка, как «Что входит»: плюс в кружке + подчёркнутый текст,
+     под курсором — серая подложка (19.10.2026: была кнопкой) */
+  .order-add {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-8);
+    padding: 6px 10px;
+    margin-left: -10px;
+    border: none;
+    border-radius: var(--r-row);
+    background: transparent;
+    color: inherit;
+    font-size: var(--text-body);
+    cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .order-add svg { flex: none; width: 20px; height: 20px; }
+  .order-add span { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+  .order-add:hover { background: var(--color-tile); transition-duration: var(--t-hover-in); }
   .order-list { list-style: none; margin: 0 calc(var(--sp-8) * -1); padding: 0; display: grid; gap: 2px; }
   .order-list :global(.order-item) {
     display: grid;

@@ -25,9 +25,12 @@
 
   /* «Стекло» — полупрозрачная серая заливка + размытие подложки. Один приём на чипы,
      кнопки, круглые стрелки, переключатели. Крутить прозрачность в пределах 0.2–0.4 */
-  --glass-blur: blur(32px);
-  --glass-dark: rgba(156, 156, 159, 0.3);        /* на тёмном и на фото */
-  --glass-dark-hover: rgba(156, 156, 159, 0.45);
+  /* Размытие выключено (19.10.2026, «должно всё просто летать»): «стекло» есть на закреплённой
+     шапке и поверх анимированных фото — размытие пересчитывалось каждый кадр прокрутки и
+     тормозило ноутбук. Вернуть — blur(32px) и прозрачность --glass-dark обратно 0.3 */
+  --glass-blur: none;
+  --glass-dark: rgba(120, 120, 124, 0.42);       /* на тёмном и на фото; без размытия — плотнее */
+  --glass-dark-hover: rgba(140, 140, 144, 0.55);
   --glass-light: rgba(100, 101, 114, 0.235);     /* на светлом (их frosted, ≈ #D9D9DE на белом) */
   --glass-light-hover: rgba(100, 101, 114, 0.32);
   --row-hover-light: #f2f2f4;                    /* подсветка пункта на белом (меню) */
@@ -228,10 +231,22 @@ html[data-bg-theme='light'] .dots { background: var(--glass-light); color: var(-
   opacity: 0.45;      /* декоративная точка, не текст */
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  /* ширина меняется сразу: с анимацией старая и новая капсулы на миг сливались в одну длинную */
-  transition: opacity 0.2s;
 }
-.dots .dot.is-active { width: 28px; opacity: 1; }
+/* Указатель — одна капсула, едет между точками за пальцем (сдвиг ставит lib/carousel-dots.js);
+   под ней точка не видна — капсула непрозрачная */
+.dots { position: relative; }
+.dots .dot-ind {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 22px;
+  height: 8px;
+  margin-top: -4px;
+  border-radius: var(--r-full);
+  background: currentColor;
+  pointer-events: none;
+  will-change: transform;
+}
 @media (max-width: 560px) {
   .dots { display: flex; }
 }

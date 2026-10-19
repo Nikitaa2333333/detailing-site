@@ -14,7 +14,8 @@ import { url } from '../lib/paths.js';
 import { typo } from '../lib/typo.js';
 
 const { footer, contacts, services } = content;
-const { brand, year = new Date().getFullYear() } = Astro.props;
+// cta={false} — без призыва «Рассчитаем стоимость»: на странице калькулятора он повторял её саму
+const { brand, year = new Date().getFullYear(), cta = true } = Astro.props;
 const calc = url('/calc/');
 
 const groups = [
@@ -34,16 +35,18 @@ const chevron = '<path d="m5 7.5 5 5 5-5" fill="none" stroke="currentColor" stro
 
 <footer class="footer on-dark" id="footer" data-bg="#010205">
   <div class="container">
-    <div class="footer-hero">
-      <h2 class="footer-title">Рассчитаем стоимость для вашей машины</h2>
-      <p class="footer-lead">{typo(footer.about)}</p>
-      <div class="footer-actions">
-        <a class="btn btn--primary" href={calc}>Рассчитать стоимость</a>
-        <a class="btn btn--glass" href={`tel:${contacts.phoneHref}`}>Позвонить</a>
+    {cta && (
+      <div class="footer-hero">
+        <h2 class="footer-title">Рассчитаем стоимость для вашей машины</h2>
+        <p class="footer-lead">{typo(footer.about)}</p>
+        <div class="footer-actions">
+          <a class="btn btn--primary" href={calc}>Рассчитать стоимость</a>
+          <a class="btn btn--glass" href={`tel:${contacts.phoneHref}`}>Позвонить</a>
+        </div>
       </div>
-    </div>
+    )}
 
-    <div class="footer-grid">
+    <div class:list={['footer-grid', !cta && 'footer-grid--first']}>
       <div class="footer-contacts">
         <a class="footer-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
         <p>{typo(contacts.hours)}</p>
@@ -157,6 +160,7 @@ const chevron = '<path d="m5 7.5 5 5 5-5" fill="none" stroke="currentColor" stro
     gap: var(--sp-48);
     margin-top: var(--sp-120);
   }
+  .footer-grid.footer-grid--first { margin-top: 0; }   /* без призыва — контакты сразу сверху */
   .footer-contacts {
     display: grid;
     justify-items: start;

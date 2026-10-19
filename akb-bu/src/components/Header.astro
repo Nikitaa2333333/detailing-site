@@ -111,20 +111,23 @@ const icon = {
   /* Шапка над первым экраном прозрачная; после прокрутки — фон основы */
   /* Шапка видна всегда и не меняется (19.10.2026: прятать при прокрутке пробовали —
      «она всегда должна быть») */
-  const setMenu = (open: boolean) => {
+  // keyboard — меню открыли с клавиатуры: тогда фокус на первый пункт. Пальцем и мышью — нет,
+  // иначе Safari рисовал синюю рамку фокуса вокруг «Мойки и ухода» (19.10.2026)
+  const setMenu = (open: boolean, keyboard = false) => {
     menu.classList.toggle('is-open', open);
     menu.setAttribute('aria-hidden', String(!open));
     openBtn.setAttribute('aria-expanded', String(open));
     document.documentElement.style.overflow = open ? 'hidden' : '';
     if (!open) menu.classList.remove('is-sub');
-    else (menu.querySelector<HTMLElement>('.menu-cat.is-active') ?? cats[0])?.focus({ preventScroll: true });
+    else if (keyboard) (menu.querySelector<HTMLElement>('.menu-cat.is-active') ?? cats[0])?.focus({ preventScroll: true });
   };
   const show = (id: string) => {
     cats.forEach((b) => b.classList.toggle('is-active', b.dataset.menuCat === id));
     panels.forEach((p) => (p.hidden = p.dataset.menuPanel !== id));
   };
 
-  openBtn.addEventListener('click', () => setMenu(true));
+  // detail === 0 — «клик» с клавиатуры (Enter/пробел), а не пальцем или мышью
+  openBtn.addEventListener('click', (e) => setMenu(true, (e as MouseEvent).detail === 0));
   menu.querySelectorAll('[data-menu-close]').forEach((el) =>
     el.addEventListener('click', (e) => { if (e.target === el || el.matches('button')) setMenu(false); }),
   );
@@ -365,7 +368,20 @@ const icon = {
     cursor: pointer;
   }
   .menu.is-open .menu-veil { opacity: 1; }
-  .menu-close { position: absolute; top: 20px; left: 24px; width: 64px; height: 64px; }
+  /* «Закрыть» — белый круг с чёрным крестиком: «стекло» на затемнении без размытия
+     выглядело мутным серым пятном (19.10.2026) */
+  .menu-close {
+    position: absolute;
+    top: 20px;
+    left: 24px;
+    width: 64px;
+    height: 64px;
+    background: var(--color-page);
+    color: var(--color-ink);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .menu-close:hover { background: var(--color-tile); }
 
   /* ---------- Планшет и телефон: одна колонка, разделы выезжают поверх ---------- */
   @media (max-width: 900px) {
@@ -396,7 +412,9 @@ const icon = {
     }
     .menu-back svg { width: 20px; height: 20px; }
     .menu-cat.is-active { background: none; }
-    .menu-extra { margin-bottom: calc(var(--sp-32) * -1); padding-bottom: var(--sp-32); }
+    /* телефон: связь не прибита — на высоте экрана телефона прибитый блок закрывал чипы
+       ссылок, и не было видно, что ниже есть ещё пункты (19.10.2026). Встаёт после чипов */
+    .menu-extra { position: static; margin-bottom: 0; padding: 0; background: none; }
     /* в разделах фон серый — крестику белый кружок, иначе он сливается с фоном */
     .menu.is-sub .menu-close { background: var(--color-page); }
   }
