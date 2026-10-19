@@ -232,14 +232,10 @@ const frames = hero.frames ?? [hero.media];
     .hero-text { padding-top: 0; }
     .hero-sticky::after, .hero-down { display: none; }
     .hero-actions { position: static; flex-direction: column; padding-bottom: var(--sp-24); }
-    /* Как у Porsche на телефоне: одна кнопка во всю ширину, в «стекле» */
+    /* Одна кнопка во всю ширину, с заливкой (19.10.2026: «на всю ширину и зальём»).
+       width: 100% у блока — автополя .container в колонке иначе сжимают его по кнопке */
+    .hero-actions { width: 100%; }
     .hero-actions .btn { width: 100%; }
-    .hero-btn-main {
-      background: var(--glass-dark);
-      -webkit-backdrop-filter: var(--glass-blur);
-      backdrop-filter: var(--glass-blur);
-      color: var(--color-white);
-    }
     .hero-btn-alt { display: none; }
   }
   @media (prefers-reduced-motion: reduce) {
