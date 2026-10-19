@@ -50,8 +50,8 @@ const frames = hero.frames ?? [hero.media];
     <!-- Действия — внизу слева, над полом, не на машине (приём porsche.com: кнопка
          в «стекле» под заголовком первого экрана). По центру — стрелка прокрутки -->
     <div class="container hero-actions">
-      <a class="btn btn--primary" href={url('/calc/')}>{services.more}</a>
-      <a class="btn btn--glass" href="#services">{hero.cta}</a>
+      <a class="btn btn--primary hero-btn-main" href={url('/calc/')}>{services.more}</a>
+      <a class="btn btn--glass hero-btn-alt" href="#services">{hero.cta}</a>
     </div>
     <a class="round-glass hero-down" href="#calc-teaser" aria-label="Прокрутить вниз">
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12m-5-5 5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -218,8 +218,9 @@ const frames = hero.frames ?? [hero.media];
       width: 100%;
       aspect-ratio: 16 / 9;
       /* Кадр растворяется в канве сверху и снизу — без резкой кромки фото */
-      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 78%, transparent 100%);
-      mask-image: linear-gradient(to bottom, transparent 0%, #000 18%, #000 78%, transparent 100%);
+      /* Низ — очень плавный линейный уход в чёрный: от середины кадра до низа (19.10.2026) */
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 16%, #000 45%, transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0%, #000 16%, #000 45%, transparent 100%);
     }
     .hero-frame { object-position: center; }
     .hero-content {
@@ -231,7 +232,15 @@ const frames = hero.frames ?? [hero.media];
     .hero-text { padding-top: 0; }
     .hero-sticky::after, .hero-down { display: none; }
     .hero-actions { position: static; flex-direction: column; padding-bottom: var(--sp-24); }
+    /* Как у Porsche на телефоне: одна кнопка во всю ширину, в «стекле» */
     .hero-actions .btn { width: 100%; }
+    .hero-btn-main {
+      background: var(--glass-dark);
+      -webkit-backdrop-filter: var(--glass-blur);
+      backdrop-filter: var(--glass-blur);
+      color: var(--color-white);
+    }
+    .hero-btn-alt { display: none; }
   }
   @media (prefers-reduced-motion: reduce) {
     .hero { height: 100svh; }
