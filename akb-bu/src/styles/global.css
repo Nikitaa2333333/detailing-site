@@ -28,8 +28,10 @@
   --glass-blur: blur(32px);
   --glass-dark: rgba(156, 156, 159, 0.3);        /* на тёмном и на фото */
   --glass-dark-hover: rgba(156, 156, 159, 0.45);
-  --glass-light: rgba(100, 101, 114, 0.18);      /* на светлом */
-  --glass-light-hover: rgba(100, 101, 114, 0.28);
+  --glass-light: rgba(100, 101, 114, 0.235);     /* на светлом (их frosted, ≈ #D9D9DE на белом) */
+  --glass-light-hover: rgba(100, 101, 114, 0.32);
+  --row-hover-light: #f2f2f4;                    /* подсветка пункта на белом (меню) */
+  --backdrop: rgba(36, 37, 40, 0.5);             /* слой под открытым меню (их backdrop) */
 
   /* Полупрозрачные слои на тёмном фоне: подложки контролов и волосяные обводки.
      Четыре ступени на весь сайт — новых значений rgba(255,255,255,…) не заводим */
@@ -304,12 +306,12 @@ mark {
   align-items: center;
   justify-content: center;
   gap: var(--sp-8);
-  padding: 15px 26px;
+  padding: 16px 28px;            /* их кнопка: 16/28 при межстрочном 24 → высота 56 */
   border-radius: var(--r-pill);
   font-weight: var(--w-regular);
   letter-spacing: 0;
   font-size: var(--text-body);
-  line-height: 1.2;
+  line-height: 1.5;
   cursor: pointer;
   border: none;
   white-space: nowrap;

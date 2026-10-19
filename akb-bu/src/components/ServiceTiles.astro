@@ -11,10 +11,16 @@ import { categories, rub } from '../lib/catalog.js';
 import { asset } from '../lib/paths.js';
 
 const { cta, more, href = '#contacts' } = Astro.props;
+/* Ряды по две: при наведении карточка расширяется, соседняя сужается (их приём,
+   width 560 → 620 за 0.6 с) — для этого у каждого ряда своя флекс-строка */
+const rows = [];
+for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i + 2));
 ---
 
-<div class:list={['tiles', categories.length % 2 && 'tiles--odd']}>
-  {categories.map((c) => (
+<div class="tiles">
+  {rows.map((row) => (
+  <div class="tiles-row">
+  {row.map((c) => (
     <div class="tile-cell">
     <article
       class:list={['tile', c.media && 'tile--media']}
@@ -31,9 +37,12 @@ const { cta, more, href = '#contacts' } = Astro.props;
           </div>
           <div class="tile-row">
             <p class="tile-price">от {rub(c.from)}</p>
-            <span class="round-glass tile-arrow" aria-hidden="true">
-              <svg viewBox="0 0 20 20"><path d="M4 10h12m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
+            <!-- Круглая стрелка; при наведении на плашку раскрывается в «Рассчитать →».
+                 Ссылка растянута на всю плашку (::after) — клик в любом месте ведёт в калькулятор -->
+            <a class="tile-go" href={`${href}?cat=${c.id}`} aria-label={`${c.title}: рассчитать стоимость`}>
+              <span class="tile-go-label">Рассчитать</span>
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
           </div>
         </div>
       </div>
@@ -54,7 +63,8 @@ const { cta, more, href = '#contacts' } = Astro.props;
     </article>
     </div>
   ))}
-
+  </div>
+  ))}
 </div>
 
 {cta && (
@@ -72,16 +82,29 @@ const { cta, more, href = '#contacts' } = Astro.props;
      радиус 32, фото на всю плашку. Пропорция — ручка --tile-ratio (1 / 1 у Porsche; ниже
      5 / 4 не опускать — на обороте должен уместиться мини-прайс с кнопкой) */
   .tiles {
+    --tile-gap: var(--sp-28);
+    /* высота плашки — от ширины колонки (квадрат), а не от своей ширины: при наведении
+       ширина меняется, высота стоит на месте */
+    --tile-h: calc((100cqw - var(--tile-gap)) / 2);
+    container-type: inline-size;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--sp-28);
+    gap: var(--tile-gap);
+  }
+  .tiles-row { display: flex; gap: var(--tile-gap); }
+  .tile-cell {
+    flex: 1 1 0;
+    min-width: 0;
+    transition: flex-grow 0.6s cubic-bezier(0, 0, 0.2, 1);
+  }
+  /* Наведение (их приём): карточка шире на ~17%, соседняя уступает */
+  @media (hover: hover) and (min-width: 901px) {
+    .tile-cell:hover { flex-grow: 1.17; }
   }
   .tile {
     position: relative;
     overflow: hidden;
     isolation: isolate;
-    --tile-ratio: 1 / 1;
-    aspect-ratio: var(--tile-ratio);
+    height: var(--tile-h);
     border-radius: var(--r-tile);
     background: var(--gradient-sparks);
     color: var(--color-white);
@@ -153,9 +176,36 @@ const { cta, more, href = '#contacts' } = Astro.props;
     font-size: var(--text-lead);
     font-variant-numeric: tabular-nums;
   }
-  .tile-arrow { width: 44px; height: 44px; transition: background-color var(--t-hover-out) var(--ease-out), translate 0.3s var(--ease-porsche); }
+  /* Круглая стеклянная стрелка → при наведении на плашку «Рассчитать →» (их «Explore →») */
+  .tile-go {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    height: 44px;
+    min-width: 44px;
+    padding: 0 12px;
+    border-radius: var(--r-full);
+    background: var(--glass-dark);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    color: var(--color-white);
+    transition: background-color 0.25s var(--ease-porsche), gap 0.4s var(--ease-porsche), padding 0.4s var(--ease-porsche);
+  }
+  .tile-go svg { width: 20px; height: 20px; flex: none; }
+  .tile-go-label {
+    max-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    opacity: 0;
+    transition: max-width 0.4s var(--ease-porsche), opacity 0.25s var(--ease-porsche);
+  }
+  /* ссылка растянута на всю плашку: клик в любом месте — в калькулятор */
+  .tile-go::after { content: ''; position: absolute; inset: 0; }
   @media (hover: hover) {
-    .tile:hover .tile-arrow { background: var(--glass-dark-hover); translate: 4px 0; }
+    .tile:hover .tile-go { gap: var(--sp-8); padding-inline: 18px 14px; }
+    .tile:hover .tile-go-label { max-width: 8em; opacity: 1; }
+    .tile-go:hover { background: var(--glass-dark-hover); }
   }
 
   /* Оборот — «стекло» поверх фото: размытая плашка с тёмной заливкой. Без трансформов:
@@ -186,19 +236,11 @@ const { cta, more, href = '#contacts' } = Astro.props;
   /* Кнопка прижата к низу, но от последней строки прайса всегда отбита */
   .tile-back .tile-more { margin-top: auto; }
   .tile-back .tile-list { margin-bottom: var(--sp-16); }
-  /* Раскрытие: наведение (только там, где есть курсор — на тач-экране «липкий» hover
-     путает), фокус внутри (клавиатура), клик из меню и тап — .is-open */
-  @media (hover: hover) {
-    .tile:hover .tile-back { opacity: 1; }
-  }
-  .tile:focus-within .tile-back,
+  /* Мини-прайс по наведению снят 19.10.2026: как у Porsche, при наведении фото остаётся
+     на виду, карточка расширяется. Оборот открывается только классом .is-open */
   .tile.is-open .tile-back { opacity: 1; }
   .tile-back { pointer-events: none; }
-  .tile.is-open .tile-back,
-  .tile:focus-within .tile-back { pointer-events: auto; }
-  @media (hover: hover) {
-    .tile:hover .tile-back { pointer-events: auto; }
-  }
+  .tile.is-open .tile-back { pointer-events: auto; }
   .tile[data-tile] { cursor: pointer; }
   .tile-list {
     list-style: none;
@@ -239,8 +281,6 @@ const { cta, more, href = '#contacts' } = Astro.props;
     font-size: var(--text-body);
   }
 
-  .tile-cell { display: grid; }
-
   /* Призыв — не плашка и не клетка сетки: текст и кнопка отдельной строкой под плашками */
   .tiles-cta {
     display: flex;
@@ -259,22 +299,18 @@ const { cta, more, href = '#contacts' } = Astro.props;
     .tile-back { display: none; }
   }
 
-  /* Две колонки: при нечётном числе категорий первая во всю ширину, чтобы не было дыры */
-  @media (min-width: 561px) {
-    .tiles--odd .tile-cell:first-child { grid-column: span 2; }
-    .tiles--odd .tile-cell:first-child .tile { --tile-ratio: 2 / 1; }
-  }
+  /* Нечётное число категорий: последняя одна в ряду — во всю ширину той же высоты */
   @media (max-width: 900px) {
-    .tiles { gap: var(--sp-16); }
-    .tile { --tile-ratio: 4 / 5; }
+    .tiles { --tile-gap: var(--sp-16); --tile-h: calc((100cqw - var(--tile-gap)) / 2 * 1.25); }
     .tile-front, .tile-back { padding: var(--sp-20); }
   }
   /* Телефон: одна колонка, лицо 16:10. Тап переворачивает плашку: на обороте без фото —
      название, мини-прайс, кнопка; высота тянется по списку (16.10.2026: оборот поверх
      фото в рамке 16:10 не вмещал список). Наведение здесь ничего не делает */
   @media (max-width: 560px) {
-    .tiles { grid-template-columns: 1fr; gap: var(--sp-12); }
-    .tile { grid-column: auto; aspect-ratio: auto; }
+    .tiles { --tile-gap: var(--sp-12); }
+    .tiles-row { flex-direction: column; }
+    .tile { height: auto; }
     .tile-front { position: relative; aspect-ratio: 16 / 10; }
     .tile-back,
     .tile:hover .tile-back,
