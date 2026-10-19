@@ -1,28 +1,26 @@
-/* Детейлинг — база. Тёмная основа с синевой (не чистый чёрный), светлые листы-вставки,
-   серо-голубые плашки. Швейцарская типографика на Onest. Кнопки и чипы — пилюли.
-   Палитра 14.10.2026 — по референсу b2b.yandex.ru/adv/meropriyatiya (refs/). */
+/* КАРКАС (ветка redesign, 19.10.2026). Дизайн начинаем с нуля: модули, иерархия и логика
+   на месте, стиль снят — нейтральная серая шкала, системный шрифт, одинаковые малые радиусы,
+   фото заменены плашками-заглушками. Имена токенов прежние: новый дизайн = новые значения.
+   Прежний стиль (сине-чёрный, Onest, оранжевый акцент) — коммит b04a771 в main. */
 
 :root {
-  /* Цвета — сине-чёрный и светлые листы */
-  --color-page: #eef1f6;        /* светлый лист и поля на нём (Яндекс: #ebeff5) */
-  --color-tile: #e2e7f0;        /* плашка на светлом */
-  --color-tile-hover: #d8deea;
-  --color-tile-dark: #1e2837;   /* плашка на тёмной полосе */
-  --color-tile-back: #2a3548;   /* оборот плашки по наведению — светлее и плашки, и полосы */
+  /* Цвета — серая шкала: тёмные полосы остаются тёмными, светлые листы — светлыми */
+  --color-page: #f2f2f2;        /* светлый лист и поля на нём */
+  --color-tile: #e6e6e6;        /* плашка на светлом */
+  --color-tile-hover: #dcdcdc;
+  --color-tile-dark: #2a2a2a;   /* плашка на тёмной полосе */
+  --color-tile-back: #333333;   /* оборот плашки */
   --color-white: #ffffff;
-  --color-ink: #0f141e;         /* фон сайта, тёмные полосы; текст на светлом */
-  --color-coal: #191e28;        /* нижний ярус подвала — на ступень светлее основы */
-  --color-grey-text: #8090ad;   /* ТОЛЬКО плейсхолдеры */
-  --color-grey-text-dark: #a0afc8; /* ТОЛЬКО описания услуг в обороте плашки (по запросу заказчика) */
-  /* Приглушённый текст на ровном тёмном фоне — исключение из правила контраста по прямой
-     просьбе (14.10.2026): ответы FAQ и ссылки подвала, как у референса. На фото не ставить —
-     на первом экране пробовали, сине-серый на янтаре грязнит */
-  --color-text-muted: #a0afc8;
-  --color-line-ink: rgba(15, 20, 30, 0.12);
+  --color-ink: #161616;         /* фон сайта, тёмные полосы; текст на светлом */
+  --color-coal: #1f1f1f;        /* нижний ярус подвала */
+  --color-grey-text: #8a8a8a;   /* ТОЛЬКО плейсхолдеры */
+  --color-grey-text-dark: #c4c4c4;
+  --color-text-muted: #c4c4c4;
+  --color-line-ink: rgba(0, 0, 0, 0.12);
   --color-line-white: rgba(255, 255, 255, 0.14);
-  --color-ink-hover: #1e2837;   /* наведение на тёмную кнопку */
-  --color-void: #0b0f17;        /* канва под hero-кадрами, темнее тёмных полос */
-  --color-photo-black: #060708; /* чёрный фото hero: канва под кадром на телефоне, шапка */
+  --color-ink-hover: #2a2a2a;   /* наведение на тёмную кнопку */
+  --color-void: #111111;        /* канва под первым экраном */
+  --color-photo-black: #111111;
 
   /* Полупрозрачные слои на тёмном фоне: подложки контролов и волосяные обводки.
      Четыре ступени на весь сайт — новых значений rgba(255,255,255,…) не заводим */
@@ -35,25 +33,21 @@
   --color-row-hover-dark: rgba(255, 255, 255, 0.12);
   --color-row-hover-light: rgba(10, 10, 11, 0.06);
 
-  /* Янтарь из hero — единственный цветной акцент (плашка-призыв). Взят из световой балки на фото */
-  --color-amber: #ffb35c;       /* светлый край балки */
-  --color-orange: #ff8a2a;      /* ядро свечения */
-  --color-ember: #e8560f;       /* тёмный край, к которому уходит градиент */
-  /* Акцент — оранжевый балки (≈28° на круге) против синей основы (≈220°): почти
-     дополнительная пара. Контраст: тёмный текст на оранжевом ≈ 8:1, оранжевый на основе ≈ 8:1.
-     Только главное действие — шапка и «Рассчитать стоимость» */
+  /* Акцент в каркасе — без цвета: главное действие белое на тёмном, чёрное на светлом.
+     Цвет акцента выбираем заново вместе с дизайном */
+  --color-amber: #e5e5e5;
+  --color-orange: #ffffff;
+  --color-ember: #9a9a9a;
   --color-accent: var(--color-orange);
   --color-accent-hover: var(--color-amber);
-  --color-on-accent: #0b0b0c;   /* текст на оранжевом — нейтральный чёрный: синий на оранжевом спорил */
-  --cut: 18px;                  /* срез угла карточки-бирки (32 пробовали — слишком сильно) */
-  --cut-sm: 10px;               /* срез нижних углов шапки */
-  --gradient-sparks: linear-gradient(160deg, var(--color-amber) 0%, var(--color-orange) 45%, var(--color-ember) 100%);
+  --color-on-accent: #111111;
+  --cut: 0px;
+  --cut-sm: 0px;
+  --gradient-sparks: linear-gradient(160deg, #3a3a3a 0%, #2a2a2a 100%);
 
-  /* Шрифт */
-  --font-body: 'Onest Variable', system-ui, sans-serif;
-  /* Технический слой (16.10.2026, «чуть гаража»): метки, счётчики, цены-«от», чипы.
-     Только служебные строки — набор и заголовки остаются на Onest */
-  --font-mono: 'Geist Mono Variable', ui-monospace, monospace;  /* выбран 16.10.2026 из 8; отвергнуты: JetBrains, IBM Plex, Martian */
+  /* Шрифт — системный, без характера: шрифт выбираем заново */
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
   --w-regular: 400;
   --w-medium: 500;
   --w-semibold: 600;
@@ -66,12 +60,12 @@
   --text-body-lg: 1.125rem;
   --text-lead: clamp(1.0625rem, 1.6vw, 1.25rem);          /* лид под h1 и вопрос FAQ: 17 → 20 */
   --text-subhead: clamp(1.25rem, 1.6vw, 1.5rem);         /* заголовок внутри карточки, над списком */
-  --text-tile: clamp(1.5rem, 2.2vw, 2.125rem);          /* название услуги в плашке */
-  --text-heading: clamp(2.125rem, 4.4vw, 3.75rem);       /* заголовок секции: 34 → 60 (было 28 → 44) */
-  --text-heading-xl: clamp(2.25rem, 4.6vw, 4rem);        /* крупный заголовок блока: 36 → 64 (было 32 → 48) */
-  --text-question: clamp(1.125rem, 1.9vw, 1.5rem);       /* вопрос FAQ: 18 → 24 */
-  --text-display: clamp(2.25rem, 4.2vw, 4.5rem);         /* h1 — две строки над фото */
-  --text-stat: clamp(2.5rem, 4.5vw, 4rem);
+  --text-tile: clamp(1.375rem, 2vw, 1.75rem);           /* название в плашке */
+  --text-heading: clamp(1.75rem, 3vw, 2.5rem);           /* заголовок секции */
+  --text-heading-xl: clamp(2rem, 3.4vw, 2.75rem);        /* крупный заголовок блока */
+  --text-question: clamp(1.125rem, 1.6vw, 1.25rem);      /* вопрос FAQ */
+  --text-display: clamp(2rem, 4vw, 3.5rem);              /* h1 */
+  --text-stat: clamp(2.25rem, 4vw, 3.25rem);
 
   /* Spacing */
   --sp-4: 4px; --sp-8: 8px; --sp-12: 12px; --sp-16: 16px; --sp-20: 20px;
@@ -94,14 +88,13 @@
   --bullet-indent: 16px;        /* отступ текста от левого края пункта */
   --bullet-gap: 6px;            /* между пунктами — меньше, чем между абзацами */
 
-  /* Радиусы. 16.10.2026: прямые углы (3px) — «грубо, как в 2000-х»; прежние (tile 20,
-     panel 24, пилюли) — «слишком сильно». Середина — ниже */
-  --r-row: 6px;                 /* подсветка строки списка */
-  --r-input: 10px;
-  --r-tile: 12px;
-  --r-panel: 14px;
-  --r-sheet: clamp(16px, 2.2vw, 28px);  /* светлый лист во всю ширину окна — углы видны по краям */
-  --r-pill: 10px;               /* кнопки, чипы — мягкий угол, не пилюля */
+  /* Радиусы — каркас: один малый на всё, лист без скругления */
+  --r-row: 4px;
+  --r-input: 4px;
+  --r-tile: 4px;
+  --r-panel: 4px;
+  --r-sheet: 0px;
+  --r-pill: 4px;
 
   /* Движение */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -131,19 +124,12 @@ body {
   line-height: 1.5;
 }
 
-/* Швейцарская типографика, «дерзко» (16.10.2026): крупные заголовки секций тяжёлые и плотные,
-   подзаголовки карточек — на ступень легче. Было: всё 600, трекинг −0.03em */
+/* Заголовки — каркас: один вес, обычный трекинг. Характер типографики задаём заново */
 h1, h2, h3, h4 {
   margin: 0;
   font-weight: var(--w-bold);
-  line-height: 1.04;
-  letter-spacing: -0.015em;
-}
-/* трекинг разряжен 16.10.2026: −0.045em слипался («буквы прижаты») */
-h1, h2 {
-  font-weight: var(--w-black);
-  line-height: 1;
-  letter-spacing: -0.025em;
+  line-height: 1.1;
+  letter-spacing: 0;
 }
 
 p { margin: 0; }
@@ -346,3 +332,23 @@ mark {
   html { scroll-behavior: auto; }
   [data-reveal] { opacity: 1; transform: none; transition: none; }
 }
+
+/* ===== КАРКАС: заглушки вместо фото и снятые украшения (19.10.2026) =====
+   Фото первого экрана и плашек — серые прямоугольники с подписью «фото», иней сезонных
+   пакетов и тени сняты. Когда будет новый дизайн — этот блок удаляется целиком */
+.hero-media,
+.tile--media { background: var(--color-tile-dark); }
+.hero-frame,
+.tile-bg { opacity: 0 !important; animation: none !important; }
+.hero-media::after,
+.tile--media::after {
+  content: 'фото';
+  position: absolute;
+  top: var(--sp-12);
+  right: var(--sp-12);
+  font: 500 var(--text-caption) / 1 var(--font-mono);
+  color: var(--color-white);
+}
+.pack::before { display: none !important; }
+.tile--media .tile-title,
+.tile--media .tile-price { text-shadow: none; }
