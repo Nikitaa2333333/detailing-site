@@ -568,13 +568,14 @@ dialog.sheet .sheet-panel {
   box-shadow: 0 -16px 48px rgba(1, 2, 5, 0.28);
   animation: sheet-in 0.32s var(--ease-porsche);
 }
+dialog.sheet .sheet-panel:focus { outline: none; }
 @keyframes sheet-in { from { transform: translateY(100%); } }
 dialog.sheet .sheet-close { position: absolute; z-index: 1; top: var(--sp-16); right: var(--sp-16); background: var(--glass-light); color: var(--color-ink); }
 dialog.sheet .sheet-close:hover { background: var(--glass-light-hover); }
 /* крупно и свободно (19.10.2026: «мелко, кучно») — длинный состав листается внутри шторки */
 dialog.sheet .sheet-kicker { font-size: var(--text-body); font-weight: var(--w-medium); padding-right: 64px; }
 dialog.sheet .sheet-title { margin-top: var(--sp-12); font-size: var(--text-tile); letter-spacing: var(--track-head); line-height: 1.15; padding-right: 64px; }
-dialog.sheet .sheet-body { display: grid; gap: var(--sp-20); margin-top: var(--sp-32); font-size: var(--text-body-lg); line-height: 1.55; }
+dialog.sheet .sheet-body { display: grid; gap: var(--sp-20); margin-top: var(--sp-16); font-size: var(--text-body-lg); line-height: 1.55; }
 dialog.sheet .sheet-body .bullets { --bullet-gap: 12px; }
 html.sheet-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { dialog.sheet .sheet-panel { animation: none; } }

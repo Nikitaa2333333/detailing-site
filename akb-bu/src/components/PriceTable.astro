@@ -111,7 +111,8 @@ const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.va
     sheet = document.createElement('dialog');
     sheet.className = 'sheet';
     sheet.innerHTML =
-      '<div class="sheet-panel">' +
+      // фокус при открытии — на саму панель, не на крестик: иначе iPhone рисует на нём синее кольцо
+      '<div class="sheet-panel" tabindex="-1" autofocus>' +
       '<button class="round-glass sheet-close" type="button" aria-label="Закрыть"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>' +
       '<p class="sheet-kicker"></p><h3 class="sheet-title"></h3><div class="sheet-body"></div></div>';
     document.body.append(sheet);
