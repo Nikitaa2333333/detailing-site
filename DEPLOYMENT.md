@@ -71,8 +71,25 @@ git push origin main
 
 ## Ручной деплой в обход GitHub
 
-```bash
+Когда нужен: шаг SCP в Actions падает с `dial tcp 37.140.192.202:22: i/o timeout`, а с
+локальной машины порт 22 открыт — Reg.ru не пускает серверы GitHub (16.10.2026: два запуска
+подряд, сборка при этом зелёная). Тогда — руками, как ниже; после ручной заливки запуск в
+Actions остаётся красным, это нормально.
+
+**Собирать из PowerShell, не из Git Bash.** Git Bash молча превращает `BASE_PATH=/` в
+`C:/Program Files/Git/` — все стили и скрипты ведут в никуда, сайт голым текстом
+(16.10.2026 так и уехало). Если всё же из Git Bash — только с `MSYS_NO_PATHCONV=1`.
+
+```powershell
 cd akb-bu
-SITE_URL=https://dssever.ru BASE_PATH=/ SITE_NOINDEX=1 npm run build
+$env:SITE_URL='https://dssever.ru'; $env:BASE_PATH='/'; $env:SITE_NOINDEX='1'; npm run build
+Select-String 'Program Files' dist\index.html   # должно быть пусто
+```
+
+Заливка — `scp` из Git Bash (Windows-scp ругается на права `~/.ssh/config`):
+
+```bash
 scp -i ~/.ssh/noblefarm_key -r dist/. u0124240@server66.hosting.reg.ru:/var/www/u0124240/data/www/dssever.ru/
 ```
+
+После заливки открыть сайт и проверить, что `/_astro/*.css` отдаются (200).
