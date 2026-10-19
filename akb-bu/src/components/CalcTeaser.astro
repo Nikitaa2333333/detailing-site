@@ -181,9 +181,10 @@ const {
     --combo-pop: var(--color-page);
     --combo-hover: var(--row-hover-light);
     --combo-line: var(--color-line-ink);
-    --combo-sel-bg: var(--color-ink);
-    --combo-sel-fg: var(--color-white);
-    --combo-sel-hover: var(--color-ink-hover);
+    /* выбранная машина — светло-серые плашки (их вторичная): чёрной остаётся только кнопка */
+    --combo-sel-bg: var(--color-tile);
+    --combo-sel-fg: var(--color-ink);
+    --combo-sel-hover: var(--color-tile-hover);
     max-width: none;
   }
   /* Скроллбар выдачи — тонкий, в цвет, вместо системного серого */
