@@ -144,8 +144,15 @@ const icon = {
     position: absolute;
     inset: 0 0 auto;
     z-index: -1;
-    height: var(--scrim-top-h);
-    background: linear-gradient(to bottom, rgba(1, 2, 5, 0.85) 0%, rgba(1, 2, 5, 0.6) 45%, rgba(1, 2, 5, 0) 100%);
+    height: calc(var(--scrim-top-h) * 1.35);
+    /* 16 ступеней по сглаженной кривой — без видимых границ перехода (их fade-dark) */
+    background: linear-gradient(to bottom,
+      rgba(1, 2, 5, 0.85) 0%, rgba(1, 2, 5, 0.839) 8.1%, rgba(1, 2, 5, 0.808) 15.5%,
+      rgba(1, 2, 5, 0.762) 22.5%, rgba(1, 2, 5, 0.701) 29%, rgba(1, 2, 5, 0.63) 35.3%,
+      rgba(1, 2, 5, 0.551) 41.2%, rgba(1, 2, 5, 0.468) 47.1%, rgba(1, 2, 5, 0.383) 52.9%,
+      rgba(1, 2, 5, 0.299) 58.8%, rgba(1, 2, 5, 0.22) 64.7%, rgba(1, 2, 5, 0.149) 71%,
+      rgba(1, 2, 5, 0.088) 77.5%, rgba(1, 2, 5, 0.042) 84.5%, rgba(1, 2, 5, 0.011) 91.9%,
+      rgba(1, 2, 5, 0) 100%);
     pointer-events: none;
   }
   .header-inner {
