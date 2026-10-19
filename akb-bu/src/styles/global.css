@@ -234,6 +234,23 @@ mark {
 }
 .section { padding-block: var(--section-gap); }
 .section--flush-top { padding-top: 0; }
+/* Плавный переход с тёмной полосы на светлую (как на porsche.com): верх секции начинается
+   цветом основы и по сглаженной кривой уходит в белый. Контент — уже на белом: высоту
+   перехода добавляем к верхнему отступу. Длина — ручка --blend-h (240–480px) */
+.section--blend-from-dark {
+  --blend-h: clamp(240px, 42vh, 440px);
+  padding-top: calc(var(--section-gap) + var(--blend-h));
+  background-color: var(--color-page);
+  background-image: linear-gradient(to bottom,
+    rgba(1, 2, 5, 1) 0%, rgba(1, 2, 5, 0.987) 8.1%, rgba(1, 2, 5, 0.951) 15.5%,
+    rgba(1, 2, 5, 0.896) 22.5%, rgba(1, 2, 5, 0.825) 29%, rgba(1, 2, 5, 0.741) 35.3%,
+    rgba(1, 2, 5, 0.648) 41.2%, rgba(1, 2, 5, 0.55) 47.1%, rgba(1, 2, 5, 0.45) 52.9%,
+    rgba(1, 2, 5, 0.352) 58.8%, rgba(1, 2, 5, 0.259) 64.7%, rgba(1, 2, 5, 0.175) 71%,
+    rgba(1, 2, 5, 0.104) 77.5%, rgba(1, 2, 5, 0.049) 84.5%, rgba(1, 2, 5, 0.013) 91.9%,
+    rgba(1, 2, 5, 0) 100%);
+  background-size: 100% var(--blend-h);
+  background-repeat: no-repeat;
+}
 /* Тёмная полоса во всю ширину — чёрный фон, белый текст; чипы/кнопки инвертирует класс on-dark */
 .section--dark { background: var(--color-ink); color: var(--color-white); }
 .section--dark ::selection { background: var(--color-white); color: var(--color-ink); }
