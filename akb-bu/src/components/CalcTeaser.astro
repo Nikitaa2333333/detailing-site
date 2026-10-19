@@ -194,7 +194,9 @@ const {
   /* Выбранная машина — крупно (16.10.2026): марка и модель читаются издалека */
   /* Плашки и поле — одной фиксированной высоты: --teaser-row (16.10.2026: плашка марки
      была выше поля рядом) */
-  .teaser-form { --teaser-row: 72px; }
+  /* высота поля и плашек машины = высота кнопки (56); было 72 — на телефоне в полноэкранном
+     выборе поле выходило огромным (19.10.2026) */
+  .teaser-form { --teaser-row: 56px; }
   .teaser-form :global(.combo-plate) {
     height: var(--teaser-row);
     min-height: 0;
@@ -207,7 +209,7 @@ const {
     box-sizing: border-box;
     font-size: var(--text-body-lg);
   }
-  .teaser-form :global(.combo-plate-value) { font-size: var(--text-tile); }
+  .teaser-form :global(.combo-plate-value) { font-size: var(--text-subhead); }
   .teaser-form :global(.combo-class) { font-size: var(--text-body); font-weight: var(--w-medium); letter-spacing: 0; }
 
   /* Металлический блик «вжух» на кнопке пробовали 16.10.2026 — снят: лишнее */
