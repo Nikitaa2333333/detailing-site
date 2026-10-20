@@ -15,7 +15,9 @@ import { typo } from '../lib/typo.js';
 
 const { footer, contacts, services } = content;
 // cta={false} — без призыва «Рассчитаем стоимость»: на странице калькулятора он повторял её саму
-const { brand, year = new Date().getFullYear(), cta = true } = Astro.props;
+// contacts={false} — без колонки контактов: на главной прямо над подвалом блок «Адрес и
+// контакты», колонка повторяла его целиком (20.10.2026)
+const { brand, year = new Date().getFullYear(), cta = true, contacts: withContacts = true } = Astro.props;
 const calc = url('/calc/');
 
 const groups = [
@@ -46,7 +48,8 @@ const chevron = '<path d="m5 7.5 5 5 5-5" fill="none" stroke="currentColor" stro
       </div>
     )}
 
-    <div class:list={['footer-grid', !cta && 'footer-grid--first']}>
+    <div class:list={['footer-grid', !cta && 'footer-grid--first', !withContacts && 'footer-grid--links']}>
+      {withContacts && (
       <div class="footer-contacts">
         <a class="footer-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
         <p>{typo(contacts.hours)}</p>
@@ -64,6 +67,7 @@ const chevron = '<path d="m5 7.5 5 5 5-5" fill="none" stroke="currentColor" stro
           ))}
         </ul>
       </div>
+      )}
 
       {groups.map((g) => (
         <details class="footer-group" open data-footer-group>
@@ -161,6 +165,7 @@ const chevron = '<path d="m5 7.5 5 5 5-5" fill="none" stroke="currentColor" stro
     margin-top: var(--sp-120);
   }
   .footer-grid.footer-grid--first { margin-top: 0; }   /* без призыва — контакты сразу сверху */
+  @media (min-width: 1001px) { .footer-grid.footer-grid--links { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .footer-contacts {
     display: grid;
     justify-items: start;
