@@ -508,7 +508,7 @@ const short = page.tab ?? page.h1;
   .price-tabs {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start;   /* по левому краю таблицы (20.10.2026), не по центру */
     gap: var(--sp-8);
     margin-bottom: var(--sp-24);
   }
@@ -530,7 +530,7 @@ const short = page.tab ?? page.h1;
   /* скрипт включил вкладки — виден один раздел; без скрипта видны все */
   .price-tabs-on .price-block[data-block]:not([data-active]) { display: none; }
   .price-tabs-on .price-block + .price-block { margin-top: 0; }
-  .price-block-lead--tab { margin: 0 auto var(--sp-16); text-align: center; }
+  .price-block-lead--tab { margin: 0 0 var(--sp-16); }
   .price-block-head { margin-bottom: var(--sp-16); }
   .price-block-title { font-size: var(--text-tile); }
   .price-block-more {
@@ -595,7 +595,6 @@ const short = page.tab ?? page.h1;
       scrollbar-width: none;
     }
     .price-tabs::-webkit-scrollbar { display: none; }
-    .price-block-lead--tab { text-align: left; margin-left: 0; }
   }
   @media (max-width: 860px) {
     .intro { grid-template-columns: minmax(0, 1fr); }
