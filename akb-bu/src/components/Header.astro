@@ -8,7 +8,7 @@
    Ссылки ведут в калькулятор: /calc/?cat=…&sheet=…; на самой /calc/ калькулятор
    перехватывает клик по data-service-id и открывает раздел без перезагрузки. */
 import content from '../data/content.json';
-import { categories, rub } from '../lib/catalog.js';
+import { categories } from '../lib/catalog.js';
 import { url } from '../lib/paths.js';
 import { typo } from '../lib/typo.js';
 // light — светлая шапка для страниц с белым верхом (калькулятор): тёмная дымка на белом
@@ -89,12 +89,10 @@ const icon = {
             <li>
               <a href={`${calc}?cat=${c.id}&sheet=${s.id}`} data-service={s.title} data-service-id={s.id}>
                 <span class="menu-item-name">{s.title}</span>
-                {s.from != null && <span class="menu-item-price">от {rub(s.from)}</span>}
               </a>
             </li>
           ))}
         </ul>
-        <p class="menu-note">{services.menuNote}</p>
       </section>
     ))}
   </div>
@@ -334,7 +332,10 @@ const icon = {
     margin-bottom: var(--sp-8);
   }
   .menu-msg { display: flex; flex-wrap: wrap; gap: var(--sp-8); margin-top: var(--sp-16); }
-  .menu-msg .btn { padding: 10px 20px; }
+  /* мессенджеры — тот же серый, что чипы ссылок над ними (20.10.2026: «разные оттенки серого»
+     — было стекло --glass-light, темнее --color-tile) */
+  .menu-msg .btn { padding: 10px 20px; background: var(--color-tile); }
+  .menu-msg .btn:hover { background: var(--color-tile-hover); }
 
   /* Колонка 2 — разделы направления на сером */
   .menu-sub {
@@ -342,7 +343,6 @@ const icon = {
     background: var(--color-tile);
     color: var(--color-ink);
   }
-  /* колонка во всю высоту: сноска к ценам прижата к низу, как якорь (19.10.2026) */
   .menu-panel { display: flex; flex-direction: column; gap: var(--sp-16); min-height: 100%; }
   /* своё display перебивает атрибут hidden — без этого видны разделы всех направлений сразу */
   .menu-panel[hidden] { display: none; }
@@ -363,17 +363,8 @@ const icon = {
   .menu-items a:hover,
   .menu-items a:focus-visible { background: var(--glass-light); transition-duration: var(--t-hover-in); }
   .menu-item-name { line-height: 1.3; }
-  .menu-item-price { flex: none; white-space: nowrap; font-variant-numeric: tabular-nums; }
-  /* Сноска к ценам — внизу колонки, серой плашкой. Текст чёрный — приглушённого текста нет */
-  .menu-note {
-    align-self: flex-start;
-    margin-top: auto;
-    padding: 10px 14px;
-    border-radius: var(--r-input);
-    background: var(--glass-light);
-    font-size: var(--text-caption);
-    line-height: 1.45;
-  }
+  /* Цены «от» и сноска к ним в меню сняты 20.10.2026 («здесь уберём цены»): цена — на
+     странице направления и в калькуляторе, меню — только навигация */
 
   /* Колонка 3 — страница под размытием, круглая кнопка «закрыть» */
   /* Без размытия — только затемнение (19.10.2026: размытие тормозило ноутбук) */
