@@ -35,11 +35,17 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
     >
       {c.media && <img class="tile-bg" src={asset(c.media)} alt="" loading="lazy" />}
       <div class="tile-front">
-        <h3 class="tile-title">{c.title}</h3>
+        <!-- чипы разделов — наверху под названием (20.10.2026); у направления из одного раздела
+             (PDR) чип повторял название — не показываем -->
+        <div class="tile-head">
+          <h3 class="tile-title">{c.title}</h3>
+          {c.items.length > 1 && (
+            <div class="tile-chips">
+              {c.items.slice(0, 3).map((s) => <span class="chip">{s.title}</span>)}
+            </div>
+          )}
+        </div>
         <div class="tile-foot">
-          <div class="tile-chips">
-            {c.items.slice(0, 3).map((s) => <span class="chip">{s.title}</span>)}
-          </div>
           <div class="tile-row">
             <p class="tile-price">от {rub(c.from)}</p>
             <!-- Круглая стрелка; при наведении на плашку раскрывается в «Рассчитать →».
@@ -133,21 +139,21 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
   @media (prefers-reduced-motion: reduce) {
     .tile-bg { animation: none; }
   }
-  /* Как у Porsche: верх плашки темнеет под названием (~20% высоты), низ — под чипами и
-     ценой (~40%). Те же ступени --scrim, что под шапкой и внизу первого экрана */
+  /* Как у Porsche: верх плашки темнеет под названием и чипами (~34% высоты), низ — под
+     ценой (~36%). Те же ступени --scrim, что под шапкой и внизу первого экрана */
   .tile--media::before,
   .tile--media::after {
     content: '';
     position: absolute;
     inset: 0 0 auto;
     z-index: -1;
-    height: 22%;
+    height: 34%;
     background: linear-gradient(var(--scrim));
     pointer-events: none;
   }
   .tile--media::after {
     inset: auto 0 0;
-    height: 42%;
+    height: 36%;
     background: linear-gradient(to top, var(--scrim));
   }
 
@@ -163,6 +169,7 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
     font-size: var(--text-tile);
     max-width: 14ch;
   }
+  .tile-head { display: grid; gap: var(--sp-16); justify-items: start; }
   .tile-foot { display: grid; gap: var(--sp-16); }
   .tile-chips { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
   /* чипы лежат на фото — всегда тёмное стекло, на какой бы полосе ни стояла плашка */
