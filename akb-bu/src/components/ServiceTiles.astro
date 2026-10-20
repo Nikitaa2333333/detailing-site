@@ -124,9 +124,10 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
     height: 100%;
     object-fit: cover;
   }
-  /* Фото «отъезжает» при прокрутке (их приём: scale 1.14 → 1 за время появления) */
+  /* Фото «отъезжает» при прокрутке (их приём, у нас scale 1.28 → 1 за время появления) */
+  /* 1.14 (их) — «слабенько», 20.10.2026 усилено до 1.28 */
   @keyframes tile-zoom {
-    from { transform: scale(1.14); }
+    from { transform: scale(1.28); }
     to { transform: scale(1); }
   }
   @supports (animation-timeline: view()) {

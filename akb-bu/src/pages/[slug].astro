@@ -184,11 +184,13 @@ const short = page.tab ?? page.h1;
             )}
           </div>
         ))}
-        </div>
+        <!-- внутри сетки разделов: на ПК с меню слева кнопка встаёт под таблицей по её левому
+             краю, а не по центру всей полосы (20.10.2026: «плохо выглядит») -->
         <div class="price-actions">
           {isPdr
             ? <a class="btn btn--primary" href={wa} target="_blank" rel="noopener">Прислать фото в WhatsApp</a>
             : <a class="btn btn--primary" href="#zayavka">Записаться</a>}
+        </div>
         </div>
       </Section>
     )}
@@ -243,15 +245,15 @@ const short = page.tab ?? page.h1;
       </Section>
     )}
 
-    {related.length > 0 && (
-      <Section dark title="Смежные услуги">
-        <div class="on-dark-cards"><ServiceCards slugs={related} /></div>
-      </Section>
-    )}
-
     {page.faq?.length > 0 && (
       <Section id="faq" dark>
         <Faq title="Вопросы" items={page.faq} />
+      </Section>
+    )}
+
+    {related.length > 0 && (
+      <Section dark title="Смежные услуги">
+        <div class="on-dark-cards"><ServiceCards slugs={related} /></div>
       </Section>
     )}
 
@@ -354,7 +356,9 @@ const short = page.tab ?? page.h1;
     counters.forEach((el) => io.observe(el));
   }
 
-  /* Фото «отъезжает»: въезжает крупнее и к середине экрана приходит в 1 (их scale 1.14 → 1) */
+  /* Фото «отъезжает»: въезжает крупнее и к середине экрана приходит в 1. Было 1.14 (их) —
+     «слабенько», 20.10.2026 усилено до 1.3 */
+  const ZOOM = 1.3;
   const photos = [...document.querySelectorAll<HTMLElement>('[data-zoom]')];
   if (!still && photos.length) {
     let ticking = false;
@@ -364,7 +368,7 @@ const short = page.tab ?? page.h1;
       for (const p of photos) {
         const r = p.getBoundingClientRect();
         const k = Math.min(1, Math.max(0, (vh - r.top) / (vh * 0.9)));
-        p.style.setProperty('--zoom', String(1.14 - 0.14 * k));
+        p.style.setProperty('--zoom', String(ZOOM - (ZOOM - 1) * k));
       }
     };
     addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }, { passive: true });
@@ -463,7 +467,7 @@ const short = page.tab ?? page.h1;
   .fact-unit { font-size: var(--text-lead); margin-left: 0.15em; }
   .fact-label { font-size: var(--text-body); max-width: 24ch; }
   .intro-photo {
-    --zoom: 1.14;
+    --zoom: 1.3;
     margin: 0;
     aspect-ratio: 4 / 5;
     border-radius: var(--r-tile);
@@ -531,13 +535,13 @@ const short = page.tab ?? page.h1;
   .price-tab[aria-selected='true'] { background: var(--color-ink); color: var(--color-white); }
   /* ПК (20.10.2026: «всё в пилюлях, теряется»): разделы — вертикальным меню слева от таблицы,
      липким, как этапы калькулятора. Пункт — текст, выбранный — белой плашкой цвета таблицы и
-     весом. Уже 1024px — чипы над таблицей: меню отнимает ширину, пятый класс не влезает.
+     весом. Уже 1100px — чипы над таблицей: меню отнимает ширину, пятый класс не влезает.
      Таблица рядом с меню ужата (--ptable-*), чтобы все пять классов помещались без прокрутки */
-  @media (min-width: 1024px) {
+  @media (min-width: 1100px) {
     .price-tabs-on {
       display: grid;
       grid-template-columns: 200px minmax(0, 1fr);
-      gap: 0 var(--sp-24);
+      gap: 0 var(--sp-64);   /* меню отодвинуто от таблицы (20.10.2026) */
       align-items: start;
     }
     .price-tabs-on .price-tabs {
@@ -566,6 +570,7 @@ const short = page.tab ?? page.h1;
       font-weight: var(--w-semibold);
     }
     .price-tabs-on .price-block { grid-column: 2; }
+    .price-tabs-on .price-actions { grid-column: 2; justify-content: flex-start; }
     .price-tabs-on .price-table { padding-inline: var(--sp-20); }
     .price-tabs-on .price-table :global(.ptable-scroll) { --ptable-name-min: 180px; --ptable-col: 96px; }
   }
