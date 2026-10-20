@@ -509,12 +509,7 @@ const short = page.tab ?? page.h1;
   .step-text { font-size: var(--text-body-lg); line-height: 1.45; }
 
   /* смежные на тёмном — тёмные плашки */
-  .on-dark-cards :global(.scard) {
-    --scard-arrow-bg: var(--color-white);
-    --scard-arrow-fg: var(--color-ink);
-    background: var(--color-tile-dark);
-    color: var(--color-white);
-  }
+  .on-dark-cards :global(.scard) { background: var(--color-tile-dark); color: var(--color-white); }
   .on-dark-cards :global(.scard:hover) { background: var(--color-tile-back); }
 
   @media (max-width: 860px) {
