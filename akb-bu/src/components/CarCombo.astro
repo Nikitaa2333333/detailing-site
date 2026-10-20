@@ -20,6 +20,7 @@ const { id, placeholder, label } = Astro.props;
   <button class="combo-plate" type="button" hidden data-car-brand aria-label="Сменить марку">
     <span class="combo-plate-label">Марка</span>
     <span class="combo-plate-value" data-car-brand-name></span>
+    <svg class="combo-plate-edit" viewBox="0 0 20 20" aria-hidden="true"><path d="m5.5 8 4.5 4.5L14.5 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
   <div class="combo-field" data-car-field>
     <svg class="combo-icon" viewBox="0 0 20 20" aria-hidden="true">
@@ -50,6 +51,7 @@ const { id, placeholder, label } = Astro.props;
   <button class="combo-plate combo-plate--model" type="button" hidden data-car-model aria-label="Сменить модель">
     <span class="combo-plate-label">Модель</span>
     <span class="combo-plate-value"><span data-car-model-name></span><span class="combo-class" data-car-model-class></span></span>
+    <svg class="combo-plate-edit" viewBox="0 0 20 20" aria-hidden="true"><path d="m5.5 8 4.5 4.5L14.5 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
   <ul class="combo-list" id={`${id}-list`} role="listbox" hidden data-car-list></ul>
 </div>
@@ -94,12 +96,16 @@ const { id, placeholder, label } = Astro.props;
 
   /* плашки марки и модели — того же размера и формы, что поле. Внутри только значение:
      подписи «Марка» / «Модель» не нужны, «BMW | X5» читается само (подпись — для скринридера) */
+  /* 20.10.2026 («плашки должны вызывать желание кликнуть»): высота кнопки (56) и стрелка вниз
+     справа — знак «нажми, чтобы сменить», как у выпадающего списка */
   .combo-plate {
-    display: grid;
-    align-content: center;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-8);
     flex: none;
     max-width: 45%;
-    padding: 10px 24px;
+    min-height: 56px;
+    padding: 10px 16px 10px 24px;
     border: 1.5px solid transparent;
     border-radius: var(--r-pill);
     /* выбранное — инверсией, как отмеченная услуга и плитка: сразу видно, что машина выбрана */
@@ -111,6 +117,8 @@ const { id, placeholder, label } = Astro.props;
     animation: combo-plate-in 0.32s var(--ease-out);
   }
   .combo-plate:hover { background: var(--combo-sel-hover); transition-duration: var(--t-hover-in); }
+  .combo-plate-edit { flex: none; width: 20px; height: 20px; opacity: 0.85; transition: transform 0.25s var(--ease-porsche); }
+  .combo-plate:hover .combo-plate-edit { transform: translateY(2px); }
   .combo-plate:focus-visible { outline: 2px solid var(--combo-fg); outline-offset: 2px; }
   /* плашка появляется, а не подменяет поле мгновенно (анимация срабатывает при каждом показе) */
   @keyframes combo-plate-in {
@@ -127,6 +135,7 @@ const { id, placeholder, label } = Astro.props;
   .combo-plate--model [data-car-model-name] { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .combo-plate-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .combo-plate-value {
+    min-width: 0;
     display: flex;
     justify-content: space-between;
     align-items: baseline;
