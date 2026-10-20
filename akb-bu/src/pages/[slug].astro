@@ -62,6 +62,7 @@ const priceBlocks = isDir
       ...page.sections.map((s) => ({ id: s.id, title: s.title, lead: page.sectionLeads?.[s.id] ?? '', href: '', groups: s.groups })),
     ]
   : [{ id: page.section.id, title: '', lead: '', href: '', groups: page.groups }];
+const tabs = isDir && priceBlocks.length > 1; // разделы направления — чипами, один на экране
 const allRows = priceBlocks.flatMap((b) => b.groups.flatMap((g) => g.rows));
 
 const facts = page.facts ?? [];
@@ -150,27 +151,37 @@ const short = page.tab ?? page.h1;
             <CarCombo id="page-car" placeholder="Марка или модель" label="Марка и модель" />
           </div>
         </div>
-        {priceBlocks.map((b) => (
-          <div class="price-block" id={isDir ? `ceny-${b.id}` : undefined}>
-            {b.title && (
+        <!-- Направление (20.10.2026): разделы — чипами над таблицей, на экране один раздел.
+             Без скрипта видны все. Ссылка «#ceny-<раздел>» открывает свой раздел -->
+        <div class="price-blocks" data-price-blocks>
+        {tabs && (
+          <div class="price-tabs" role="tablist" aria-label="Разделы" data-price-tabs>
+            {priceBlocks.map((b, i) => (
+              <button class="price-tab" type="button" role="tab" aria-selected={i === 0 ? 'true' : 'false'} aria-controls={`ceny-${b.id}`} data-tab={b.id}>{typo(b.title)}</button>
+            ))}
+          </div>
+        )}
+        {priceBlocks.map((b, i) => (
+          <div class="price-block" id={isDir ? `ceny-${b.id}` : undefined} role={tabs ? 'tabpanel' : undefined} data-block={tabs ? b.id : undefined} data-active={tabs && i === 0 ? '' : undefined}>
+            {b.title && !tabs && (
               <div class="price-block-head">
-                <div class="price-block-row">
-                  <h3 class="price-block-title">{typo(b.title)}</h3>
-                  {b.href && (
-                    <a class="price-block-more" href={b.href}>
-                      Подробнее о разделе
-                      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </a>
-                  )}
-                </div>
+                <h3 class="price-block-title">{typo(b.title)}</h3>
                 {b.lead && <p class="price-block-lead">{typo(b.lead)}</p>}
               </div>
             )}
+            {tabs && b.lead && <p class="price-block-lead price-block-lead--tab">{typo(b.lead)}</p>}
             <div class="price-table">
               <PriceTable groups={b.groups} />
             </div>
+            {b.href && (
+              <a class="price-block-more" href={b.href}>
+                Подробнее о разделе «{typo(b.title)}»
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>
+            )}
           </div>
         ))}
+        </div>
         <div class="price-actions">
           {isPdr
             ? <a class="btn btn--primary" href={wa} target="_blank" rel="noopener">Прислать фото в WhatsApp</a>
@@ -250,6 +261,28 @@ const short = page.tab ?? page.h1;
 </Layout>
 
 <script>
+  /* Разделы направления чипами: на экране один раздел. Адрес #ceny-<раздел> открывает свой */
+  const wrap = document.querySelector<HTMLElement>('[data-price-blocks]');
+  const tabBtns = [...document.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+  if (wrap && tabBtns.length) {
+    const blocks = [...wrap.querySelectorAll<HTMLElement>('[data-block]')];
+    const show = (id: string) => {
+      tabBtns.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === id)));
+      blocks.forEach((b) => b.toggleAttribute('data-active', b.dataset.block === id));
+    };
+    tabBtns.forEach((b) => b.addEventListener('click', () => {
+      show(b.dataset.tab!);
+      b.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }));
+    const fromHash = () => {
+      const id = location.hash.replace(/^#ceny-/, '');
+      if (id !== location.hash && blocks.some((b) => b.dataset.block === id)) show(id);
+    };
+    fromHash();
+    window.addEventListener('hashchange', fromHash);
+    wrap.classList.add('price-tabs-on');
+  }
+
   import { loadCars } from '../lib/car-index-client.js';
   import { carCombo } from '../lib/car-combo.js';
   import { storedCar, storeCar, applyCar } from '../lib/page-car.js';
@@ -470,16 +503,43 @@ const short = page.tab ?? page.h1;
   }
   .price-car :global(.combo:not(.is-sheet)) { justify-content: center; }
   .price-block + .price-block { margin-top: var(--sp-48); }
+  /* Чипы разделов направления: как разделы в калькуляторе — серое стекло, выбранный чёрный.
+     На телефоне — строка с прокруткой до краёв экрана, без переноса */
+  .price-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sp-8);
+    margin-bottom: var(--sp-24);
+  }
+  .price-tab {
+    flex: none;
+    padding: 10px 18px;
+    border: 0;
+    border-radius: var(--r-full);
+    background: var(--glass-light);
+    color: var(--color-ink);
+    font: inherit;
+    font-size: var(--text-body);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .price-tab:hover { background: var(--glass-light-hover); transition-duration: var(--t-hover-in); }
+  .price-tab[aria-selected='true'] { background: var(--color-ink); color: var(--color-white); }
+  /* скрипт включил вкладки — виден один раздел; без скрипта видны все */
+  .price-tabs-on .price-block[data-block]:not([data-active]) { display: none; }
+  .price-tabs-on .price-block + .price-block { margin-top: 0; }
+  .price-block-lead--tab { margin: 0 auto var(--sp-16); text-align: center; }
   .price-block-head { margin-bottom: var(--sp-16); }
   .price-block-title { font-size: var(--text-tile); }
-  .price-block-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--sp-8) var(--sp-24); }
   .price-block-more {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    margin-top: var(--sp-16);
     font-size: var(--text-body);
     font-weight: var(--w-medium);
-    white-space: nowrap;
   }
   .price-block-more svg { width: 18px; height: 18px; transition: transform 0.25s var(--ease-porsche); }
   .price-block-more:hover svg { transform: translateX(4px); }
@@ -525,6 +585,18 @@ const short = page.tab ?? page.h1;
   .on-dark-cards :global(.scard) { background: var(--color-tile-dark); color: var(--color-white); }
   .on-dark-cards :global(.scard:hover) { background: var(--color-tile-back); }
 
+  @media (max-width: 760px) {
+    .price-tabs {
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      overflow-x: auto;
+      margin-inline: calc(var(--gutter) * -1);
+      padding-inline: var(--gutter);
+      scrollbar-width: none;
+    }
+    .price-tabs::-webkit-scrollbar { display: none; }
+    .price-block-lead--tab { text-align: left; margin-left: 0; }
+  }
   @media (max-width: 860px) {
     .intro { grid-template-columns: minmax(0, 1fr); }
     .intro-photo { aspect-ratio: 4 / 3; }
