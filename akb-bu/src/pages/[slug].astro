@@ -17,6 +17,7 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Section from '../components/Section.astro';
 import PriceTable from '../components/PriceTable.astro';
+import PriceCard from '../components/PriceCard.astro';
 import ServiceCards from '../components/ServiceCards.astro';
 import LeadForm from '../components/LeadForm.astro';
 import Faq from '../components/Faq.astro';
@@ -173,9 +174,10 @@ const short = page.tab ?? page.h1;
               </div>
             )}
             {tabs && b.lead && <p class="price-block-lead price-block-lead--tab">{typo(b.lead)}</p>}
-            <div class="price-table">
-              <PriceTable groups={b.groups} />
-            </div>
+            {/* одна услуга в разделе — карточка цены, а не таблица из одной строки (20.10.2026) */}
+            {b.groups.flatMap((g) => g.rows).length === 1
+              ? <PriceCard row={b.groups.flatMap((g) => g.rows)[0]} />
+              : <div class="price-table"><PriceTable groups={b.groups} /></div>}
             {b.href && (
               <a class="price-block-more" href={b.href}>
                 Подробнее о разделе «{typo(b.title)}»

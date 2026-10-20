@@ -1,0 +1,127 @@
+---
+/* Карточка цены — вместо таблицы, когда в разделе одна услуга (20.10.2026: «таблица из одной
+   строки — странно»; «выбрал машину — видишь одну крупную цену»).
+   Крупно — цена для класса выбранной машины (lib/page-car.js переписывает data-cells), без
+   машины — «от» по минимуму. Ниже — все пять классов строкой, класс машины выделен. Состав
+   и условия — сразу в карточке: строк нет, рвать нечего.
+   row — { name, lead, includes, terms, cells } из lib/pages.js */
+import { rub } from '../lib/catalog.js';
+import { typo } from '../lib/typo.js';
+
+const { row, classes = 5 } = Astro.props;
+const cells = row.cells.map((c) => (c && c.value != null ? [c.kind === 'exact' ? 'e' : 'f', c.value] : null));
+const known = cells.filter(Boolean).map((c) => c[1]);
+const from = known.length ? `от ${rub(Math.min(...known))}` : 'по запросу';
+const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.value) : `от ${rub(c.value)}`);
+const cols = Array.from({ length: classes }, (_, i) => i + 1);
+// у всех классов одна точная цена — без строки классов и без «от»: пять одинаковых сумм — шум
+const same = cells.length > 0 && cells.every((c) => c && c[0] === 'e' && c[1] === cells[0][1]);
+---
+
+<div class="pcard" data-pcard>
+  <div class="pcard-main">
+    <p class="pcard-name">{typo(row.name)}</p>
+    {same
+      ? <p class="pcard-price">{rub(cells[0][1])}</p>
+      : <p class="pcard-price" data-price data-cells={JSON.stringify(cells)}>{from}</p>}
+    {same
+      ? <p class="pcard-cls">Одна цена для машины любого класса</p>
+      : <p class="pcard-cls" data-pcard-cls>Выберите машину — покажем цену для её класса</p>}
+  </div>
+  {!same && (
+  <ul class="pcard-classes" aria-label="Цены по классам">
+    {cols.map((n) => (
+      <li class="pcard-class" data-col={n}>
+        <span class="pcard-class-n">{n}-й класс</span>
+        <span class="pcard-class-v">{price(row.cells[n - 1])}</span>
+      </li>
+    ))}
+  </ul>
+  )}
+  {(row.lead || row.includes.length > 0 || row.terms.length > 0) && (
+    <div class="pcard-more">
+      {row.lead && <p>{typo(row.lead)}</p>}
+      {row.includes.length > 0 && <ul class="bullets">{row.includes.map((i) => <li>{typo(i)}</li>)}</ul>}
+      {row.terms.map((t) => <p class="pcard-terms">{typo(t)}</p>)}
+    </div>
+  )}
+</div>
+
+<script>
+  /* Подпись под ценой — для какого класса она посчитана */
+  const sync = () => {
+    const cls = document.documentElement.dataset.carCls;
+    const text = !cls
+      ? 'Выберите машину — покажем цену для её класса'
+      : cls === 'p'
+        ? 'Для этой машины цену назовём после осмотра'
+        : `Цена для ${cls}-го класса`;
+    for (const el of document.querySelectorAll<HTMLElement>('[data-pcard-cls]')) el.textContent = text;
+  };
+  sync();
+  document.addEventListener('car:change', sync);
+</script>
+
+<style>
+  .pcard {
+    display: grid;
+    gap: var(--sp-24);
+    padding: var(--sp-32);
+    border-radius: var(--r-panel);
+    background: var(--color-page);
+    color: var(--color-ink);
+  }
+  .pcard-main { display: grid; gap: var(--sp-8); }
+  .pcard-name { font-size: var(--text-body-lg); font-weight: var(--w-medium); }
+  .pcard-price {
+    font-size: var(--text-heading-xl);
+    letter-spacing: var(--track-head);
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+  }
+  .pcard-cls { font-size: var(--text-body); }
+  /* Пять классов строкой; класс машины — серой подложкой и весом, как столбец в таблице */
+  .pcard-classes {
+    list-style: none;
+    margin: 0;
+    padding: var(--sp-16) 0 0;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--sp-4);
+    border-top: 1px solid var(--color-line-ink);
+  }
+  .pcard-class {
+    display: grid;
+    gap: 2px;
+    padding: var(--sp-8) var(--sp-12);
+    border-radius: var(--r-row);
+    font-variant-numeric: tabular-nums;
+  }
+  .pcard-class-n { font-size: var(--text-caption); }
+  .pcard-class-v { font-size: var(--text-body); white-space: nowrap; }
+  :global(html[data-car-cls='1']) .pcard-class[data-col='1'],
+  :global(html[data-car-cls='2']) .pcard-class[data-col='2'],
+  :global(html[data-car-cls='3']) .pcard-class[data-col='3'],
+  :global(html[data-car-cls='4']) .pcard-class[data-col='4'],
+  :global(html[data-car-cls='5']) .pcard-class[data-col='5'] {
+    background: var(--color-tile);
+    font-weight: var(--w-semibold);
+  }
+  .pcard-more {
+    display: grid;
+    gap: var(--sp-12);
+    max-width: var(--measure-text);
+    padding-top: var(--sp-16);
+    border-top: 1px solid var(--color-line-ink);
+    font-size: var(--text-body-lg);
+    line-height: 1.55;
+  }
+  .pcard-more .bullets { --bullet-gap: 8px; }
+
+  @media (max-width: 760px) {
+    .pcard { padding: var(--sp-24) var(--sp-20); }
+    /* телефон: классы — 3 + 2 в два ряда, цена не режется */
+    .pcard-classes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .pcard-class { padding: var(--sp-8); }
+  }
+</style>
