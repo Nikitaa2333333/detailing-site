@@ -704,12 +704,12 @@ const short = page.tab ?? page.h1;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
     gap: var(--sp-12);
+    align-items: start;   /* плашки — по высоте содержимого, не растягиваем по ряду (правило дизайн-системы 20.10.2026) */
   }
   .step {
     display: grid;
-    align-content: space-between;
-    gap: var(--sp-32);
-    min-height: 220px;
+    align-content: start;
+    gap: var(--sp-24);
     padding: var(--sp-24) var(--sp-20);
     border-radius: var(--r-panel);
     background: var(--color-tile-dark);
@@ -720,7 +720,7 @@ const short = page.tab ?? page.h1;
 
   /* Шаги с пояснением: номер мелко сверху, заголовок и текст; без минимальной высоты */
   .steps--rich { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
-  .steps--rich .step { min-height: 0; align-content: start; gap: var(--sp-24); padding: var(--sp-28) var(--sp-24); }
+  .steps--rich .step { padding: var(--sp-28) var(--sp-24); }
   .steps--rich .step-num { font-size: var(--text-lead); }
   .step-body { display: grid; gap: var(--sp-8); }
   .steps--rich .step-text { font-size: var(--text-subhead); letter-spacing: var(--track-head); line-height: 1.2; }
@@ -730,24 +730,27 @@ const short = page.tab ?? page.h1;
 
   /* ---------- Пилот 20.10.2026: результат, сценарии, сравнение, уход ---------- */
   .outcomes, .care, .compare, .scenarios { list-style: none; margin: 0; padding: 0; display: grid; }
+  .scenarios { display: block; }
   /* Что вы получите — 2×2 под тонкими линиями, заголовок крупно (как гарантии на главной) */
-  .outcomes { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-40) var(--sp-48); }
+  .outcomes { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-48); }   /* один промежуток */
   .outcome { display: grid; gap: var(--sp-12); align-content: start; padding-top: var(--sp-20); border-top: 1px solid var(--color-line-ink); }
   .outcome-title { font-size: var(--text-tile); letter-spacing: var(--track-head); line-height: 1.15; }
   .outcome-text { font-size: var(--text-body-lg); line-height: 1.55; max-width: 46ch; }
   /* Кому подходит / какую выбрать — карточки во всю ширину: ситуация крупно, ниже решение */
-  .scenarios { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: var(--sp-16); }
-  .scenario { display: grid; gap: var(--sp-12); align-content: start; padding: var(--sp-28) var(--sp-24); border-radius: var(--r-panel); background: var(--color-tile); }
+  /* колонками (masonry), а не сеткой рядов: в сетке под короткой карточкой промежуток до
+     следующего ряда больше, чем под длинной — правило «промежуток один и тот же» (20.10.2026) */
+  .scenarios { display: block; columns: 3 300px; column-gap: var(--sp-16); }
+  .scenario { break-inside: avoid; margin-bottom: var(--sp-16); display: grid; gap: var(--sp-12); align-content: start; padding: var(--sp-28) var(--sp-24); border-radius: var(--r-panel); background: var(--color-tile); }
   .scenario-title { font-size: var(--text-subhead); letter-spacing: var(--track-head); line-height: 1.2; }
   .scenario-text { font-size: var(--text-body-lg); line-height: 1.5; }
   /* Сравнение — две карточки рядом; текущая страница — белая с обводкой, соседняя — серая */
-  .compare { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-16); }
+  .compare { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-16); align-items: start; }
   .cmp { display: flex; flex-direction: column; gap: var(--sp-16); padding: var(--sp-32); border-radius: var(--r-tile); background: var(--color-tile); }
   .cmp--here { background: var(--color-page); box-shadow: inset 0 0 0 1.5px var(--color-ink); }
   .cmp-kicker { font-size: var(--text-caption); font-weight: var(--w-medium); }
   .cmp-title { font-size: var(--text-tile); letter-spacing: var(--track-head); line-height: 1.15; }
   .cmp-points { --bullet-gap: 10px; font-size: var(--text-body-lg); line-height: 1.45; }
-  .cmp-foot { margin-top: auto; padding-top: var(--sp-16); display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-16); flex-wrap: wrap; }
+  .cmp-foot { padding-top: var(--sp-16); display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-16); flex-wrap: wrap; }
   .cmp-foot .price-block-more { margin-top: 0; }
   .cmp-price { font-size: var(--text-lead); font-weight: var(--w-semibold); font-variant-numeric: tabular-nums; }
   /* Уход — три колонки под линиями на тёмном */
@@ -757,7 +760,7 @@ const short = page.tab ?? page.h1;
   .care-text { font-size: var(--text-body-lg); line-height: 1.55; color: var(--color-grey-text-dark); }
   @media (max-width: 860px) {
     .outcomes, .compare, .care { grid-template-columns: minmax(0, 1fr); }
-    .outcomes { gap: var(--sp-28); }
+    .outcomes { gap: var(--sp-32); }
     .cmp { padding: var(--sp-24); }
   }
 
