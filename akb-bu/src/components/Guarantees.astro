@@ -1,23 +1,21 @@
 ---
-/* Гарантии — нумерованный список под тонкими линиями (20.10.2026). Лента карточек со
+/* Гарантии — список под тонкими линиями (20.10.2026; номера 01–04 сняты в тот же день). Лента карточек со
    стрелками (их «Drive.») снята: на телефоне давала дыры между заголовком, стрелками и
    карточками, на ПК плашки растягивались вширь; третья лента подряд после пакетов — перебор.
-   ПК — четыре колонки в ряд, телефон — столбиком. Номер мелко, заголовок, текст.
+   ПК — четыре колонки в ряд, телефон — столбиком. Заголовок и текст.
    Пункты — content.json → guarantees.items (поле media больше не используется). */
 import { typo } from '../lib/typo.js';
 const { items = [] } = Astro.props;
-const num = (i) => String(i + 1).padStart(2, '0');
 ---
 
-<ol class="g-list">
-  {items.map((g, i) => (
+<ul class="g-list">
+  {items.map((g) => (
     <li class="g-item">
-      <span class="g-num" aria-hidden="true">{num(i)}</span>
       <h3 class="g-title">{typo(g.title)}</h3>
       <p class="g-text">{typo(g.text)}</p>
     </li>
   ))}
-</ol>
+</ul>
 
 <style>
   .g-list {
@@ -35,7 +33,6 @@ const num = (i) => String(i + 1).padStart(2, '0');
     padding-top: var(--sp-20);
     border-top: 1px solid var(--color-line-white);
   }
-  .g-num { font-size: var(--text-caption); font-weight: var(--w-medium); }
   .g-title { font-size: var(--text-subhead); letter-spacing: var(--track-head); line-height: 1.2; text-wrap: balance; }
   .g-text { font-size: var(--text-body); line-height: 1.55; max-width: 40ch; }
 
