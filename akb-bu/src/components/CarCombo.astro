@@ -96,16 +96,16 @@ const { id, placeholder, label } = Astro.props;
 
   /* плашки марки и модели — того же размера и формы, что поле. Внутри только значение:
      подписи «Марка» / «Модель» не нужны, «BMW | X5» читается само (подпись — для скринридера) */
-  /* 20.10.2026 («плашки должны вызывать желание кликнуть»): высота кнопки (56) и стрелка вниз
-     справа — знак «нажми, чтобы сменить», как у выпадающего списка */
+  /* 20.10.2026 («плашки должны вызывать желание кликнуть», «сделать больше»): крупнее кнопки —
+     64px, текст 20; стрелка вниз справа — знак «нажми, чтобы сменить», как у выпадающего списка */
   .combo-plate {
     display: flex;
     align-items: center;
     gap: var(--sp-8);
     flex: none;
     max-width: 45%;
-    min-height: 56px;
-    padding: 10px 16px 10px 24px;
+    min-height: 64px;
+    padding: 12px 18px 12px 26px;
     border: 1.5px solid transparent;
     border-radius: var(--r-pill);
     /* выбранное — инверсией, как отмеченная услуга и плитка: сразу видно, что машина выбрана */
@@ -117,7 +117,7 @@ const { id, placeholder, label } = Astro.props;
     animation: combo-plate-in 0.32s var(--ease-out);
   }
   .combo-plate:hover { background: var(--combo-sel-hover); transition-duration: var(--t-hover-in); }
-  .combo-plate-edit { flex: none; width: 20px; height: 20px; opacity: 0.85; transition: transform 0.25s var(--ease-porsche); }
+  .combo-plate-edit { flex: none; width: 22px; height: 22px; opacity: 0.85; transition: transform 0.25s var(--ease-porsche); }
   .combo-plate:hover .combo-plate-edit { transform: translateY(2px); }
   .combo-plate:focus-visible { outline: 2px solid var(--combo-fg); outline-offset: 2px; }
   /* плашка появляется, а не подменяет поле мгновенно (анимация срабатывает при каждом показе) */
@@ -140,7 +140,7 @@ const { id, placeholder, label } = Astro.props;
     justify-content: space-between;
     align-items: baseline;
     gap: var(--sp-12);
-    font-size: var(--text-body-lg);
+    font-size: var(--text-lead);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

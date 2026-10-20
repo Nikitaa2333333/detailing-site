@@ -53,10 +53,15 @@ const cells = isDir ? directionCells(page) : classFrom(page.groups);
 const fromText = from != null ? `от ${rub(from)}` : 'по запросу';
 const title = `${page.h1} в Москве — цена от ${from != null ? rub(from) : 'по запросу'} | ${brand.name}`;
 
-/* Строки прайса этой страницы: у услуги — её раздел, у направления — разделы без своей страницы */
+/* Строки прайса этой страницы: у услуги — её раздел; у направления (20.10.2026) — ВСЕ разделы
+   одной таблицей подряд: сначала у которых своя страница (со ссылкой «Подробнее о разделе»),
+   потом без своей. Карточки разделов с ценой «от» сняты: «почему нельзя сразу таблицу» */
 const priceBlocks = isDir
-  ? page.sections.map((s) => ({ id: s.id, title: s.title, lead: page.sectionLeads?.[s.id] ?? '', groups: s.groups }))
-  : [{ id: page.section.id, title: '', lead: '', groups: page.groups }];
+  ? [
+      ...page.children.map((p) => ({ id: p.slug, title: p.h1, lead: p.card ?? '', href: url(`/${p.slug}/`), groups: p.groups })),
+      ...page.sections.map((s) => ({ id: s.id, title: s.title, lead: page.sectionLeads?.[s.id] ?? '', href: '', groups: s.groups })),
+    ]
+  : [{ id: page.section.id, title: '', lead: '', href: '', groups: page.groups }];
 const allRows = priceBlocks.flatMap((b) => b.groups.flatMap((g) => g.rows));
 
 const facts = page.facts ?? [];
@@ -99,7 +104,6 @@ const schema = [
     : []),
 ];
 
-const children = isDir ? page.children.map((p) => p.slug) : [];
 /* Смежные: названные в pages.json, затем соседи по направлению — одной лентой, без повторов */
 const related = [...new Set([...(page.related ?? []), ...siblings(catId).map((t) => t.slug)])]
   .filter((s) => s !== page.slug)
@@ -137,7 +141,7 @@ const short = page.tab ?? page.h1;
 
     <!-- 2. Цена для машины — сразу после первого экрана, прайс открыт (как у brooklandsdetailing, 19.10.2026).
          bgLine={1}: фон белеет, едва полоса вошла в экран, — к блоку «Что это» ниже он уже белый -->
-    {(priceBlocks.length > 0 || children.length > 0) && (
+    {priceBlocks.length > 0 && (
       <Section id="cena" sheet reveal={false} bgLine={1} bgSnap class="section--solid band">
         <div class="price-head">
           <h2 class="price-title">Цена для вашей машины</h2>
@@ -146,16 +150,19 @@ const short = page.tab ?? page.h1;
             <CarCombo id="page-car" placeholder="Марка или модель" label="Марка и модель" />
           </div>
         </div>
-        {children.length > 0 && (
-          <div class="price-block band-cards">
-            <ServiceCards slugs={children} />
-          </div>
-        )}
         {priceBlocks.map((b) => (
           <div class="price-block" id={isDir ? `ceny-${b.id}` : undefined}>
             {b.title && (
               <div class="price-block-head">
-                <h3 class="price-block-title">{typo(b.title)}</h3>
+                <div class="price-block-row">
+                  <h3 class="price-block-title">{typo(b.title)}</h3>
+                  {b.href && (
+                    <a class="price-block-more" href={b.href}>
+                      Подробнее о разделе
+                      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </a>
+                  )}
+                </div>
                 {b.lead && <p class="price-block-lead">{typo(b.lead)}</p>}
               </div>
             )}
@@ -465,12 +472,18 @@ const short = page.tab ?? page.h1;
   .price-block + .price-block { margin-top: var(--sp-48); }
   .price-block-head { margin-bottom: var(--sp-16); }
   .price-block-title { font-size: var(--text-tile); }
+  .price-block-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--sp-8) var(--sp-24); }
+  .price-block-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--text-body);
+    font-weight: var(--w-medium);
+    white-space: nowrap;
+  }
+  .price-block-more svg { width: 18px; height: 18px; transition: transform 0.25s var(--ease-porsche); }
+  .price-block-more:hover svg { transform: translateX(4px); }
   .price-block-lead { margin-top: var(--sp-8); font-size: var(--text-body-lg); max-width: var(--measure-lead); }
-  /* карточки услуг на серой полосе — белые; наведение — серый темнее полосы (19.10.2026:
-     светло-серое сливалось с полосой, чёрное — «не нужно»). Текст остаётся чёрным — приглушённого
-     текста на сайте нет */
-  .band-cards :global(.scard) { background: var(--color-page); }
-  .band-cards :global(.scard:hover) { background: var(--color-tile-hover); }
   /* Цена сменилась под класс — короткий подъём, глаз замечает перемену */
   .spage :global([data-price].is-updated) { animation: price-in 0.6s var(--ease-out-expo); }
   @keyframes price-in {
