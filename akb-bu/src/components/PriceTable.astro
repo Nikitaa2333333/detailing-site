@@ -6,8 +6,9 @@
 
    Телефон (19.10.2026, «таблица нечитабельна»): не таблица, а список — услуга слева, цена
    справа, одна колонка класса; какой класс показывать — чипы над списком (класс машины
-   подставляется сам). «Что входит» на телефоне открывает шторку снизу (.sheet из global.css),
-   на ПК раскрывается строкой под услугой. Разметка одна: таблица перестраивается стилями,
+   подставляется сам). «Что входит» открывает шторку (.sheet из global.css): на телефоне —
+   снизу, на ПК — справа (20.10.2026: строка под услугой рвала таблицу); строки состава
+   остаются в HTML скрытыми — источник шторки и текст для поисковика. Разметка одна: таблица перестраивается стилями,
    все пять цен остаются в HTML.
 
    groups — [{ title, rows: [{ key, name, lead, includes, terms, cells }] }] из lib/pages.js.
@@ -128,7 +129,14 @@ const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.va
     const cls = table.dataset.cls!;
     const tr = b.closest('tr')!;
     const cell = tr.querySelector<HTMLElement>(`[data-col='${cls}']`);
-    s.querySelector('.sheet-kicker')!.textContent = cell ? `${cls}-й класс · ${cell.textContent}` : '';
+    // класс известен (машина выбрана или телефон с чипом класса) — его цена; на ПК без машины —
+    // вилка от 1-го до 5-го класса
+    const known = PHONE.matches || document.documentElement.dataset.carCls;
+    const first = tr.querySelector<HTMLElement>(`[data-col='1']`)?.textContent;
+    const last = tr.querySelector<HTMLElement>(`[data-col]:last-of-type`)?.textContent;
+    s.querySelector('.sheet-kicker')!.textContent = known
+      ? (cell ? `${cls}-й класс · ${cell.textContent}` : '')
+      : first === last ? `${first}` : `${first} — ${last} по классам`;
     s.querySelector('.sheet-title')!.textContent = b.dataset.svc ?? '';
     s.querySelector('.sheet-body')!.innerHTML = row.querySelector('.ptable-more-body')!.innerHTML;
     document.documentElement.classList.add('sheet-open');
@@ -138,13 +146,8 @@ const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.va
   for (const b of document.querySelectorAll<HTMLButtonElement>('[data-more]')) {
     const row = document.getElementById(b.dataset.more!);
     if (!row) continue;
-    b.addEventListener('click', () => {
-      if (PHONE.matches) { openSheet(b, row); return; }
-      const open = row.hidden;
-      row.hidden = !open;
-      b.setAttribute('aria-expanded', String(open));
-      b.querySelector('.ptable-more-text')!.textContent = open ? 'Свернуть' : 'Что входит';
-    });
+    // 20.10.2026: и на ПК — шторкой (справа), а не строкой под услугой: строка рвала таблицу
+    b.addEventListener('click', () => openSheet(b, row));
   }
 </script>
 
