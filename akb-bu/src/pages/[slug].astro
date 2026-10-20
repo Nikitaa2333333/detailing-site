@@ -69,7 +69,6 @@ const facts = page.facts ?? [];
 const isInt = (v) => /^\d+$/.test(v);
 const nbspNum = (v) => v.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 
-const calcHref = isDir ? url(`/calc/?cat=${catId}`) : url(`/calc/?cat=${catId}&sheet=${page.section.id}`);
 const site = Astro.site ?? Astro.url.origin;
 const abs = (path) => new URL(path, site).href;
 const prices = [...allRows.flatMap((r) => r.cells.filter(Boolean).map((c) => c.value)), ...(isDir && from != null ? [from] : [])];
@@ -105,9 +104,13 @@ const schema = [
     : []),
 ];
 
-/* Смежные: названные в pages.json, затем соседи по направлению — одной лентой, без повторов */
-const related = [...new Set([...(page.related ?? []), ...siblings(catId).map((t) => t.slug)])]
-  .filter((s) => s !== page.slug)
+/* Смежные — только из ДРУГИХ направлений (20.10.2026: соседи по направлению уже есть в чипах
+   разделов, «нахуя повторять»). Источник — related из pages.json: у услуги свои, затем её
+   соседей; у направления — related всех его страниц. Своё направление отсекается */
+const catOf = (slug) => pageServices.find((p) => p.slug === slug)?.cat ?? pageDirections.find((d) => d.slug === slug)?.cat.id;
+const ownPages = isDir ? page.children : [page, ...siblings(catId).map((t) => pageServices.find((p) => p.slug === t.slug)).filter(Boolean)];
+const related = [...new Set([...(isDir ? [] : page.related ?? []), ...ownPages.flatMap((p) => p.related ?? [])])]
+  .filter((s) => s !== page.slug && catOf(s) !== catId)
   .slice(0, 6);
 const steps = isDir ? [] : page.steps ?? [];
 const isPdr = catId === 'pdr';
@@ -186,7 +189,6 @@ const short = page.tab ?? page.h1;
           {isPdr
             ? <a class="btn btn--primary" href={wa} target="_blank" rel="noopener">Прислать фото в WhatsApp</a>
             : <a class="btn btn--primary" href="#zayavka">Записаться</a>}
-          <a class="btn btn--glass" href={calcHref}>Несколько услуг — в калькулятор</a>
         </div>
       </Section>
     )}
@@ -527,6 +529,46 @@ const short = page.tab ?? page.h1;
   }
   .price-tab:hover { background: var(--glass-light-hover); transition-duration: var(--t-hover-in); }
   .price-tab[aria-selected='true'] { background: var(--color-ink); color: var(--color-white); }
+  /* ПК (20.10.2026: «всё в пилюлях, теряется»): разделы — вертикальным меню слева от таблицы,
+     липким, как этапы калькулятора. Пункт — текст, выбранный — белой плашкой цвета таблицы и
+     весом. Уже 1024px — чипы над таблицей: меню отнимает ширину, пятый класс не влезает.
+     Таблица рядом с меню ужата (--ptable-*), чтобы все пять классов помещались без прокрутки */
+  @media (min-width: 1024px) {
+    .price-tabs-on {
+      display: grid;
+      grid-template-columns: 200px minmax(0, 1fr);
+      gap: 0 var(--sp-24);
+      align-items: start;
+    }
+    .price-tabs-on .price-tabs {
+      grid-column: 1;
+      grid-row: 1 / span 20;
+      position: sticky;
+      top: calc(var(--header-h) + var(--sp-24));
+      flex-direction: column;
+      flex-wrap: nowrap;
+      gap: 2px;
+      margin: 0;
+    }
+    .price-tabs-on .price-tab {
+      flex: none;
+      padding: 12px 16px;
+      border-radius: var(--r-input);
+      background: transparent;
+      text-align: left;
+      white-space: normal;
+      line-height: 1.3;
+    }
+    .price-tabs-on .price-tab:hover { background: rgba(1, 2, 5, 0.05); }
+    .price-tabs-on .price-tab[aria-selected='true'] {
+      background: var(--color-page);
+      color: var(--color-ink);
+      font-weight: var(--w-semibold);
+    }
+    .price-tabs-on .price-block { grid-column: 2; }
+    .price-tabs-on .price-table { padding-inline: var(--sp-20); }
+    .price-tabs-on .price-table :global(.ptable-scroll) { --ptable-name-min: 180px; --ptable-col: 96px; }
+  }
   /* скрипт включил вкладки — виден один раздел; без скрипта видны все */
   .price-tabs-on .price-block[data-block]:not([data-active]) { display: none; }
   .price-tabs-on .price-block + .price-block { margin-top: 0; }
