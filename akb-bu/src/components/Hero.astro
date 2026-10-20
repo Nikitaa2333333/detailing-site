@@ -49,9 +49,9 @@ const video = hero.video;
       })}
     </div>
 
-    <!-- Заголовок слева, лид справа — оба в тёмном верху кадра, выше световой балки.
-         Лид под заголовком (как у b2b.yandex.ru) пробовали 14.10.2026: ложится на балку,
-         приглушённый сине-серый на янтаре грязнит — не повторять -->
+    <!-- Заголовок, подзаголовок и лид — одной колонкой слева (20.10.2026, прямая просьба:
+         «текст с правой стороны — в левую»). Лид справа был с 14.10.2026; под заголовком тогда
+         ложился на световую балку раскадровки — с роликом её нет -->
     <div class="container hero-content">
       <!-- H1 — запрос «премиальный детейлинг в Москве», слоган — подзаголовком под ним (19.10.2026) -->
       <div class="hero-head">
@@ -178,9 +178,9 @@ const video = hero.video;
     position: relative;
     width: 100%;
     display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    gap: var(--sp-40);
-    align-items: start;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-20);
+    justify-items: start;
     padding-top: calc(var(--header-h) + var(--sp-24));
   }
   /* Появления текста и кнопок нет — сняли 19.10.2026 («анимация появления тупая») */
@@ -202,8 +202,7 @@ const video = hero.video;
     font-size: var(--text-lead);
     letter-spacing: var(--track-lead);
     line-height: 1.4;
-    max-width: 40ch;
-    padding-top: 0.6em;
+    max-width: 38ch;   /* не заходит на сюжет кадра справа */
   }
 
   /* Низ кадра темнеет снизу вверх (их приём: 185px, чёрный .8 → 0) — на нём кнопки и
