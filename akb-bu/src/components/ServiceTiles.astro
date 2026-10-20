@@ -331,8 +331,19 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
     .tiles::-webkit-scrollbar { display: none; }
     .tiles-row { display: contents; }
     .tile-cell { flex: 0 0 86%; scroll-snap-align: start; }
-    .tile { height: auto; }
+    .tile { height: auto; background: var(--color-ink); }
     .tile-front { position: relative; aspect-ratio: 3 / 5; }
+    /* Фото опущено (20.10.2026: чипы лежали на машине): верх карточки — чистый тёмный фон под
+       названием и чипами, фото начинается ниже (--tile-photo-top) и растворяется в фон
+       плавной кривой. Верхнее затемнение тогда не нужно */
+    .tile--media { --tile-photo-top: 30%; }
+    .tile-bg {
+      top: var(--tile-photo-top);
+      height: calc(100% - var(--tile-photo-top));
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.15) 8%, rgba(0,0,0,.5) 16%, rgba(0,0,0,.85) 24%, #000 32%);
+      mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.15) 8%, rgba(0,0,0,.5) 16%, rgba(0,0,0,.85) 24%, #000 32%);
+    }
+    .tile--media::before { display: none; }
     .tile-chips .chip:nth-child(n + 3) { display: none; }
     .tile-back { display: none; }
     .tile-row { flex-direction: column; align-items: stretch; gap: var(--sp-12); }
