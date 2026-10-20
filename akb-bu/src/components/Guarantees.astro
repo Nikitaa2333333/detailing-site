@@ -1,112 +1,49 @@
 ---
-/* Гарантии — лента карточек со стрелками, как блок «Drive.» на странице машины porsche.com
-   (19.10.2026): светлые карточки радиус 32 на тёмной полосе, нижняя половина ряда выходит
-   на белое (фон секции — .section--band). Стрелки ← → справа над лентой, лента листается
-   свайпом и колесом, карточки встают по краю (scroll-snap). Фото — content.json →
-   guarantees.items[].media; файла нет — карточка без фото. */
-import { asset } from '../lib/paths.js';
+/* Гарантии — нумерованный список под тонкими линиями (20.10.2026). Лента карточек со
+   стрелками (их «Drive.») снята: на телефоне давала дыры между заголовком, стрелками и
+   карточками, на ПК плашки растягивались вширь; третья лента подряд после пакетов — перебор.
+   ПК — четыре колонки в ряд, телефон — столбиком. Номер мелко, заголовок, текст.
+   Пункты — content.json → guarantees.items (поле media больше не используется). */
 import { typo } from '../lib/typo.js';
-import fs from 'node:fs';
 const { items = [] } = Astro.props;
-const exists = (p) => p && fs.existsSync(new URL(`../../public${p}`, import.meta.url));
-const arrow = (d) => `<path d="${d}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+const num = (i) => String(i + 1).padStart(2, '0');
 ---
 
-<div class="g-carousel" data-carousel>
-  <div class="g-nav">
-    <button class="g-arrow" type="button" data-prev aria-label="Назад" disabled>
-      <svg viewBox="0 0 20 20" aria-hidden="true" set:html={arrow('M16 10H4m5-5-5 5 5 5')} />
-    </button>
-    <button class="g-arrow" type="button" data-next aria-label="Дальше">
-      <svg viewBox="0 0 20 20" aria-hidden="true" set:html={arrow('M4 10h12m-5-5 5 5-5 5')} />
-    </button>
-  </div>
-  <ul class="g-track" data-track>
-    {items.map((g) => (
-      <li class="g-card">
-        {exists(g.media) && <img class="g-img" src={asset(g.media)} alt="" loading="lazy" />}
-        <div class="g-body">
-          <h3 class="g-title">{typo(g.title)}</h3>
-          <p class="g-text">{typo(g.text)}</p>
-        </div>
-      </li>
-    ))}
-  </ul>
-</div>
-
-<script>
-  document.querySelectorAll<HTMLElement>('[data-carousel]').forEach((box) => {
-    const track = box.querySelector<HTMLElement>('[data-track]')!;
-    const prev = box.querySelector<HTMLButtonElement>('[data-prev]')!;
-    const next = box.querySelector<HTMLButtonElement>('[data-next]')!;
-    const step = () => (track.firstElementChild as HTMLElement)?.offsetWidth + parseFloat(getComputedStyle(track).columnGap || '0');
-    const sync = () => {
-      prev.disabled = track.scrollLeft < 4;
-      next.disabled = track.scrollLeft + track.clientWidth > track.scrollWidth - 4;
-    };
-    prev.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: 'smooth' }));
-    next.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }));
-    track.addEventListener('scroll', sync, { passive: true });
-    sync();
-  });
-</script>
+<ol class="g-list">
+  {items.map((g, i) => (
+    <li class="g-item">
+      <span class="g-num" aria-hidden="true">{num(i)}</span>
+      <h3 class="g-title">{typo(g.title)}</h3>
+      <p class="g-text">{typo(g.text)}</p>
+    </li>
+  ))}
+</ol>
 
 <style>
-  .g-carousel { display: grid; gap: var(--sp-24); }
-  .g-nav { display: flex; justify-content: flex-end; gap: var(--sp-8); }
-  /* Стрелки — просто значок, как у Porsche: без подложки, под курсором — стекло */
-  .g-arrow {
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    border: 0;
-    border-radius: var(--r-full);
-    background: none;
-    color: var(--color-white);
-    cursor: pointer;
-    transition: background-color var(--t-hover-out) var(--ease-out), opacity 0.2s;
-  }
-  .g-arrow:hover:not(:disabled) { background: var(--glass-dark); transition-duration: var(--t-hover-in); }
-  .g-arrow:disabled { opacity: 0.35; cursor: default; }
-  .g-arrow svg { width: 22px; height: 22px; }
-
-  /* Лента — на всю ширину окна в обе стороны: при листании карточки уходят за край экрана,
-     а не обрезаются полем секции. Первая карточка стоит по сетке (scroll-padding) */
-  .g-track {
+  .g-list {
     list-style: none;
-    margin: 0 calc(var(--gutter) * -1);
-    padding: 0 var(--gutter);
-    scroll-padding-inline: var(--gutter);
+    margin: 0;
+    padding: 0;
     display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: min(64%, 820px);
-    column-gap: var(--sp-28);
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--sp-40) var(--sp-32);
   }
-  .g-track::-webkit-scrollbar { display: none; }
-  /* Карточка — их светлая плашка: #EFF0F2, радиус 32, заголовок 32/400, текст 16/24 */
-  /* По содержимому, текст сверху (19.10.2026: пустота над текстом снята — иконок и фото нет) */
-  .g-card {
-    scroll-snap-align: start;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    overflow: hidden;
-    border-radius: var(--r-tile);
-    background: var(--color-tile);
-    color: var(--color-ink);
+  .g-item {
+    display: grid;
+    align-content: start;
+    gap: var(--sp-12);
+    padding-top: var(--sp-20);
+    border-top: 1px solid var(--color-line-white);
   }
-  .g-img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
-  .g-body { display: grid; gap: var(--sp-12); padding: var(--sp-32) var(--sp-28); }
-  .g-title { font-size: var(--text-tile); }
-  .g-text { font-size: var(--text-body); line-height: 1.5; max-width: 52ch; }
+  .g-num { font-size: var(--text-caption); font-weight: var(--w-medium); }
+  .g-title { font-size: var(--text-subhead); letter-spacing: var(--track-head); line-height: 1.2; text-wrap: balance; }
+  .g-text { font-size: var(--text-body); line-height: 1.55; max-width: 40ch; }
 
-  @media (max-width: 860px) {
-    .g-track { grid-auto-columns: 86%; column-gap: var(--sp-12); }
-    .g-body { padding: var(--sp-24) var(--sp-20); }
+  @media (max-width: 1100px) {
+    .g-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 600px) {
+    .g-list { grid-template-columns: minmax(0, 1fr); gap: var(--sp-28); }
+    .g-item { padding-top: var(--sp-16); }
   }
 </style>

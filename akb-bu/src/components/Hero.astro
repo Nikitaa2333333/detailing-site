@@ -236,16 +236,19 @@ const video = hero.video;
     translate: -50% 0;
   }
 
-  /* Телефон и планшет в портрете (19.10.2026: «первый экран полностью заполнен, акцент на
-     фото»): блок ровно в экран, текст и кнопка внизу, фото занимает всё место над ними —
-     от самого верха, под шапкой. Кадр шире места — края срезаются (cover), в приоритете
-     левая часть с фарой: --hero-photo-x (0% — левый край кадра, 50% — центр; крутить 15–50%).
-     Свет по-прежнему включается от прокрутки */
+  /* Телефон и планшет в портрете. 20.10.2026: «акцент на видео, а не на тексте, белый блок
+     снизу не торчит» — блок высотой с БОЛЬШОЙ экран (lvh): в iOS 26 панель Safari прозрачная
+     и висит поверх страницы, при 100svh под ней просвечивал белый тизер. Кнопка поднята над
+     панелью на разницу lvh − svh. Лид на телефоне спрятан — в кадре видео, заголовок и кнопка.
+     Видео занимает всё над заголовком и растворяется в чёрный длинной плавной кривой;
+     заголовок заходит на растворение (--hero-overlap) */
   @media (max-width: 860px) {
     .hero {
       --hero-travel: 36svh;
       --hero-photo-x: 4%;   /* нос машины целиком, срезается правый край (19.10.2026) */
+      --hero-overlap: 96px; /* насколько заголовок наезжает на низ видео: 60–140px */
       height: 100svh;
+      height: 100lvh;
     }
     .hero-sticky {
       position: relative;
@@ -259,20 +262,32 @@ const video = hero.video;
       flex: 1 1 0;
       min-height: 0;
       width: 100%;
-      /* сверху — под дымкой шапки, снизу кадр плавно уходит в чёрный под заголовком */
-      -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 72%, transparent 100%);
-      mask-image: linear-gradient(to bottom, #000 0%, #000 72%, transparent 100%);
+      margin-bottom: calc(var(--hero-overlap) * -1);
+      /* растворение по ease-out: 16 ступеней от 45% высоты до низа — без видимой границы */
+      --m: linear-gradient(to bottom,
+        #000 0%, #000 45%,
+        rgba(0,0,0,.987) 48.4%, rgba(0,0,0,.951) 51.9%, rgba(0,0,0,.896) 55.3%,
+        rgba(0,0,0,.825) 58.8%, rgba(0,0,0,.741) 62.2%, rgba(0,0,0,.648) 65.6%,
+        rgba(0,0,0,.55) 69.1%, rgba(0,0,0,.45) 72.5%, rgba(0,0,0,.352) 75.9%,
+        rgba(0,0,0,.259) 79.4%, rgba(0,0,0,.175) 82.8%, rgba(0,0,0,.104) 86.3%,
+        rgba(0,0,0,.049) 89.7%, rgba(0,0,0,.013) 93.1%, transparent 96.5%);
+      -webkit-mask-image: var(--m);
+      mask-image: var(--m);
     }
     .hero-frame { object-position: var(--hero-photo-x) center; }
     .hero-content {
       grid-template-columns: minmax(0, 1fr);
-      gap: var(--sp-16);
+      gap: var(--sp-12);
       padding-top: 0;
       padding-bottom: var(--sp-24);
     }
-    .hero-text { padding-top: 0; }
+    .hero-text { display: none; }
     .hero-sticky::after, .hero-down { display: none; }
-    .hero-actions { position: static; flex-direction: column; padding-bottom: var(--sp-24); }
+    .hero-actions {
+      position: static;
+      flex-direction: column;
+      padding-bottom: calc(var(--sp-24) + (100lvh - 100svh));
+    }
     /* Одна кнопка во всю ширину, с заливкой (19.10.2026: «на всю ширину и зальём»).
        width: 100% у блока — автополя .container в колонке иначе сжимают его по кнопке */
     .hero-actions { width: 100%; }

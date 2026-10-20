@@ -1,5 +1,5 @@
 ---
-/* Контакты с картой — как на сайте КТМ: три колонки (связь, адрес, часы) и Яндекс Карта
+/* Контакты с картой — как на сайте КТМ: две колонки (связь; адрес и часы) и Яндекс Карта
    во всю ширину контента. Карта — виджет Яндекса (iframe): с mapOid показывает карточку
    организации с отзывами и маршрутом, без него — метку по координатам.
    На таче карта неактивна до тапа: иначе свайп по ней крутит карту, а не страницу.
@@ -13,27 +13,40 @@ const [lon, lat] = contacts.mapCenter;
 const mapSrc = contacts.mapOid
   ? `https://yandex.ru/map-widget/v1/?oid=${contacts.mapOid}&ol=biz&z=16`
   : `https://yandex.ru/map-widget/v1/?ll=${lon}%2C${lat}&z=16&pt=${lon}%2C${lat}%2Cpm2orgl`;
+/* значки — те же, что в подвале (SiteFooter.astro), и «собака» для почты */
+const icons = {
+  Telegram: '<path d="M21.2 4.1 2.9 11.2c-.9.4-.9 1.6 0 1.9l4.5 1.5 1.7 5.4c.2.7 1.1.9 1.6.4l2.6-2.4 4.5 3.3c.6.5 1.5.1 1.7-.6l3.2-15.2c.2-.9-.7-1.7-1.5-1.4zM9.9 14.6l7.6-6.9-5.9 7.9-.4 2.9z" fill="currentColor" fill-rule="evenodd"/>',
+  WhatsApp: '<path fill-rule="evenodd" d="M12 3a9 9 0 0 0-7.8 13.4L3 21l4.7-1.2A9 9 0 1 0 12 3zM9.3 7.6c-.4.4-.9 1.2-.6 2.3.5 1.9 2.9 4.4 5 5.1.9.3 1.7 0 2.1-.5l.3-1.1-1.9-.9-.8.8c-1-.5-2.1-1.6-2.6-2.6l.8-.8-.9-2z" fill="currentColor"/>',
+  mail: '<circle cx="12" cy="12" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M15.6 9v4.2a2.4 2.4 0 0 0 4.8 0V12a8.4 8.4 0 1 0-3.3 6.7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+};
 const routeHref = `https://yandex.ru/maps/?rtext=~${lat}%2C${lon}&rtt=auto`;
 ---
 
 <div class="contacts">
   <h2 class="contacts-title">{typo(title)}</h2>
 
+  <!-- 20.10.2026 «подсобрать»: слева телефон крупно и под ним связь значками (WhatsApp,
+       Telegram, почта со значком @), справа адрес крупно и часы под ним -->
   <div class="contacts-grid">
     <div class="contacts-col">
-      <a class="contacts-big" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
+      <a class="contacts-phone" href={`tel:${contacts.phoneHref}`}>{contacts.phone}</a>
       <div class="contacts-msg">
-        <a class="btn btn--glass" href={`https://wa.me/${contacts.whatsappHref}`} target="_blank" rel="noopener">WhatsApp</a>
-        <a class="btn btn--glass" href={`https://t.me/${contacts.telegram}`} target="_blank" rel="noopener">Telegram</a>
+        <a class="round-glass contacts-ico" href={`https://wa.me/${contacts.whatsappHref}`} target="_blank" rel="noopener" aria-label="WhatsApp" title="WhatsApp">
+          <svg viewBox="0 0 24 24" aria-hidden="true" set:html={icons.WhatsApp} />
+        </a>
+        <a class="round-glass contacts-ico" href={`https://t.me/${contacts.telegram}`} target="_blank" rel="noopener" aria-label="Telegram" title="Telegram">
+          <svg viewBox="0 0 24 24" aria-hidden="true" set:html={icons.Telegram} />
+        </a>
+        <a class="btn btn--glass contacts-mail" href={`mailto:${contacts.email}`}>
+          <svg viewBox="0 0 24 24" aria-hidden="true" set:html={icons.mail} />
+          {contacts.email}
+        </a>
       </div>
     </div>
     <div class="contacts-col">
-      <p class="contacts-big">{typo(contacts.addressShort ?? contacts.address)}</p>
+      <p class="contacts-address">{typo(contacts.addressShort ?? contacts.address)}</p>
       {contacts.addressNote && <p class="contacts-note">{typo(contacts.addressNote)}</p>}
-    </div>
-    <div class="contacts-col">
-      <p class="contacts-big">{typo(contacts.hours)}</p>
-      <a class="contacts-mail" href={`mailto:${contacts.email}`}>{contacts.email}</a>
+      <p class="contacts-hours">{typo(contacts.hours)}</p>
     </div>
   </div>
 
@@ -62,32 +75,34 @@ const routeHref = `https://yandex.ru/maps/?rtext=~${lat}%2C${lon}&rtt=auto`;
   }
   .contacts-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--sp-24) var(--sp-40);
   }
   .contacts-col { display: grid; gap: var(--sp-12); align-content: start; justify-items: start; }
-  /* Телефон, адрес, часы — витринные строки одного кегля, обычный вес */
-  .contacts-big {
-    font-size: var(--text-subhead);
-    letter-spacing: var(--track-lead);
-    line-height: 1.25;
+  /* Телефон — самая крупная строка блока, адрес — ступенью ниже, часы — наборным */
+  .contacts-phone {
+    font-size: var(--text-heading);
+    letter-spacing: var(--track-head);
+    line-height: 1.1;
   }
-  .contacts-note { font-size: var(--text-body-lg); }
+  .contacts-address {
+    font-size: var(--text-tile);
+    letter-spacing: var(--track-head);
+    line-height: 1.2;
+    max-width: 22ch;
+  }
+  .contacts-note, .contacts-hours { font-size: var(--text-body-lg); }
   .contacts-msg {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: var(--sp-8);
     margin-top: var(--sp-8);
   }
-  .contacts-msg .btn { padding: 10px 20px; }
-  /* Почта — их приём: подчёркнутый текст, под курсором подчёркивание уходит */
-  .contacts-mail {
-    font-size: var(--text-body-lg);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-    text-decoration-thickness: 1px;
-  }
-  .contacts-mail:hover { text-decoration-color: transparent; }
+  .contacts-ico { width: 52px; height: 52px; }
+  .contacts-ico svg { width: 24px; height: 24px; }
+  .contacts-mail { display: inline-flex; align-items: center; gap: var(--sp-8); height: 52px; padding: 0 20px 0 16px; border-radius: var(--r-full); }
+  .contacts-mail svg { flex: none; width: 22px; height: 22px; }
 
   .contacts-map-block { display: grid; gap: var(--sp-16); justify-items: start; }
 

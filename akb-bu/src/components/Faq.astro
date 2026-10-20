@@ -74,13 +74,14 @@ const { title, items = [] } = Astro.props;
   }
   .faq-item[open] .faq-chevron { transform: rotate(180deg); }
 
-  /* Ответ — белый, 18: контраст с вопросом даёт размер (25 против 18), а не цвет
-     (серый 16 пробовали 19.10.2026 — «мелко, серый — отстой») */
+  /* Ответ — 18, светло-серый (20.10.2026, прямая просьба: «текст-ответ серым»).
+     Серый 16 пробовали 19.10.2026 — «мелко»: кегль оставлен 18, серый светлый, не тёмный */
   .faq-a {
     max-width: var(--measure-text);
     padding-bottom: var(--sp-28);
     font-size: var(--text-body-lg);
     line-height: 1.6;
+    color: var(--color-grey-text-dark);
   }
 
   @media (max-width: 860px) {
