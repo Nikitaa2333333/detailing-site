@@ -35,16 +35,15 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
     >
       {c.media && <img class="tile-bg" src={asset(c.media)} alt="" loading="lazy" />}
       <div class="tile-front">
-        <!-- чипы разделов — наверху под названием (20.10.2026); у направления из одного раздела
-             (PDR) чип повторял название — не показываем -->
-        <div class="tile-head">
-          <h3 class="tile-title">{c.title}</h3>
-          {c.items.length > 1 && (
-            <div class="tile-chips">
-              {c.items.slice(0, 3).map((s) => <span class="chip">{s.title}</span>)}
-            </div>
-          )}
-        </div>
+        <!-- чипы разделов: на ПК — внизу над ценой (наверху закрывали фото), на телефоне —
+             наверху под названием, там фото опущено (20.10.2026). У направления из одного
+             раздела (PDR) чип повторял название — не показываем -->
+        <h3 class="tile-title">{c.title}</h3>
+        {c.items.length > 1 && (
+          <div class="tile-chips">
+            {c.items.slice(0, 3).map((s) => <span class="chip">{s.title}</span>)}
+          </div>
+        )}
         <div class="tile-foot">
           <div class="tile-row">
             <p class="tile-price">от {rub(c.from)}</p>
@@ -139,21 +138,21 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
   @media (prefers-reduced-motion: reduce) {
     .tile-bg { animation: none; }
   }
-  /* Как у Porsche: верх плашки темнеет под названием и чипами (~34% высоты), низ — под
-     ценой (~36%). Те же ступени --scrim, что под шапкой и внизу первого экрана */
+  /* Как у Porsche: верх плашки темнеет под названием (~22% высоты), низ — под чипами и
+     ценой (~42%); на телефоне верх — чистый фон (фото опущено). Те же ступени --scrim, что под шапкой и внизу первого экрана */
   .tile--media::before,
   .tile--media::after {
     content: '';
     position: absolute;
     inset: 0 0 auto;
     z-index: -1;
-    height: 34%;
+    height: 22%;
     background: linear-gradient(var(--scrim));
     pointer-events: none;
   }
   .tile--media::after {
     inset: auto 0 0;
-    height: 36%;
+    height: 42%;
     background: linear-gradient(to top, var(--scrim));
   }
 
@@ -162,14 +161,16 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
     inset: 0;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    gap: var(--sp-16);
     padding: var(--sp-28);
   }
+  /* ПК: чипы и цена прижаты к низу; телефон — чипы под названием (ниже, в @media 560px) */
+  .tile-chips { margin-top: auto; }
+  .tile-title + .tile-foot { margin-top: auto; }
   .tile-title {
     font-size: var(--text-tile);
     max-width: 14ch;
   }
-  .tile-head { display: grid; gap: var(--sp-16); justify-items: start; }
   .tile-foot { display: grid; gap: var(--sp-16); }
   .tile-chips { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
   /* чипы лежат на фото — всегда тёмное стекло, на какой бы полосе ни стояла плашка */
@@ -344,6 +345,8 @@ for (let i = 0; i < categories.length; i += 2) rows.push(categories.slice(i, i +
       mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,.15) 8%, rgba(0,0,0,.5) 16%, rgba(0,0,0,.85) 24%, #000 32%);
     }
     .tile--media::before { display: none; }
+    .tile-chips { margin-top: 0; }
+    .tile-foot { margin-top: auto; }
     .tile-chips .chip:nth-child(n + 3) { display: none; }
     .tile-back { display: none; }
     .tile-row { flex-direction: column; align-items: stretch; gap: var(--sp-12); }
