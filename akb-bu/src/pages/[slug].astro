@@ -686,7 +686,7 @@ const short = page.tab ?? page.h1;
   }
   /* Таблица — белая карточка на серой полосе, открыта сразу */
   .price-table {
-    padding: var(--sp-8) var(--sp-32) var(--sp-16);
+    padding: 0 var(--sp-32);   /* сверху и снизу — поля строк таблицы: подсветка класса до краёв */
     border-radius: var(--r-panel);
     background: var(--color-page);
     overflow: hidden;
@@ -783,7 +783,7 @@ const short = page.tab ?? page.h1;
   }
   @media (max-width: 560px) {
     .hero-actions .btn { width: 100%; }
-    .price-table { padding-inline: var(--sp-16); }
+    .price-table { padding: var(--sp-16) var(--sp-16) 0; }   /* телефон: столбца-подсветки нет, сверху — чипы класса */
     .price-table :global(.ptable-name) { padding-left: 0 !important; }
     .price-actions .btn { width: 100%; }
   }

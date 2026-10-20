@@ -231,8 +231,13 @@ const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.va
   :global(html[data-car-cls='4']) .ptable thead [data-col='4'],
   :global(html[data-car-cls='5']) .ptable thead [data-col='5'] {
     font-weight: var(--w-semibold);
-    border-radius: var(--r-row) var(--r-row) 0 0;
   }
+  /* Подсветка столбца — от верхнего до нижнего края белой карточки (20.10.2026: «не доходит
+     до конца плашки»): у карточки-обёртки нет отступов сверху и снизу, вместо них — поля
+     первой и последней строки. Последняя видимая строка — перед скрытой строкой состава */
+  .ptable thead th { padding-top: var(--sp-20); }
+  .ptable tbody tr.ptable-row:last-child > *,
+  .ptable tbody tr.ptable-row:nth-last-child(2):has(+ .ptable-more-row) > * { padding-bottom: var(--sp-24); }
 
   /* ---- Телефон: список «услуга — цена одного класса», чипы класса сверху --------------- */
   @media (max-width: 760px) {
