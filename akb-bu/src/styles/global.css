@@ -504,7 +504,9 @@ mark {
    Разметка: <button class="link-plus"><svg … круг+плюс …/><span>Текст</span></button>
    (или <summary class="link-plus"> в <details>). С 19.10.2026, поздно — прямоугольник-«стекло»
    с радиусом 8, без подчёркивания (просьба: «не совсем скруглённая пилюля, прозрачная»);
-   цвет — светлый холодный серый --color-more (19.10.2026: стекло «тёмное», синий «выбивается») */
+   цвет — светлый холодный серый --color-more (19.10.2026: стекло «тёмное», синий «выбивается»).
+   .link-plus--sm — мелкий, в строке прайса и карточке услуги калькулятора: акцент на названии
+   и цене, а не на кнопке (20.10.2026) */
 .link-plus {
   display: inline-flex;
   align-items: center;
@@ -525,6 +527,12 @@ mark {
 .link-plus:hover { background: var(--color-more-hover); transition-duration: var(--t-hover-in); }
 .on-dark .link-plus { background: var(--color-more-dark); color: var(--color-white); }
 .on-dark .link-plus:hover { background: var(--color-more-dark-hover); }
+.link-plus--sm {
+  gap: 6px;
+  padding: 4px 10px 4px 6px;
+  font-size: var(--text-caption);
+}
+.link-plus--sm svg { width: 16px; height: 16px; }
 .link-plus[aria-expanded='true'] svg,
 details[open] > .link-plus svg { transform: rotate(45deg); }
 

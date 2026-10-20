@@ -50,7 +50,7 @@ const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.va
                   <th scope="row" class="ptable-name">
                     <span class="ptable-svc">{typo(r.name)}</span>
                     {more && (
-                      <button class="link-plus ptable-more" type="button" aria-expanded="false" aria-controls={id} data-more={id} data-svc={r.name}>
+                      <button class="link-plus link-plus--sm ptable-more" type="button" aria-expanded="false" aria-controls={id} data-more={id} data-svc={r.name}>
                         <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 6.5v7M6.5 10h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                         <span class="ptable-more-text">Что входит</span>
                       </button>
@@ -258,15 +258,21 @@ const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.va
     .ptable, .ptable tbody, .ptable tr, .ptable th, .ptable td { display: block; min-width: 0; }
     .ptable thead { display: none; }
     .ptable { min-width: 0; }
-    .ptable-row {
+    /* Строка (20.10.2026): название и цена в одну строку крупно, цена весом;
+       мелкое «Что входит» — под названием. th раскрыт (display: contents) — его название
+       и кнопка встают в сетку строки наравне с ценой. Селектор с tr — иначе общее
+       «.ptable tr { display: block }» выше по весу и сетки нет */
+    .ptable tr.ptable-row {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: var(--sp-4) var(--sp-16);
-      align-items: start;
+      gap: var(--sp-8) var(--sp-16);
+      align-items: baseline;
       padding-block: var(--sp-16);
     }
     .ptable th, .ptable td { padding: 0; }
-    .ptable-name { width: auto; }
+    .ptable-row th.ptable-name { display: contents; }
+    .ptable-svc { grid-column: 1; grid-row: 1; font-size: var(--text-body-lg); font-weight: var(--w-medium); line-height: 1.3; }
+    .ptable-row .ptable-more { grid-column: 1 / -1; grid-row: 2; justify-self: start; margin-top: 0; }
     /* видна только колонка выбранного класса; подсветку столбца с ПК снимаем */
     .ptable td.ptable-price { display: none; background: none !important; padding: 0 !important; }
     .ptable-scroll[data-cls='1'] .ptable-row [data-col='1'],
@@ -275,7 +281,11 @@ const price = (c) => (!c ? 'по запросу' : c.kind === 'exact' ? rub(c.va
     .ptable-scroll[data-cls='4'] .ptable-row [data-col='4'],
     .ptable-scroll[data-cls='5'] .ptable-row [data-col='5'] {
       display: block;
+      grid-column: 2;
+      grid-row: 1;
       font-size: var(--text-body-lg);
+      font-weight: var(--w-semibold);
+      white-space: nowrap;
       text-align: right;
     }
     .ptable-group th { padding-top: var(--sp-24); padding-bottom: 0; }

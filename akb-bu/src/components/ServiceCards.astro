@@ -1,7 +1,9 @@
 ---
 /* Карточки страниц услуг: сетка направления и «смежные услуги». Серая плашка, название,
    одна строка «что это», цена «от» — её lib/page-car.js переписывает под класс машины
-   (data-cells). Вся карточка — ссылка. */
+   (data-cells). Вся карточка — ссылка. 20.10.2026 («должны вызывать желание кликнуть»):
+   название крупнее, внизу цена весом и круглая стрелка — как у плашек главной; под пальцем
+   и курсором стрелка сдвигается. Цвет стрелки — инверсия карточки (--scard-arrow-*) */
 import { pageCard } from '../lib/pages.js';
 import { rub } from '../lib/catalog.js';
 import { typo } from '../lib/typo.js';
@@ -17,7 +19,12 @@ const cards = slugs.map(pageCard).filter(Boolean);
       <a class="scard" href={url(`/${c.slug}/`)}>
         <h3 class="scard-title">{typo(c.title)}</h3>
         {c.card && <p class="scard-text">{typo(c.card)}</p>}
-        <p class="scard-price" data-cells={JSON.stringify(c.cells)}>{c.from != null ? `от ${rub(c.from)}` : 'по запросу'}</p>
+        <div class="scard-foot">
+          <p class="scard-price" data-cells={JSON.stringify(c.cells)}>{c.from != null ? `от ${rub(c.from)}` : 'по запросу'}</p>
+          <span class="scard-arrow" aria-hidden="true">
+            <svg viewBox="0 0 20 20"><path d="M4 10h12m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
       </a>
     </li>
   ))}
@@ -33,6 +40,8 @@ const cards = slugs.map(pageCard).filter(Boolean);
     gap: var(--sp-16);
   }
   .scard {
+    --scard-arrow-bg: var(--color-ink);
+    --scard-arrow-fg: var(--color-white);
     display: flex;
     flex-direction: column;
     gap: var(--sp-8);
@@ -44,12 +53,33 @@ const cards = slugs.map(pageCard).filter(Boolean);
     transition: background-color var(--t-hover-out) var(--ease-out);
   }
   .scard:hover { background: var(--color-tile-hover); transition-duration: var(--t-hover-in); }
-  .scard-title { font-size: var(--text-subhead); }
-  .scard-text { font-size: var(--text-body); }
-  .scard-price {
+  .scard-title { font-size: var(--text-tile); letter-spacing: var(--track-head); line-height: 1.15; }
+  .scard-text { font-size: var(--text-body); line-height: 1.5; }
+  .scard-foot {
     margin-top: auto;
-    padding-top: var(--sp-16);
-    font-size: var(--text-body-lg);
+    padding-top: var(--sp-20);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-16);
+  }
+  .scard-price {
+    font-size: var(--text-lead);
+    font-weight: var(--w-semibold);
     font-variant-numeric: tabular-nums;
   }
+  .scard-arrow {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--r-full);
+    background: var(--scard-arrow-bg);
+    color: var(--scard-arrow-fg);
+    transition: transform 0.25s var(--ease-porsche);
+  }
+  .scard-arrow svg { width: 20px; height: 20px; }
+  .scard:hover .scard-arrow,
+  .scard:active .scard-arrow { transform: translateX(4px); }
 </style>
