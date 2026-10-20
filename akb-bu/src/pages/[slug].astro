@@ -220,25 +220,27 @@ const short = page.tab ?? page.h1;
       </Section>
     )}
 
+    <!-- 2в. Кому подходит / какую выбрать — ситуации человека, своей полосой во всю ширину
+         (20.10.2026: в колонке текста главный блок терялся) -->
+    {scenarios.length > 0 && (
+      <Section sheet reveal={false} title={page.scenariosTitle ?? 'Кому подходит'}>
+        <ul class="scenarios" data-reveal-group>
+          {scenarios.map((x) => (
+            <li class="scenario" data-reveal>
+              <p class="scenario-title">{typo(x.t)}</p>
+              <p class="scenario-text">{typo(x.d)}</p>
+            </li>
+          ))}
+        </ul>
+      </Section>
+    )}
+
     <!-- 3. Что это и когда нужно — на фоне страницы, без своего белого: ниже тёмная часть,
          и фон перетекает плавно, а не режется краем (19.10.2026) -->
     <Section sheet reveal={false}>
       <div class:list={['intro', !media && 'intro--plain']}>
         <div class="intro-text" data-reveal-group>
           {page.about?.map((p, i) => <p class:list={['intro-p', i === 0 && 'intro-p--first']} data-reveal>{typo(p)}</p>)}
-          {scenarios.length > 0 && (
-            <div class="tasks" data-reveal>
-              <h2 class="tasks-title">Кому подходит</h2>
-              <ul class="scenarios">
-                {scenarios.map((x) => (
-                  <li class="scenario">
-                    <p class="scenario-title">{typo(x.t)}</p>
-                    <p class="scenario-text">{typo(x.d)}</p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
           {!scenarios.length && page.tasks?.length > 0 && (
             <div class="tasks" data-reveal>
               <h2 class="tasks-title">Когда это нужно</h2>
@@ -733,11 +735,11 @@ const short = page.tab ?? page.h1;
   .outcome { display: grid; gap: var(--sp-12); align-content: start; padding-top: var(--sp-20); border-top: 1px solid var(--color-line-ink); }
   .outcome-title { font-size: var(--text-tile); letter-spacing: var(--track-head); line-height: 1.15; }
   .outcome-text { font-size: var(--text-body-lg); line-height: 1.55; max-width: 46ch; }
-  /* Кому подходит — карточки 2×2 в колонке текста */
-  .scenarios { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-12); }
-  .scenario { display: grid; gap: var(--sp-8); align-content: start; padding: var(--sp-20); border-radius: var(--r-panel); background: var(--color-tile); }
-  .scenario-title { font-size: var(--text-lead); font-weight: var(--w-medium); line-height: 1.25; }
-  .scenario-text { font-size: var(--text-body); line-height: 1.5; }
+  /* Кому подходит / какую выбрать — карточки во всю ширину: ситуация крупно, ниже решение */
+  .scenarios { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: var(--sp-16); }
+  .scenario { display: grid; gap: var(--sp-12); align-content: start; padding: var(--sp-28) var(--sp-24); border-radius: var(--r-panel); background: var(--color-tile); }
+  .scenario-title { font-size: var(--text-subhead); letter-spacing: var(--track-head); line-height: 1.2; }
+  .scenario-text { font-size: var(--text-body-lg); line-height: 1.5; }
   /* Сравнение — две карточки рядом; текущая страница — белая с обводкой, соседняя — серая */
   .compare { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-16); }
   .cmp { display: flex; flex-direction: column; gap: var(--sp-16); padding: var(--sp-32); border-radius: var(--r-tile); background: var(--color-tile); }
@@ -757,9 +759,6 @@ const short = page.tab ?? page.h1;
     .outcomes, .compare, .care { grid-template-columns: minmax(0, 1fr); }
     .outcomes { gap: var(--sp-28); }
     .cmp { padding: var(--sp-24); }
-  }
-  @media (max-width: 560px) {
-    .scenarios { grid-template-columns: minmax(0, 1fr); }
   }
 
   /* смежные на тёмном — тёмные плашки */
