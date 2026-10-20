@@ -47,14 +47,15 @@ export function applyCar(car) {
     const cells = JSON.parse(el.dataset.cells);
     el.textContent = cellText(cells, cls);
   }
+  // машина выбрана — подпись не нужна: марка, модель и класс уже на плашках (20.10.2026:
+  // «зачем дублируешь»); остаётся подсказка без машины и пометка для премиума
   for (const el of document.querySelectorAll('[data-car-note]')) {
     el.textContent = !car
       ? 'Цены «от». Выберите машину — покажем цены её класса.'
       : cls === PREMIUM
         ? 'Для этой машины стоимость считаем индивидуально — назовём после осмотра.'
-        : car.model
-          ? `Цены для ${car.brand} ${car.model}, ${cls}-й класс.`
-          : `Цены для ${cls}-го класса.`;
+        : '';
+    el.hidden = !el.textContent;
   }
   document.dispatchEvent(new CustomEvent('car:change', { detail: car }));
 }

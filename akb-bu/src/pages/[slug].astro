@@ -151,11 +151,18 @@ const short = page.tab ?? page.h1;
             : <a class="btn btn--primary" href="#zayavka">Записаться</a>}
         </div>
       </div>
+      <!-- фото на первом экране обязательно (20.10.2026); пока своих по услугам нет — фото
+           направления. Оно же «отъезжает» при прокрутке -->
+      {media && (
+        <figure class="hero-photo" data-zoom>
+          <img src={asset(media)} alt="" fetchpriority="high" decoding="async" />
+        </figure>
+      )}
     </Section>
 
     <!-- 2. Цена для машины — сразу после первого экрана, прайс открыт (как у brooklandsdetailing, 19.10.2026).
          bgLine={1}: фон белеет, едва полоса вошла в экран, — к блоку «Что это» ниже он уже белый -->
-    {priceBlocks.length > 0 && (
+    {isDir && priceBlocks.length > 0 && (
       <Section id="cena" sheet reveal={false} bgLine={1} bgSnap class="section--solid band">
         <div class="price-head">
           <h2 class="price-title">Цена для вашей машины</h2>
@@ -182,7 +189,6 @@ const short = page.tab ?? page.h1;
                 {b.lead && <p class="price-block-lead">{typo(b.lead)}</p>}
               </div>
             )}
-            {tabs && b.lead && <p class="price-block-lead price-block-lead--tab">{typo(b.lead)}</p>}
             {/* одна услуга в разделе — карточка цены, а не таблица из одной строки (20.10.2026) */}
             {b.groups.flatMap((g) => g.rows).length === 1
               ? <PriceCard row={b.groups.flatMap((g) => g.rows)[0]} />
@@ -208,7 +214,7 @@ const short = page.tab ?? page.h1;
 
     <!-- 2б. Что вы получите — результат для человека, а не описание технологии (пилот 20.10.2026) -->
     {outcomes.length > 0 && (
-      <Section sheet reveal={false} title="Что вы получите">
+      <Section sheet reveal={false} title="Что вы получите" bgLine={isDir ? null : 1} bgSnap={!isDir}>
         <ul class="outcomes" data-reveal-group>
           {outcomes.map((o) => (
             <li class="outcome" data-reveal>
@@ -238,7 +244,7 @@ const short = page.tab ?? page.h1;
     <!-- 3. Что это и когда нужно — на фоне страницы, без своего белого: ниже тёмная часть,
          и фон перетекает плавно, а не режется краем (19.10.2026) -->
     <Section sheet reveal={false}>
-      <div class:list={['intro', !media && 'intro--plain']}>
+      <div class="intro intro--plain">
         <div class="intro-text" data-reveal-group>
           {page.about?.map((p, i) => <p class:list={['intro-p', i === 0 && 'intro-p--first']} data-reveal>{typo(p)}</p>)}
           {!scenarios.length && page.tasks?.length > 0 && (
@@ -263,11 +269,6 @@ const short = page.tab ?? page.h1;
             </dl>
           )}
         </div>
-        {media && (
-          <figure class="intro-photo" data-zoom>
-            <img src={asset(media)} alt="" loading="lazy" decoding="async" />
-          </figure>
-        )}
       </div>
     </Section>
 
@@ -295,6 +296,25 @@ const short = page.tab ?? page.h1;
             );
           })}
         </ul>
+      </Section>
+    )}
+
+    <!-- 3в. Стоимость на странице услуги (20.10.2026): страница услуги — информационная, без
+         поля машины наверху («на каждой странице калькулятор»). Цены по классам — здесь, после
+         рассказа; выбранная раньше машина подсвечивает свой класс сама -->
+    {!isDir && priceBlocks.length > 0 && (
+      <Section id="cena" sheet reveal={false} title="Стоимость" class="section--solid band">
+        <p class="price-lead">Цена зависит от класса машины. Знаете свою — смотрите её столбец, нет — <a href={url(`/calc/?cat=${catId}`)}>определим в калькуляторе</a>.</p>
+        {priceBlocks.map((b) => (
+          b.groups.flatMap((g) => g.rows).length === 1
+            ? <PriceCard row={b.groups.flatMap((g) => g.rows)[0]} />
+            : <div class="price-table"><PriceTable groups={b.groups} /></div>
+        ))}
+        <div class="price-actions price-actions--start">
+          {isPdr
+            ? <a class="btn btn--primary" href={wa} target="_blank" rel="noopener">Прислать фото в WhatsApp</a>
+            : <a class="btn btn--primary" href="#zayavka">Записаться</a>}
+        </div>
       </Section>
     )}
 
@@ -516,20 +536,20 @@ const short = page.tab ?? page.h1;
   .crumbs li + li::before { content: '/'; margin-right: var(--sp-8); }
   .crumbs a { text-decoration: underline; text-underline-offset: 3px; }
   .hero-h1 {
-    margin-top: var(--sp-20);
+    margin-top: var(--gap-group);
     font-size: var(--text-heading-xl);
     max-width: var(--measure-head);
     text-wrap: balance;
   }
   .hero-lead {
-    margin-top: var(--sp-16);
+    margin-top: var(--gap-group);
     font-size: var(--text-lead);
     letter-spacing: var(--track-lead);
     line-height: 1.45;
     max-width: var(--measure-lead);
     text-wrap: balance;
   }
-  .hero-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-12); margin-top: var(--sp-28); }
+  .hero-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-12); margin-top: var(--gap-block); }
 
   /* ---------- 2. Что это и когда нужно ---------- */
   .intro {
@@ -556,15 +576,17 @@ const short = page.tab ?? page.h1;
   .fact-value { margin: 0; font-size: var(--text-heading-xl); line-height: 1; letter-spacing: var(--track-head); font-variant-numeric: tabular-nums; }
   .fact-unit { font-size: var(--text-lead); margin-left: 0.15em; }
   .fact-label { font-size: var(--text-body); max-width: 24ch; }
-  .intro-photo {
+  /* Фото первого экрана — во всю колонку, под кнопкой, отступ группы */
+  .hero-photo {
     --zoom: 1.3;
-    margin: 0;
-    aspect-ratio: 4 / 5;
+    position: relative;
+    margin: var(--gap-block) 0 0;
+    aspect-ratio: 16 / 7;
     border-radius: var(--r-tile);
     overflow: hidden;
     background: var(--color-tile-dark);
   }
-  .intro-photo img {
+  .hero-photo img {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -579,11 +601,15 @@ const short = page.tab ?? page.h1;
     display: grid;
     justify-items: center;
     text-align: center;
-    gap: var(--sp-8);
-    margin-bottom: var(--sp-32);
+    gap: var(--gap-inner);
+    margin-bottom: var(--gap-block);
   }
   .price-title { font-size: var(--text-heading); }
-  .price-car { width: min(100%, 560px); margin-top: var(--sp-8); text-align: left; }
+  .price-note[hidden] { display: none; }
+  .price-car { width: min(100%, 560px); margin-top: var(--gap-inner); text-align: left; }
+  .price-lead { margin-bottom: var(--gap-group); font-size: var(--text-body-lg); max-width: var(--measure-lead); }
+  .price-lead a { text-decoration: underline; text-underline-offset: 0.2em; }
+  .price-actions--start { justify-content: flex-start; }
   /* Поле — белое; выбранная машина — чёрные плашки (19.10.2026: серые сливались с полосой) */
   .price-car :global(.combo) {
     --combo-fg: var(--color-ink);
@@ -598,15 +624,15 @@ const short = page.tab ?? page.h1;
     max-width: none;
   }
   .price-car :global(.combo:not(.is-sheet)) { justify-content: center; }
-  .price-block + .price-block { margin-top: var(--sp-48); }
+  .price-block + .price-block { margin-top: var(--gap-block); }
   /* Чипы разделов направления: как разделы в калькуляторе — серое стекло, выбранный чёрный.
      На телефоне — строка с прокруткой до краёв экрана, без переноса */
   .price-tabs {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;   /* по левому краю таблицы (20.10.2026), не по центру */
-    gap: var(--sp-8);
-    margin-bottom: var(--sp-24);
+    gap: var(--gap-inner);
+    margin-bottom: var(--gap-group);
   }
   .price-tab {
     flex: none;
@@ -667,14 +693,13 @@ const short = page.tab ?? page.h1;
   /* скрипт включил вкладки — виден один раздел; без скрипта видны все */
   .price-tabs-on .price-block[data-block]:not([data-active]) { display: none; }
   .price-tabs-on .price-block + .price-block { margin-top: 0; }
-  .price-block-lead--tab { margin: 0 0 var(--sp-16); }
   .price-block-head { margin-bottom: var(--sp-16); }
   .price-block-title { font-size: var(--text-tile); }
   .price-block-more {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin-top: var(--sp-16);
+    margin-top: var(--gap-group);
     font-size: var(--text-body);
     font-weight: var(--w-medium);
   }
@@ -694,7 +719,7 @@ const short = page.tab ?? page.h1;
     overflow: hidden;
   }
   .price-table :global(.ptable-scroll) { margin-inline: 0; padding-inline: 0; }
-  .price-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-12); margin-top: var(--sp-32); }
+  .price-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-12); margin-top: var(--gap-block); }
 
   /* ---------- 4. Шаги ---------- */
   .steps {
@@ -781,7 +806,7 @@ const short = page.tab ?? page.h1;
   }
   @media (max-width: 860px) {
     .intro { grid-template-columns: minmax(0, 1fr); }
-    .intro-photo { aspect-ratio: 4 / 3; }
+    .hero-photo { aspect-ratio: 4 / 3; }
   }
   @media (max-width: 560px) {
     .hero-actions .btn { width: 100%; }
@@ -790,6 +815,6 @@ const short = page.tab ?? page.h1;
     .price-actions .btn { width: 100%; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .intro-photo img { transform: none; }
+    .hero-photo img { transform: none; }
   }
 </style>
