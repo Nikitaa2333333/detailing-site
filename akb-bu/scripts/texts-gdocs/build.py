@@ -172,28 +172,23 @@ for i, d in enumerate(dirs, start=2):
                  'list': [d.get('h1') or svc[d['page']]['h1']] + [c['h1'] for c in children] if 'slug' in d else [main['h1']] + [c['h1'] for c in children]})
     open(OUT + f'{i:02d}.html', 'w').write(f'<html><head><meta charset="utf-8"></head><body>{INTRO}{body}</body></html>')
 
-# Главная
+# Главная: только блоки, которые index.astro выводит (works, numbers, calc, menuNote, services.cta не выводятся)
 c = content
 h = f'<h1>Главная страница</h1><p><i>Страница {SITE}/</i></p>'
 h += '<h2>Первый экран</h2>' + table(['Что', 'Текст'], [['Заголовок', c['hero']['title']], ['Подзаголовок', c['hero']['subtitle']], ['Текст', c['hero']['text']], ['Кнопка', c['hero']['cta']]])
-h += '<h2>Направления</h2>' + table(['Что', 'Текст'], [['Заголовок блока', c['services']['title']], ['Подпись в меню «Услуги»', c['services']['menuNote']],
-                                                        ['Призыв под плитками: заголовок', c['services']['cta']['title']], ['Призыв: текст', c['services']['cta']['text']], ['Призыв: кнопка', c['services']['cta']['button']]])
+h += '<h2>Направления</h2>' + table(['Что', 'Текст'], [['Заголовок блока', c['services']['title']]])
 h += '<p><i>Названия направлений и разделов приходят из таблицы «Услуги и цены», их правим там.</i></p>'
 h += '<h2>Сезонные пакеты</h2><p><i>Состав пакета и цену собирает сайт из прайса. Здесь можно править заголовки и пояснения.</i></p>'
 h += table(['Что', 'Текст'], [['Подпись над блоком', packs['season']['label']], ['Заголовок блока', packs['season']['title']], ['Под ценой', packs['priceNote']], ['Кнопка', packs['button']]])
 h += table(['Пакет', 'Зачем он'], [[x['title'], x['why']] for x in packs['packs']])
-h += '<h2>Цифры о компании</h2><p>Проверьте цифры: они стоят на главной и на страницах направлений.</p>' + table(['Цифра', 'Подпись'], [[x['value'], x['label']] for x in c['numbers']])
-h += '<h2>Работы</h2>' + table(['Что', 'Текст'], [['Заголовок блока', c['works']['title']]] + [[x['car'], x['caption']] for x in c['works']['items']])
-h += '<p><i>Перешив салона на сайте сейчас скрыт как услуга. Если пример оставляем, напишите, какую работу показать вместо него.</i></p>'
 h += '<h2>Гарантии</h2><p>Черновик: проверьте, что каждое обещание вы готовы выполнять, и уточните сроки гарантий.</p>' + table(['Заголовок', 'Текст'], [[x['title'], x['text']] for x in c['guarantees']['items']])
 h += '<h2>Вопрос-ответ</h2>' + table(['Вопрос', 'Ответ'], [[x['q'], x['a']] for x in c['faq']['items']])
-h += '<h2>Форма заявки</h2>' + table(['Что', 'Текст'], [['Заголовок', c['calc']['title']], ['Кнопка', c['calc']['button']], ['Согласие', c['calc']['consent']]])
 h += '<h2>Подвал сайта</h2>' + table(['Что', 'Текст'], [['О компании', c['footer']['about']], ['Оговорка', c['footer']['disclaimer']]])
 h += ('<h2>Контакты</h2><p>Сейчас на сайте временные контакты. Пришлите настоящие: телефон, WhatsApp, Telegram, почту, адреса всех филиалов, часы работы, ссылки на соцсети.</p>'
       + table(['Что', 'Сейчас на сайте'], [['Телефон', c['contacts']['phone']], ['Почта', c['contacts']['email']], ['Адрес', c['contacts']['address']], ['Часы', c['contacts'].get('hours', '')]]))
 h += '<h2>Для поиска</h2>' + table(['Где', 'Текст'], [['Заголовок в поиске', c['meta']['title']], ['Описание в поиске', c['meta']['description']]])
 open(OUT + '01.html', 'w').write(f'<html><head><meta charset="utf-8"></head><body>{INTRO}{h}</body></html>')
-docs.insert(0, {'file': '01.html', 'title': '01. Главная и общие блоки · тексты сайта', 'pages': 1, 'list': ['Главная страница: первый экран, пакеты, цифры, гарантии, вопросы, контакты']})
+docs.insert(0, {'file': '01.html', 'title': '01. Главная и общие блоки · тексты сайта', 'pages': 1, 'list': ['Главная страница: первый экран, пакеты, гарантии, вопросы, подвал, контакты']})
 json.dump(docs, open(OUT + 'docs.json', 'w'), ensure_ascii=False, indent=1)
 for d in docs:
     print(d['title'], d['pages'], os.path.getsize(OUT + d['file']), d['list'])
