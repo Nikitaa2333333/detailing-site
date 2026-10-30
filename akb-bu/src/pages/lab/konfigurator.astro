@@ -1,0 +1,298 @@
+---
+/* Прототип «конфигуратора ухода» (30.10.2026) — по мотивам конфигуратора Polestar:
+   машина сбоку на сером, сверху вкладки частей машины, камера наезжает на выбранную часть,
+   снизу плитки услуг с ценой для класса машины, справа итог и заявка.
+   Страница служебная: не в меню и не в sitemap, noindex. Кадры — генерации Figma
+   (файл «DS SEVER — конфигуратор ухода»), «до/после» на вкладке «Мойка» — две разные
+   генерации, поэтому машина на них совпадает не до пикселя. Цены — из прайса (pageCard). */
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import CarCombo from '../../components/CarCombo.astro';
+import LeadForm from '../../components/LeadForm.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+import content from '../../data/content.json';
+import { pageCard, pageDirections, classFrom } from '../../lib/pages.js';
+import { rub } from '../../lib/catalog.js';
+import { url, asset } from '../../lib/paths.js';
+
+/* Плитка: страница услуги или раздел без своей страницы (у него ссылка на направление) */
+function tile(ref) {
+  if (ref.section) {
+    for (const d of pageDirections) {
+      const s = d.sections.find((x) => x.id === ref.section);
+      if (s) {
+        const cells = classFrom(s.groups);
+        const vals = cells.filter(Boolean).map((c) => c[1]);
+        return { id: ref.section, title: ref.title ?? s.title, note: ref.note, href: url(`/${d.slug ?? d.page}/`), from: vals.length ? Math.min(...vals) : null, cells };
+      }
+    }
+    throw new Error(`конфигуратор: раздел «${ref.section}» не найден`);
+  }
+  const c = pageCard(ref.slug);
+  if (!c) throw new Error(`конфигуратор: страница «${ref.slug}» не найдена`);
+  return { id: ref.slug, title: ref.title ?? c.title, note: ref.note, href: url(`/${ref.slug}/`), from: c.from, cells: c.cells };
+}
+
+/* Части машины. view — куда смотрит камера: scale и точка (в % кадра), img — какой кадр */
+const zones = [
+  { id: 'wash', tab: 'Мойка', lead: 'Вся машина снаружи и внутри', img: 'before', view: { s: 1, x: 50, y: 50 }, reveal: true, items: [
+    { slug: 'moika', title: 'Мойка кузова', note: 'от 15 минут до 2 часов' },
+    { slug: 'kompleksnaya-mojka', title: 'Кузов и салон за один визит', note: '1,5–4 часа' },
+  ] },
+  { id: 'body', tab: 'Кузов', lead: 'Царапины, вмятины, сколы, блеск лака', img: 'after', view: { s: 1.18, x: 50, y: 52 }, items: [
+    { slug: 'polirovka-kuzova', title: 'Полировка кузова' },
+    { slug: 'keramika-dlya-kuzova', title: 'Керамика' },
+    { slug: 'zhidkoe-steklo', title: 'Жидкое стекло' },
+    { slug: 'antigravijnaya-plenka', title: 'Антигравийная плёнка' },
+    { slug: 'udalenie-vmyatin', title: 'Вмятины без покраски' },
+  ] },
+  { id: 'lights', tab: 'Фары', lead: 'Помутнели или хочется сберечь', img: 'after', view: { s: 2.6, x: 96, y: 49 }, items: [
+    { slug: 'polirovka-far', title: 'Полировка фар' },
+    { slug: 'zashchita-far', title: 'Плёнка на фары' },
+  ] },
+  { id: 'glass', tab: 'Стёкла', lead: 'Дождь, солнце, сколы', img: 'after', view: { s: 2.1, x: 48, y: 40 }, items: [
+    { slug: 'antidozhd', title: 'Антидождь' },
+    { slug: 'tonirovka', title: 'Тонировка' },
+    { slug: 'atermalnaya-tonirovka', title: 'Атермальная плёнка' },
+    { slug: 'bronirovanie-stekol', title: 'Бронирование стёкол' },
+  ] },
+  { id: 'wheels', tab: 'Колёса', lead: 'Грязь и реагенты на дисках', img: 'after', view: { s: 3.4, x: 74, y: 64 }, items: [
+    { section: 'zaschita-kolesnyh-diskov', title: 'Керамика для дисков' },
+  ] },
+  { id: 'cabin', tab: 'Салон', lead: 'Пятна, запах, кожа и ткань', img: 'salon', view: { s: 1, x: 50, y: 50 }, items: [
+    { slug: 'uborka-salona', title: 'Уборка салона' },
+    { slug: 'himchistka-salona', title: 'Химчистка салона' },
+    { slug: 'himchistka-sidenij', title: 'Химчистка сидений' },
+    { section: 'zaschita-kozhanyh-pokrytij', title: 'Защита кожи' },
+  ] },
+].map((z) => ({ ...z, items: z.items.map(tile) }));
+
+const frames = {
+  before: asset('/img/lab/car-before.webp'),
+  after: asset('/img/lab/car-after.webp'),
+  salon: asset('/img/lab/salon.webp'),
+};
+const { brand } = content;
+---
+
+<Layout title={`Конфигуратор ухода — прототип | ${brand.name}`} noindex>
+  <Header />
+  <main class="cfg" data-cfg>
+    <div class="cfg-top">
+      <div class="cfg-tabs" role="tablist" aria-label="Часть машины">
+        {zones.map((z, i) => (
+          <button class="cfg-tab" type="button" role="tab" data-zone={z.id} aria-selected={i === 0 ? 'true' : 'false'}>{z.tab}</button>
+        ))}
+      </div>
+      <div class="cfg-car" data-page-car>
+        <CarCombo id="cfg-car" placeholder="Марка или модель" label="Марка и модель" />
+      </div>
+    </div>
+
+    <div class="cfg-stage">
+      <div class="cfg-cam" data-cam>
+        <img class="cfg-frame" data-frame="before" src={frames.before} alt="" />
+        <img class="cfg-frame" data-frame="after" src={frames.after} alt="Машина сбоку" />
+        <img class="cfg-frame" data-frame="salon" src={frames.salon} alt="Салон" />
+      </div>
+      <p class="cfg-lead" data-lead>{zones[0].lead}</p>
+      <p class="cfg-sample">Образец кадра</p>
+    </div>
+
+    <div class="cfg-bottom">
+      {zones.map((z, i) => (
+        <ul class="cfg-tiles" data-tiles={z.id} hidden={i !== 0}>
+          {z.items.map((t) => (
+            <li>
+              <label class="cfg-tile">
+                <input type="checkbox" data-pick data-id={t.id} data-name={t.title} data-from={t.from ?? ''} data-cells={JSON.stringify(t.cells)} />
+                <span class="cfg-tile-name">{t.title}</span>
+                {t.note && <span class="cfg-tile-note">{t.note}</span>}
+                <span class="cfg-tile-price" data-cells={JSON.stringify(t.cells)}>{t.from != null ? `от ${rub(t.from)}` : 'по запросу'}</span>
+                <a class="cfg-tile-more" href={t.href}>Подробнее</a>
+              </label>
+            </li>
+          ))}
+        </ul>
+      ))}
+      <div class="cfg-sum" data-sum hidden>
+        <div class="cfg-sum-text">
+          <span class="cfg-sum-list" data-sum-list></span>
+          <span class="cfg-sum-total" data-sum-total></span>
+        </div>
+        <a class="btn btn--primary cfg-sum-btn" href="#zayavka" data-sum-go>Записаться</a>
+      </div>
+    </div>
+  </main>
+  <section class="cfg-lead-form">
+    <LeadForm title="Записаться на уход" service="Конфигуратор ухода" />
+  </section>
+  <SiteFooter brand={brand} />
+</Layout>
+
+<script define:vars={{ zones: zones.map((z) => ({ id: z.id, lead: z.lead, img: z.img, view: z.view, reveal: !!z.reveal })) }}>
+  window.__cfgZones = zones;
+</script>
+
+<script>
+  import { loadCars } from '../../lib/car-index-client.js';
+  import { carCombo } from '../../lib/car-combo.js';
+  import { storedCar, storeCar, applyCar } from '../../lib/page-car.js';
+
+  type Zone = { id: string; lead: string; img: string; view: { s: number; x: number; y: number }; reveal: boolean };
+  const zones: Zone[] = (window as any).__cfgZones;
+  const root = document.querySelector<HTMLElement>('[data-cfg]')!;
+  const cam = root.querySelector<HTMLElement>('[data-cam]')!;
+  const lead = root.querySelector<HTMLElement>('[data-lead]')!;
+  const frame = (k: string) => root.querySelector<HTMLImageElement>(`[data-frame="${k}"]`)!;
+  let active = zones[0];
+
+  /* Камера: увеличение вокруг точки части машины; кадр — нужный слой поверх остальных */
+  function look(z: Zone) {
+    const { s, x, y } = z.view;
+    cam.style.transformOrigin = `${x}% ${y}%`;
+    cam.style.transform = `scale(${s})`;
+    const wash = z.id === 'wash';
+    for (const k of ['before', 'after', 'salon']) frame(k).classList.toggle('is-on', k === z.img || (wash && k === 'after'));
+    frame('before').classList.toggle('is-top', wash);
+    frame('before').classList.toggle('is-shut', wash && washed());
+    lead.textContent = z.lead;
+  }
+
+  /* Мойка: отметили услугу — чистая машина раскрывается кругом поверх грязной */
+  const washed = () => [...root.querySelectorAll<HTMLInputElement>('[data-tiles="wash"] [data-pick]')].some((c) => c.checked);
+  function reveal() {
+    if (active.id !== 'wash') return;
+    const before = frame('before');
+    if (washed()) {
+      before.classList.remove('is-shut');
+      void before.offsetWidth;
+      before.classList.add('is-shut');
+    } else {
+      before.classList.remove('is-shut');
+    }
+  }
+
+  for (const b of root.querySelectorAll<HTMLButtonElement>('[data-zone]')) {
+    b.addEventListener('click', () => {
+      active = zones.find((z) => z.id === b.dataset.zone)!;
+      root.querySelectorAll('[data-zone]').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+      root.querySelectorAll<HTMLElement>('[data-tiles]').forEach((t) => (t.hidden = t.dataset.tiles !== active.id));
+      look(active);
+    });
+  }
+
+  /* Итог: выбранные услуги и сумма «от» для класса машины */
+  const NBSP = ' ';
+  const rub = (v: number) => `${String(v).replace(/\B(?=(\d{3})+(?!\d))/g, NBSP)}${NBSP}₽`;
+  let car: any = storedCar();
+  function price(cells: any[]): number | null {
+    const cls = car?.cls;
+    if (cls && cls !== 'p') { const c = cells[Number(cls) - 1]; return c ? c[1] : null; }
+    const v = cells.filter(Boolean).map((c) => c[1]);
+    return v.length ? Math.min(...v) : null;
+  }
+  function summary() {
+    const picked = [...root.querySelectorAll<HTMLInputElement>('[data-pick]:checked')];
+    const sum = root.querySelector<HTMLElement>('[data-sum]')!;
+    sum.hidden = !picked.length;
+    if (!picked.length) return;
+    root.querySelector('[data-sum-list]')!.textContent = picked.map((c) => c.dataset.name).join(', ');
+    const premium = car?.cls === 'p';
+    const total = picked.reduce((a, c) => a + (price(JSON.parse(c.dataset.cells!)) ?? 0), 0);
+    root.querySelector('[data-sum-total]')!.textContent = premium ? 'после осмотра' : `${car?.cls ? '' : 'от '}${rub(total)}`;
+  }
+  root.addEventListener('change', (e) => {
+    if ((e.target as HTMLElement).matches('[data-pick]')) { summary(); reveal(); }
+  });
+  root.querySelector('[data-sum-go]')!.addEventListener('click', () => {
+    const names = [...root.querySelectorAll<HTMLInputElement>('[data-pick]:checked')].map((c) => c.dataset.name).join(', ');
+    document.dispatchEvent(new CustomEvent('lead:service', { detail: names }));
+  });
+
+  /* Машина — общая память сайта, как на страницах услуг */
+  applyCar(car);
+  look(active);
+  const box = root.querySelector<HTMLElement>('[data-page-car] [data-car-combo]');
+  if (box) {
+    let cars: unknown = null;
+    const combo = carCombo(box, {
+      cars: () => cars,
+      car: () => car,
+      onPick: (picked: any) => { car = picked; storeCar(car); combo.sync(); applyCar(car); summary(); },
+      missText: (q: string) => `«${q}» нет в списке — цены «от», класс уточнит менеджер`,
+      onMiss: () => { car = null; storeCar(null); applyCar(null); summary(); },
+    });
+    loadCars().then((index: unknown) => { cars = index; combo.ready(); }).catch(() => {});
+  }
+</script>
+
+<style>
+  .cfg {
+    --cfg-bg: #4f5052;
+    background: var(--cfg-bg);
+    color: var(--color-white);
+    padding: calc(var(--header-h, 72px) + 16px) clamp(16px, 4vw, 48px) 32px;
+    min-height: 100svh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 16px;
+  }
+  .cfg > * { min-width: 0; }
+  .cfg-top { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; }
+  .cfg-tabs { display: flex; gap: 4px; min-width: 0; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .cfg-tab {
+    padding: 10px 16px; border-radius: 8px; border: 0; cursor: pointer; white-space: nowrap;
+    background: transparent; color: var(--color-white); font: inherit; font-size: var(--text-body);
+  }
+  .cfg-tab:hover { background: var(--veil-fill-soft); }
+  .cfg-tab[aria-selected='true'] { background: var(--color-white); color: var(--color-ink); }
+  .cfg-car { width: min(100%, 360px); }
+
+  .cfg-stage { position: relative; overflow: hidden; border-radius: 12px; aspect-ratio: 16 / 9; max-height: 62svh; margin-inline: auto; width: 100%; background: var(--cfg-bg); }
+  .cfg-cam { position: absolute; inset: 0; transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1), transform-origin 0.9s cubic-bezier(0.65, 0, 0.35, 1); }
+  .cfg-frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.5s ease; }
+  .cfg-frame.is-on { opacity: 1; }
+  .cfg-frame.is-top { z-index: 2; clip-path: circle(150% at 50% 55%); }
+  .cfg-frame.is-top.is-shut { animation: cfg-wipe 1.1s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
+  @keyframes cfg-wipe { from { clip-path: circle(150% at 50% 55%); } to { clip-path: circle(0% at 50% 55%); } }
+  .cfg-lead { position: absolute; left: 20px; bottom: 16px; margin: 0; font-size: var(--text-lead); z-index: 3; }
+  .cfg-sample { position: absolute; right: 16px; top: 12px; margin: 0; font-size: var(--text-caption); z-index: 3; opacity: 0.7; }
+
+  .cfg-bottom { display: grid; gap: 12px; }
+  .cfg-tiles { list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 1fr); gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  .cfg-tiles[hidden] { display: none; }
+  .cfg-tile {
+    position: relative; display: grid; gap: 4px; align-content: start; height: 100%;
+    padding: 14px 16px; border-radius: 10px; cursor: pointer;
+    background: var(--glass-dark); transition: background 0.2s ease;
+  }
+  .cfg-tile:hover { background: var(--glass-dark-hover); }
+  .cfg-tile:has(input:checked) { background: var(--color-white); color: var(--color-ink); }
+  .cfg-tile input { position: absolute; opacity: 0; pointer-events: none; }
+  .cfg-tile:has(input:focus-visible) { outline: 2px solid var(--color-white); outline-offset: 2px; }
+  .cfg-tile-name { font-size: var(--text-body-lg); }
+  .cfg-tile-note, .cfg-tile-price { font-size: var(--text-caption); }
+  .cfg-tile-price { margin-top: 4px; }
+  .cfg-tile-more { font-size: var(--text-caption); color: inherit; text-decoration: underline; text-underline-offset: 3px; justify-self: start; }
+
+  .cfg-sum { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; padding: 12px 12px 12px 20px; border-radius: 12px; background: var(--color-white); color: var(--color-ink); }
+  .cfg-sum[hidden] { display: none; }
+  .cfg-sum-text { display: grid; gap: 2px; min-width: 0; }
+  .cfg-sum-list { font-size: var(--text-caption); }
+  .cfg-sum-total { font-size: var(--text-lead); }
+  .cfg-sum-btn { background: var(--color-ink); color: var(--color-white); }
+
+  .cfg-lead-form { background: var(--color-ink); padding: 48px clamp(16px, 4vw, 48px); }
+
+  @media (max-width: 760px) {
+    .cfg { min-height: 0; grid-template-rows: auto auto auto; }
+    .cfg-stage { aspect-ratio: 16 / 10; }
+    .cfg-car { width: 100%; }
+    .cfg-lead { font-size: var(--text-body); left: 12px; bottom: 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cfg-cam, .cfg-frame { transition: none; }
+    .cfg-frame.is-top.is-shut { animation-duration: 0.01s; }
+  }
+</style>
