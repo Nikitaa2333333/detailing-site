@@ -98,6 +98,10 @@ const {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: 'title' 'text' 'form';
     grid-template-rows: none;
+    /* Отступы по связи (03.11.2026: поле стояло дальше от описания, чем от следующего блока):
+       заголовок ↔ описание ↔ поле — одна связка, --gap-group; до следующей секции — полный
+       разрыв между секциями (Section без flush-bottom) */
+    row-gap: var(--gap-group);
     /* по центру (19.10.2026: «этот блок по центру»): заголовок, лид и форма — одной осью */
     justify-items: center;
     text-align: center;
@@ -171,7 +175,6 @@ const {
     gap: var(--sp-12);
     width: 100%;
     max-width: 560px;
-    margin-top: var(--sp-8);
   }
   /* Поле — CarCombo, светлая схема (тизер на светлой полосе с 19.10.2026) */
   .teaser-form :global(.combo) {
