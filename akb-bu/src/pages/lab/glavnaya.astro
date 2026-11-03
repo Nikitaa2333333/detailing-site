@@ -87,10 +87,6 @@ const cats = [...categories].sort((a, b) => (ORDER.indexOf(a.id) + 99) % 99 - (O
       <div class="xh-scrim" aria-hidden="true"></div>
 
       <div class="container xh-in">
-        <ul class="xh-chips">
-          {chips.map((c) => <li class="x-glass">{typo(c)}</li>)}
-        </ul>
-
         <div class="xh-copy">
           <h1 class="xh-h1">Премиальный детейлинг в&nbsp;Москве</h1>
           <p class="x-display xh-display">
@@ -106,7 +102,13 @@ const cats = [...categories].sort((a, b) => (ORDER.indexOf(a.id) + 99) % 99 - (O
           </div>
         </div>
 
-        <p class="xh-note">{typo('Стоимость — по классу автомобиля, точная цифра — после осмотра при вас.')}</p>
+        <!-- плашки — внизу справа над подписью: сверху их гасило затемнение под шапкой -->
+        <div class="xh-side">
+          <ul class="xh-chips">
+            {chips.map((c) => <li class="x-glass">{typo(c)}</li>)}
+          </ul>
+          <p class="xh-note">{typo('Стоимость — по классу автомобиля, точная цифра — после осмотра при вас.')}</p>
+        </div>
       </div>
     </section>
 
@@ -327,16 +329,15 @@ const cats = [...categories].sort((a, b) => (ORDER.indexOf(a.id) + 99) % 99 - (O
     width: 100%;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: auto 1fr auto;
-    grid-template-areas: 'chips chips' '. .' 'copy note';
+    grid-template-rows: 1fr auto;
+    grid-template-areas: '. .' 'copy side';
     align-items: end;
     gap: var(--sp-24);
     padding-top: calc(var(--header-h) + var(--sp-16));
     padding-bottom: clamp(32px, 4vw, 56px);
   }
+  .xh-side { grid-area: side; display: grid; gap: var(--gap-group); justify-items: end; }
   .xh-chips {
-    grid-area: chips;
-    justify-self: end;
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
@@ -363,7 +364,6 @@ const cats = [...categories].sort((a, b) => (ORDER.indexOf(a.id) + 99) % 99 - (O
   .xh-display { font-size: clamp(2.8rem, 6.4vw, 7rem); margin-bottom: var(--sp-8); }
   .xh-actions { display: flex; flex-wrap: wrap; gap: var(--sp-12); }
   .xh-note {
-    grid-area: note;
     max-width: 30ch;
     font-size: var(--text-caption);
     line-height: 1.45;
@@ -469,8 +469,9 @@ const cats = [...categories].sort((a, b) => (ORDER.indexOf(a.id) + 99) % 99 - (O
     .xh { min-height: 100lvh; border-radius: 0 0 var(--r-tile) var(--r-tile); }
     .xh-media { object-position: 50% 30%; }
     .xh-scrim { background: linear-gradient(to bottom, rgba(1, 2, 5, 0.5) 0%, rgba(1, 2, 5, 0) 20%), linear-gradient(to top, rgba(1, 2, 5, 0.95) 0%, rgba(1, 2, 5, 0.7) 40%, rgba(1, 2, 5, 0) 70%); }
-    .xh-in { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'chips' '.' 'copy'; padding-bottom: calc(var(--sp-24) + (100lvh - 100svh)); }
-    .xh-chips { justify-self: start; justify-content: flex-start; }
+    .xh-in { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto; grid-template-areas: 'side' '.' 'copy'; padding-bottom: calc(var(--sp-24) + (100lvh - 100svh)); }
+    .xh-side { justify-items: start; }
+    .xh-chips { justify-content: flex-start; }
     .xh-chips li { padding: 8px 14px; font-size: 0.8125rem; }
     .xh-display { font-size: 13vw; }
     .xh-actions { width: 100%; }
