@@ -1,41 +1,47 @@
 ---
 /* Эксперимент «главная с душой» (03.11.2026). Служебная страница: не в меню, noindex.
    Рабочая главная (pages/index.astro) не тронута — сравнить и перенести удачное.
-   Что взято из референсов пользователя:
-   — крупная узкая капс-типографика (Oswald) и двухтоновые позиционирующие заголовки;
-   — палитра: глубокий чёрный, синие свечения, тонкие линии, стекло (финансовое приложение);
-   (вкладки-папки и слово за кадром пробовали — сняты 03.11.2026: папки — в калькулятор);
-   — капс-кнопка со стрелкой в белой капсуле и всплывающая «Записаться» (Rentra);
-   — лента карточек без точек и круглых стрелок (Rentra, второй экран).
-   Цены — из прайса (catalog.js), руками не вписаны. */
+   Итерации и отвергнутое — docs/journal.md за 03.11.2026. Сейчас:
+   — первый экран — ролик во весь экран, заголовок «Премиальный детейлинг в Москве» крупным
+     шрифтом заголовков, пилюли-факты (часы, адрес), две скруглённые кнопки без капса;
+   — шрифт заголовков — на выбор переключателем (Oswald, Roboto Flex узкий, Unbounded,
+     Inter Tight, Geologica, Dela Gothic One), капс — только в заголовках;
+   — палитра: чёрный, синие и сиреневые свечения одним слоем за всей страницей;
+   — направления — карточки вширь парами, фото до краёв;
+   — калькулятор: машина → вкладки-папки направлений → услуги галочками → итог → заявка;
+   — дальше блоки рабочей главной: сезонные пакеты, гарантии с иконками, контакты, вопросы.
+   Цены — только из прайса (lib/sections.js, catalog.js), руками не вписаны. */
 import '@fontsource-variable/oswald';
+import '@fontsource-variable/roboto-flex/full.css';
+import '@fontsource-variable/unbounded';
+import '@fontsource-variable/inter-tight';
+import '@fontsource-variable/geologica';
+import '@fontsource/dela-gothic-one';
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
+import Section from '../../components/Section.astro';
+import SeasonPacks from '../../components/SeasonPacks.astro';
+import Contacts from '../../components/Contacts.astro';
+import Faq from '../../components/Faq.astro';
+import CarCombo from '../../components/CarCombo.astro';
+import LeadForm from '../../components/LeadForm.astro';
 import SiteFooter from '../../components/SiteFooter.astro';
 import content from '../../data/content.json';
+import seasonPacks from '../../data/season-packs.json';
 import { categories, rub } from '../../lib/catalog.js';
 import { siteCategories } from '../../lib/sections.js';
 import { directionSlug, sectionSlug, pageDirections, pageServices } from '../../lib/pages.js';
 import { asset, url } from '../../lib/paths.js';
 import { typo } from '../../lib/typo.js';
 
-const { brand, hero } = content;
+const { brand, hero, contacts, guarantees, faq } = content;
 const calc = url('/calc/');
 const pageOf = (slug, fallback) => (slug ? url(`/${slug}/`) : fallback);
 
-/* Лента: первый раздел каждого направления — «с чего начинают» (по два — фото повторялись) */
-const cards = categories.flatMap((c) =>
-  c.items.slice(0, 1).map((s) => ({
-    id: s.id,
-    title: s.title,
-    from: s.from,
-    cat: c.title,
-    media: c.media,
-    href: pageOf(sectionSlug(s.id), `${calc}?cat=${c.id}&sheet=${s.id}`),
-  })),
-);
+/* Факты на первом экране — только проверяемые, из content.json */
+const chips = [contacts.hours.replace(/^./, (ch) => ch.toUpperCase()), contacts.address.replace(/^Москва,\s*/, '')];
 
-/* Описание направления — лид его страницы (pages.json); у направления из одной страницы — лид той страницы */
+/* ---- Направления ---- */
 const leadOf = (catId) => {
   const d = pageDirections.find((x) => x.cat.id === catId);
   if (!d) return '';
@@ -43,43 +49,69 @@ const leadOf = (catId) => {
   const page = d.page && pageServices.find((x) => (x.slug ?? x.page) === d.page);
   return page?.lead ?? '';
 };
-
-/* Строки карточки: разделы направления; у направления из одного раздела (химчистка, PDR) —
-   услуги этого раздела, иначе карточка одной высоты с соседями стояла бы пустой */
-const firstPrice = (svc, labels) => {
-  for (const l of labels) { const c = svc.prices[l]; if (c) return c.value ?? c.min ?? null; }
-  return null;
+/* Цена услуги по классу: столбец прайса, где номер класса — число в начале подписи */
+const priceCells = (svc, labels) => {
+  const cells = [null, null, null, null, null];
+  for (const l of labels) {
+    const n = parseInt(l, 10);
+    const c = svc.prices[l];
+    if (n >= 1 && n <= 5 && c) cells[n - 1] = c.value ?? c.min ?? null;
+  }
+  return cells;
 };
+const firstPrice = (cells) => cells.find((v) => v != null) ?? null;
 const rowsOf = (c) => {
   if (c.items.length > 1)
     return c.items.map((s) => ({ title: s.title, from: s.from, href: pageOf(sectionSlug(s.id), `${calc}?cat=${c.id}&sheet=${s.id}`) }));
   const sec = siteCategories.find((x) => x.id === c.id)?.sections[0];
   if (!sec) return [];
   const href = pageOf(sectionSlug(sec.id) ?? directionSlug(c.id), `${calc}?cat=${c.id}&sheet=${sec.id}`);
-  return sec.services.slice(0, 4).map((x) => ({ title: x.service.name, from: firstPrice(x.service, x.sheet.classLabels), href }));
+  return sec.services.slice(0, 4).map((x) => ({ title: x.service.name, from: firstPrice(priceCells(x.service, x.sheet.classLabels)), href }));
 };
-
-/* Факты на первом экране — только проверяемые, из content.json (03.11.2026: «с 2014 года»,
-   «3 поста» сняты — к нам не относится) */
-const { contacts } = content;
-const chips = [
-  contacts.hours.replace(/^./, (ch) => ch.toUpperCase()),
-  contacts.address.replace(/^Москва,\s*/, ''),
-];   /* «цена по классу» — не плашкой: она уже подписью внизу справа */
-
-/* Направления парами по длине списка: в ряду две карточки, высота у пары общая и почти не
-   расходится — дыр нет (03.11.2026). Порядок пар — от ходового к редкому */
+/* Пары по длине списка: высота в ряду общая и почти не расходится — дыр нет */
 const ORDER = ['uhod', 'plenki', 'pokrytiya', 'himchistka', 'polirovka', 'pdr'];
-const cats = [...categories].sort((a, b) => (ORDER.indexOf(a.id) + 99) % 99 - (ORDER.indexOf(b.id) + 99) % 99);
+const rank = (id) => (ORDER.indexOf(id) + 99) % 99;
+const cats = [...categories].sort((a, b) => rank(a.id) - rank(b.id));
+
+/* ---- Данные калькулятора: направления → разделы → услуги с ценами по 5 классам ---- */
+const calcData = cats.map((c) => {
+  const sc = siteCategories.find((x) => x.id === c.id);
+  return {
+    id: c.id,
+    title: c.title,
+    sections: (sc?.sections ?? []).map((s) => ({
+      title: s.title,
+      services: s.services.map((x) => ({ k: x.key, n: x.service.name, d: x.service.duration || '', p: priceCells(x.service, x.sheet.classLabels) })),
+    })),
+  };
+});
+
+/* ---- Гарантии: иконки — линейные, 24×24, рисуем сами (позже — сгенерированные) ---- */
+const icons = [
+  '<path d="M7 4h7a4 4 0 0 1 0 8H7m0-8v16m0-5h8"/>',
+  '<path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/>',
+  '<circle cx="12" cy="12" r="3"/><path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z"/>',
+  '<path d="M4 8h3l2-3h6l2 3h3v11H4V8Z"/><circle cx="12" cy="13" r="3.5"/>',
+];
+
+const fonts = [
+  { id: 'oswald', name: 'Oswald' },
+  { id: 'flex', name: 'Roboto Flex' },
+  { id: 'unbounded', name: 'Unbounded' },
+  { id: 'inter', name: 'Inter Tight' },
+  { id: 'geologica', name: 'Geologica' },
+  { id: 'dela', name: 'Dela Gothic' },
+];
 ---
 
 <Layout title={`Главная — эксперимент | ${brand.name}`} noindex>
   <Header overlay />
 
+  <!-- Свечения — один слой за всей страницей (fixed), без стыков между блоками -->
+  <div class="x-bg" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
   <main class="x">
     <!-- ============ Первый экран: ролик во весь экран ============ -->
-    <!-- 03.11.2026: слово за кадром и кадр-плашка на фоне сняты («плашка на плашке») —
-         первый экран и есть видео, текст и кнопки поверх него -->
     <section class="xh" data-bg="#010205">
       <img class="xh-media" src={asset(hero.poster)} alt="" fetchpriority="high" decoding="async" />
       <video class="xh-media xh-video" muted loop playsinline preload="auto" poster={asset(hero.poster)} aria-hidden="true"
@@ -88,41 +120,25 @@ const cats = [...categories].sort((a, b) => (ORDER.indexOf(a.id) + 99) % 99 - (O
 
       <div class="container xh-in">
         <div class="xh-copy">
-          <h1 class="xh-h1">Премиальный детейлинг в&nbsp;Москве</h1>
-          <p class="x-display xh-display">
-            <span>Для тех, кто</span>
-            <span class="x-dim">замечает детали</span>
-          </p>
+          <h1 class="x-display xh-title">Премиальный детейлинг в&nbsp;Москве</h1>
           <div class="xh-actions">
-            <a class="xbtn xbtn--light" href={calc}>
-              <span>Рассчитать стоимость</span>
-              <span class="xbtn-cap" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 10h12m-5-5 5 5-5 5" /></svg></span>
-            </a>
-            <a class="xbtn xbtn--glass" href="#napravleniya"><span>Выбрать услугу</span></a>
+            <a class="xbtn xbtn--light" href="#calc">Рассчитать стоимость</a>
+            <a class="xbtn xbtn--glass" href="#napravleniya">Выбрать услугу</a>
           </div>
         </div>
-
-        <!-- плашки — внизу справа над подписью: сверху их гасило затемнение под шапкой -->
         <div class="xh-side">
           <ul class="xh-chips">
-            {chips.map((c) => <li class="x-glass">{typo(c)}</li>)}
+            {chips.map((c) => <li>{typo(c)}</li>)}
           </ul>
           <p class="xh-note">{typo('Стоимость — по классу автомобиля, точная цифра — после осмотра при вас.')}</p>
         </div>
       </div>
     </section>
 
-    <!-- ============ Направления: все шесть открыты сразу ============ -->
-    <!-- 03.11.2026: вкладки-папки сняты с главной («сразу всё должно открываться»),
-         папки — потом в калькулятор. Карточки по содержимому, колонками -->
+    <!-- ============ Направления ============ -->
     <section class="xs" id="napravleniya">
-      <div class="x-glow x-glow--side" aria-hidden="true"><i></i><i></i></div>
       <div class="container">
-        <h2 class="x-display xs-title">
-          <span>Шесть направлений.</span>
-          <span>Одна планка качества.</span>
-        </h2>
-
+        <h2 class="x-display xs-title">Шесть направлений. Одна планка качества.</h2>
         <div class="xd">
           {cats.map((c) => (
             <article class="xd-card">
@@ -132,9 +148,7 @@ const cats = [...categories].sort((a, b) => (ORDER.indexOf(a.id) + 99) % 99 - (O
                 </div>
               )}
               <div class="xd-body">
-                <!-- кнопки на карточке сняты (03.11.2026): ведёт вся карточка — ссылка заголовка
-                     растянута на неё, строки разделов поверх ведут каждая на свой раздел -->
-                <h3 class="xd-title"><a href={pageOf(directionSlug(c.id), `${calc}?cat=${c.id}`)}>{c.title}</a></h3>
+                <h3 class="x-display xd-title"><a href={pageOf(directionSlug(c.id), `${calc}?cat=${c.id}`)}>{c.title}</a></h3>
                 {leadOf(c.id) && <p class="xd-lead">{typo(leadOf(c.id))}</p>}
                 <ul class="xd-list">
                   {rowsOf(c).map((r) => (
@@ -146,7 +160,6 @@ const cats = [...categories].sort((a, b) => (ORDER.indexOf(a.id) + 99) % 99 - (O
                     </li>
                   ))}
                 </ul>
-                <p class="xd-from"><small>от</small> {rub(c.from)}</p>
               </div>
             </article>
           ))}
@@ -154,41 +167,91 @@ const cats = [...categories].sort((a, b) => (ORDER.indexOf(a.id) + 99) % 99 - (O
       </div>
     </section>
 
-    <!-- ============ Лента карточек ============ -->
-    <section class="xs xs--rail">
+    <!-- ============ Калькулятор: машина → папки направлений → услуги → заявка ============ -->
+    <section class="xs" id="calc">
       <div class="container">
-        <h2 class="x-display xs-title">
-          <span>С чего начинают</span>
-          <span>наши клиенты</span>
-        </h2>
+        <h2 class="x-display xs-title">Цена для вашей машины</h2>
+        <p class="xs-lead">{typo('Выберите машину и отметьте услуги — цены пересчитаются под её класс. Сумму зафиксируем после осмотра.')}</p>
+
+        <div class="xc" data-xcalc>
+          <div class="xc-tabs" role="tablist" aria-label="Направления">
+            {calcData.map((c, i) => (
+              <button class="xc-tab" type="button" role="tab" data-tab={c.id} aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}>
+                <span>{c.title}</span>
+                <b class="xc-count" data-count={c.id}>{c.sections.reduce((n, s) => n + s.services.length, 0)}</b>
+              </button>
+            ))}
+          </div>
+
+          <div class="xc-panel" data-first="1">
+            <div class="xc-car">
+              <p class="xc-car-label">Ваша машина</p>
+              <div class="xc-car-field" data-xcar>
+                <CarCombo id="xcalc-car" placeholder="Марка или модель" label="Марка и модель" />
+              </div>
+              <p class="xc-car-note" data-xcar-note>{typo('Пока без машины — цены для 1-го класса.')}</p>
+            </div>
+            <div class="xc-list" data-xlist></div>
+          </div>
+
+          <div class="xc-sum" data-xsum hidden>
+            <p class="xc-sum-text"><span data-xsum-count></span><b data-xsum-total></b></p>
+            <button class="xbtn xbtn--light" type="button" data-xsum-go>Оставить заявку</button>
+          </div>
+        </div>
+
+        <div class="xc-lead">
+          <LeadForm title="Записаться" service="Расчёт с главной" button="Отправить заявку" />
+        </div>
       </div>
-      <div class="xr" tabindex="0" aria-label="Популярные услуги">
-        {cards.map((k) => (
-          <a class="xr-card" href={k.href}>
-            <div class="xr-photo">
-              {k.media && <img src={asset(k.media)} alt="" loading="lazy" decoding="async" />}
-              <span class="xr-cat x-glass">{k.cat}</span>
-            </div>
-            <div class="xr-meta">
-              <h3 class="xr-title">{typo(k.title)}</h3>
-              <p class="xr-price">от {rub(k.from)}</p>
-            </div>
-          </a>
-        ))}
+      <script type="application/json" id="xcalc-data" set:html={JSON.stringify(calcData)} />
+    </section>
+
+    <!-- ============ Блоки рабочей главной ============ -->
+    <Section id="season" dark label={seasonPacks.season.label} title={seasonPacks.season.title}>
+      <SeasonPacks href="#calc" />
+    </Section>
+
+    <section class="xs" id="garantii">
+      <div class="container">
+        <h2 class="x-display xs-title">{guarantees.title}</h2>
+        <ul class="xg">
+          {guarantees.items.map((g, i) => (
+            <li class="xg-item">
+              <span class="xg-icon" aria-hidden="true"><svg viewBox="0 0 24 24" set:html={icons[i % icons.length]} /></span>
+              <h3 class="xg-title">{typo(g.title)}</h3>
+              <p class="xg-text">{typo(g.text)}</p>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
+
+    <Section id="contacts" dark>
+      <Contacts />
+    </Section>
+
+    <Section id="faq" dark>
+      <Faq title={faq.title} items={faq.items} />
+    </Section>
   </main>
 
-  <!-- Всплывающая «Записаться» — после первого экрана -->
-  <a class="xbtn xbtn--light x-float" href={calc} data-float aria-hidden="true" tabindex="-1">
-    <span>Записаться</span>
-    <span class="xbtn-cap" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 10h12m-5-5 5 5-5 5" /></svg></span>
-  </a>
-
   <SiteFooter brand={brand} contacts={false} />
+
+  <!-- Переключатель шрифта заголовков — только для выбора, на сайт не поедет -->
+  <div class="xfont" role="group" aria-label="Шрифт заголовков">
+    <span class="xfont-label">Шрифт</span>
+    {fonts.map((f) => <button type="button" data-font={f.id}>{f.name}</button>)}
+  </div>
 </Layout>
 
 <script is:inline>
+  /* шрифт — до отрисовки, без мигания: ?font=… или прошлый выбор */
+  (function () {
+    var f = new URLSearchParams(location.search).get('font');
+    try { f = f || localStorage.getItem('x-font'); } catch (e) {}
+    document.documentElement.dataset.xfont = f || 'oswald';
+  })();
   (function () {
     var v = document.querySelector('.xh-video');
     if (v && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -201,110 +264,260 @@ const cats = [...categories].sort((a, b) => (ORDER.indexOf(a.id) + 99) % 99 - (O
 </script>
 
 <script>
-  /* «Записаться» всплывает, когда первый экран ушёл */
-  const btn = document.querySelector<HTMLElement>('[data-float]');
-  const hero = document.querySelector('.xh');
-  if (btn && hero) {
-    new IntersectionObserver(([e]) => {
-      const show = !e.isIntersecting;
-      btn.classList.toggle('is-on', show);
-      btn.setAttribute('aria-hidden', String(!show));
-      btn.tabIndex = show ? 0 : -1;
-    }, { threshold: 0.15 }).observe(hero);
+  import { loadCars } from '../../lib/car-index-client.js';
+  import { carCombo, classText, PREMIUM } from '../../lib/car-combo.js';
+  import { typo } from '../../lib/typo.js';
+
+  /* ---- Переключатель шрифта ---- */
+  const root = document.documentElement;
+  const fontBtns = [...document.querySelectorAll<HTMLButtonElement>('.xfont [data-font]')];
+  const markFont = () => fontBtns.forEach((b) => b.classList.toggle('is-on', b.dataset.font === root.dataset.xfont));
+  fontBtns.forEach((b) => b.addEventListener('click', () => {
+    root.dataset.xfont = b.dataset.font!;
+    try { localStorage.setItem('x-font', b.dataset.font!); } catch {}
+    markFont();
+  }));
+  markFont();
+
+  /* ---- Калькулятор ---- */
+  type Svc = { k: string; n: string; d: string; p: (number | null)[] };
+  type Cat = { id: string; title: string; sections: { title: string; services: Svc[] }[] };
+  type Car = { brand?: string; model?: string; cls: string };
+
+  const box = document.querySelector<HTMLElement>('[data-xcalc]');
+  const data: Cat[] = JSON.parse(document.getElementById('xcalc-data')?.textContent || '[]');
+  if (box && data.length) {
+    const NB = String.fromCharCode(160);
+    const rub = (v: number) => `${String(v).replace(/\B(?=(\d{3})+(?!\d))/g, NB)}${NB}₽`;
+    const tabs = [...box.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+    const panel = box.querySelector<HTMLElement>('.xc-panel')!;
+    const list = box.querySelector<HTMLElement>('[data-xlist]')!;
+    const note = box.querySelector<HTMLElement>('[data-xcar-note]')!;
+    const sum = box.querySelector<HTMLElement>('[data-xsum]')!;
+    const byKey = new Map<string, Svc>();
+    data.forEach((c) => c.sections.forEach((s) => s.services.forEach((x) => byKey.set(x.k, x))));
+
+    let car: Car | null = null;
+    let active = data[0].id;
+    const secOf = new Map<string, number>();   /* открытый раздел в каждом направлении */
+    const sel = new Set<string>();
+
+    const cls = () => (car && car.cls !== PREMIUM ? Number(car.cls) : 0);
+    /* цена услуги для класса; без машины — 1-й заполненный столбец со словом «от» */
+    const price = (x: Svc): { v: number | null; from: boolean } => {
+      if (car?.cls === PREMIUM) return { v: null, from: false };
+      const c = cls();
+      if (c) return { v: x.p[c - 1] ?? null, from: false };
+      const v = x.p.find((p) => p != null) ?? null;
+      return { v, from: true };
+    };
+
+    const render = () => {
+      const cat = data.find((c) => c.id === active)!;
+      /* разделы — чипами, на экране один раздел: все подряд тянулись на несколько экранов */
+      const si = Math.min(secOf.get(cat.id) ?? 0, cat.sections.length - 1);
+      const picked = (sec: { services: Svc[] }) => sec.services.filter((x) => sel.has(x.k)).length;
+      const chipsHtml = cat.sections.length > 1
+        ? `<div class="xc-chips" role="tablist">${cat.sections.map((sec, i) => `<button type="button" class="xc-chip${i === si ? ' is-on' : ''}" data-sec="${i}">${typo(sec.title)}${picked(sec) ? ` <b>${picked(sec)}</b>` : ''}</button>`).join('')}</div>`
+        : '';
+      list.innerHTML = chipsHtml + [cat.sections[si]].map((s) => `
+        <div class="xc-sec">
+          <ul>${s.services.map((x) => {
+            const pr = price(x);
+            const txt = car?.cls === PREMIUM ? 'после осмотра' : pr.v == null ? 'по запросу' : `${pr.from ? 'от ' : ''}${rub(pr.v)}`;
+            return `<li><label class="xc-row${sel.has(x.k) ? ' is-on' : ''}">
+              <input type="checkbox" value="${x.k}"${sel.has(x.k) ? ' checked' : ''} />
+              <span class="xc-box" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="m5 10.5 3.2 3L15 7"/></svg></span>
+              <span class="xc-name">${typo(x.n)}${x.d ? `<small>${x.d}</small>` : ''}</span>
+              <span class="xc-price">${txt}</span>
+            </label></li>`;
+          }).join('')}</ul>
+        </div>`).join('');
+    };
+
+    const updateSum = () => {
+      tabs.forEach((t) => {
+        const c = data.find((x) => x.id === t.dataset.tab)!;
+        const n = c.sections.reduce((m, s) => m + s.services.filter((x) => sel.has(x.k)).length, 0);
+        const b = t.querySelector<HTMLElement>('[data-count]')!;
+        b.textContent = n ? String(n) : String(c.sections.reduce((m, s) => m + s.services.length, 0));
+        b.classList.toggle('is-picked', n > 0);
+      });
+      sum.hidden = sel.size === 0;
+      if (!sel.size) return;
+      let total = 0;
+      let unknown = false;
+      sel.forEach((k) => { const v = price(byKey.get(k)!).v; if (v == null) unknown = true; else total += v; });
+      const n = sel.size;
+      const word = n % 10 === 1 && n % 100 !== 11 ? 'услуга' : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 'услуги' : 'услуг';
+      sum.querySelector('[data-xsum-count]')!.textContent = `${n} ${word}`;
+      sum.querySelector('[data-xsum-total]')!.textContent =
+        car?.cls === PREMIUM ? 'цена после осмотра' : `${!cls() || unknown ? 'от ' : ''}${rub(total)}`;
+    };
+
+    list.addEventListener('click', (e) => {
+      const chip = (e.target as HTMLElement).closest<HTMLElement>('[data-sec]');
+      if (!chip) return;
+      secOf.set(active, Number(chip.dataset.sec));
+      render();
+    });
+
+    list.addEventListener('change', (e) => {
+      const input = e.target as HTMLInputElement;
+      if (input.type !== 'checkbox') return;
+      input.checked ? sel.add(input.value) : sel.delete(input.value);
+      input.closest('.xc-row')?.classList.toggle('is-on', input.checked);
+      const cat = data.find((c) => c.id === active)!;
+      list.querySelectorAll<HTMLElement>('[data-sec]').forEach((b) => {
+        const n = cat.sections[Number(b.dataset.sec)].services.filter((x) => sel.has(x.k)).length;
+        b.querySelector('b')?.remove();
+        if (n) b.insertAdjacentHTML('beforeend', ` <b>${n}</b>`);
+      });
+      updateSum();
+    });
+
+    const select = (t: HTMLButtonElement, focus = false) => {
+      active = t.dataset.tab!;
+      tabs.forEach((x) => { const on = x === t; x.setAttribute('aria-selected', String(on)); x.tabIndex = on ? 0 : -1; });
+      panel.dataset.first = t === tabs[0] ? '1' : '0';
+      if (focus) t.focus();
+      t.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+      render();
+    };
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => select(t));
+      t.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        e.preventDefault();
+        select(tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length], true);
+      });
+    });
+
+    /* Машина — то же поле, что на сайте (CarCombo): класс из справочника */
+    const comboBox = box.querySelector<HTMLElement>('[data-car-combo]');
+    let cars: unknown = null;
+    if (comboBox) {
+      const combo = carCombo(comboBox, {
+        cars: () => cars,
+        car: () => car,
+        onPick: (c: Car) => {
+          car = c;
+          combo.sync();
+          note.textContent = c.cls === PREMIUM ? 'Премиум-класс — цену назовём после осмотра.' : `Цены для ${c.cls}-го класса.`;
+          render();
+          updateSum();
+        },
+        missText: (q: string) => `«${q}» нет в списке — покажем цены «от», класс уточнит менеджер`,
+        onMiss: () => { car = null; note.textContent = 'Машины нет в списке — цены «от», класс уточнит менеджер.'; render(); updateSum(); },
+      });
+      loadCars().then((index: unknown) => { cars = index; combo.ready(); }).catch(() => {});
+    }
+
+    /* Заявка: состав расчёта уходит в форму строкой услуги (событие lead:service) */
+    sum.querySelector('[data-xsum-go]')!.addEventListener('click', () => {
+      const carText = car?.model ? `${car.brand} ${car.model}, ${classText(car.cls)}` : car ? classText(car.cls) : 'машина не выбрана';
+      const names = [...sel].map((k) => byKey.get(k)!.n).join(', ');
+      const total = sum.querySelector('[data-xsum-total]')!.textContent;
+      document.dispatchEvent(new CustomEvent('lead:service', { detail: `${carText}: ${names} — ${total}` }));
+    });
+
+    render();
+    updateSum();
   }
 </script>
 
 <style>
   /* ---- Локальные токены эксперимента. Перенос на сайт — в :root global.css ---- */
-  .x, .x-float {
+  :global(html) {
     --x-font-display: 'Oswald Variable', 'Arial Narrow', sans-serif;
+    --x-display-weight: 500;
+    --x-display-case: uppercase;
+    --x-display-track: -0.01em;
+    --x-display-lh: 0.95;
+    --x-display-scale: 1;
+    --x-display-vars: normal;
+  }
+  /* Варианты шрифта заголовков: размер подравнен по ширине, чтобы строки не прыгали */
+  :global(html[data-xfont='flex']) { --x-font-display: 'Roboto Flex Variable', sans-serif; --x-display-weight: 800; --x-display-vars: 'wdth' 25, 'opsz' 144; --x-display-scale: 1.04; --x-display-track: 0; }
+  :global(html[data-xfont='unbounded']) { --x-font-display: 'Unbounded Variable', sans-serif; --x-display-weight: 600; --x-display-scale: 0.6; --x-display-track: -0.02em; --x-display-lh: 1.05; }
+  :global(html[data-xfont='inter']) { --x-font-display: 'Inter Tight Variable', sans-serif; --x-display-weight: 800; --x-display-case: none; --x-display-scale: 0.86; --x-display-track: -0.045em; --x-display-lh: 0.98; }
+  :global(html[data-xfont='geologica']) { --x-font-display: 'Geologica Variable', sans-serif; --x-display-weight: 700; --x-display-case: none; --x-display-scale: 0.82; --x-display-track: -0.04em; --x-display-lh: 1; }
+  :global(html[data-xfont='dela']) { --x-font-display: 'Dela Gothic One', sans-serif; --x-display-weight: 400; --x-display-scale: 0.66; --x-display-track: -0.01em; --x-display-lh: 1.05; }
+
+  .x, .x-bg, .xfont {
     --x-ink: #010205;
-    --x-blue: #3b6cff;                 /* свечение — цвет световых линий на кадрах */
-    --x-blue-2: #7a5cff;
-    --x-dim: rgba(255, 255, 255, 0.38); /* второй тон заголовка на тёмном */
-    --x-dim-ink: rgba(1, 2, 5, 0.34);   /* второй тон на светлом */
+    --x-blue: #3b6cff;
+    --x-violet: #7a5cff;
     --x-line: rgba(255, 255, 255, 0.12);
-    --x-glass: rgba(255, 255, 255, 0.10);
-    --x-glass-line: rgba(255, 255, 255, 0.18);
+    --x-glass: rgba(255, 255, 255, 0.14);
     --x-panel: #f2f3f5;
   }
-  .x { background: var(--x-ink); color: var(--color-white); overflow-x: clip; }
+  .x { position: relative; color: var(--color-white); overflow-x: clip; }
+  :global(body:has(.x)) { background: var(--x-ink); }
+  /* блоки рабочей главной — без своего фона: под ними общий слой свечений */
+  .x :global(.section--dark) { background: transparent; }
 
-  /* ---- Узкий капс: заголовки и кнопки ---- */
+  /* ---- Заголовки: шрифт на выбор, капс — только здесь ---- */
   .x-display {
     font-family: var(--x-font-display);
-    font-weight: 500;
-    text-transform: uppercase;
-    line-height: 0.92;
-    letter-spacing: -0.01em;
-  }
-  .x-display > span { display: block; }
-  .x-dim { color: var(--x-dim); }
-
-  /* ---- Стекло ---- */
-  .x-glass {
-    background: var(--x-glass);
-    border: 1px solid var(--x-glass-line);
-    -webkit-backdrop-filter: blur(20px) saturate(140%);
-    backdrop-filter: blur(20px) saturate(140%);
+    font-weight: var(--x-display-weight);
+    font-variation-settings: var(--x-display-vars);
+    text-transform: var(--x-display-case);
+    letter-spacing: var(--x-display-track);
+    line-height: var(--x-display-lh);
   }
 
-  /* ---- Свечения и линии фона ---- */
-  .x-glow { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-  .x-glow i {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(90px);
-    opacity: 0.55;
+  /* заголовки блоков рабочей главной — тем же шрифтом заголовков */
+  .x :global(.section-title),
+  .x :global(.contacts-title),
+  .x :global(.faq-title),
+  .x :global(.lead-title) {
+    font-family: var(--x-font-display);
+    font-weight: var(--x-display-weight);
+    font-variation-settings: var(--x-display-vars);
+    text-transform: var(--x-display-case);
+    letter-spacing: var(--x-display-track);
+    line-height: var(--x-display-lh);
+    font-size: calc(clamp(2.4rem, 5vw, 5.2rem) * var(--x-display-scale));
   }
-  .x-glow i:nth-child(1) { width: 46vw; height: 46vw; left: -12vw; top: 10%; background: var(--x-blue); opacity: 0.35; }
-  .x-glow i:nth-child(2) { width: 38vw; height: 38vw; right: -10vw; top: -8%; background: var(--x-blue-2); opacity: 0.3; }
-  .x-glow i:nth-child(3) { width: 60vw; height: 24vw; left: 20vw; bottom: -14vw; background: var(--x-blue); opacity: 0.25; }
-  .x-glow--side i:nth-child(1) { top: 30%; left: auto; right: -20vw; }
-  .x-glow--side i:nth-child(2) { top: auto; bottom: 0; right: auto; left: -16vw; }
+  .x :global(.lead-title),
+  .x :global(.faq-title) { font-size: calc(clamp(2rem, 3.6vw, 3.6rem) * var(--x-display-scale)); }
 
-  /* ---- Кнопка: капс + стрелка в капсуле ---- */
+  /* ---- Свечения: один fixed-слой за всей страницей ---- */
+  .x-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; background: var(--x-ink); }
+  .x-bg i { position: absolute; border-radius: 50%; filter: blur(110px); }
+  .x-bg i:nth-child(1) { width: 55vmax; height: 55vmax; left: -22vmax; top: 20%; background: var(--x-blue); opacity: 0.28; }
+  .x-bg i:nth-child(2) { width: 46vmax; height: 46vmax; right: -18vmax; top: -12vmax; background: var(--x-violet); opacity: 0.26; }
+  .x-bg i:nth-child(3) { width: 50vmax; height: 34vmax; right: -10vmax; bottom: -16vmax; background: var(--x-violet); opacity: 0.3; }
+  .x-bg i:nth-child(4) { width: 30vmax; height: 30vmax; left: 30%; bottom: 30%; background: var(--x-blue); opacity: 0.12; }
+
+  /* ---- Кнопки: скруглённые, без капса и стрелок, текст по центру ---- */
   .xbtn {
     display: inline-flex;
     align-items: center;
-    gap: var(--sp-16);
+    justify-content: center;
     height: 56px;
-    padding: 0 6px 0 var(--sp-28);
+    padding: 0 var(--sp-32);
+    border: 0;
     border-radius: var(--r-full);
-    font-family: var(--x-font-display);
-    font-size: 1.0625rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font: inherit;
+    font-size: var(--text-body-lg);
     white-space: nowrap;
+    cursor: pointer;
     transition: background-color var(--t-hover-out) var(--ease-out), transform 0.2s var(--ease-out);
   }
   .xbtn:active { transform: scale(0.98); }
-  .xbtn-cap {
-    display: grid;
-    place-items: center;
-    width: 64px;
-    height: 44px;
-    border-radius: var(--r-full);
-    transition: width 0.3s var(--ease-out-expo);
-  }
-  .xbtn:hover .xbtn-cap { width: 76px; }
-  .xbtn-cap svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
   .xbtn--light { background: var(--color-white); color: var(--x-ink); }
-  .xbtn--light .xbtn-cap { background: var(--x-ink); color: var(--color-white); }
-  .xbtn--dark { background: var(--x-ink); color: var(--color-white); }
-  .xbtn--dark .xbtn-cap { background: var(--color-white); color: var(--x-ink); }
+  .xbtn--light:hover { background: #e6e8ec; transition-duration: var(--t-hover-in); }
   .xbtn--glass {
-    padding-right: var(--sp-28);
     color: var(--color-white);
     background: var(--x-glass);
-    border: 1px solid var(--x-glass-line);
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
   }
-  .xbtn--glass:hover { background: rgba(255, 255, 255, 0.16); }
+  .xbtn--glass:hover { background: rgba(255, 255, 255, 0.22); transition-duration: var(--t-hover-in); }
 
-  /* ================= Первый экран: ролик во весь экран ================= */
+  /* ================= Первый экран ================= */
   .xh {
     position: relative;
     isolation: isolate;
@@ -336,73 +549,46 @@ const cats = [...categories].sort((a, b) => (ORDER.indexOf(a.id) + 99) % 99 - (O
     padding-top: calc(var(--header-h) + var(--sp-16));
     padding-bottom: clamp(32px, 4vw, 56px);
   }
-  .xh-side { grid-area: side; display: grid; gap: var(--gap-group); justify-items: end; }
-  .xh-chips {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: var(--sp-8);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .xh-chips li {
-    color: var(--color-white);
-    padding: 10px 18px;
-    border-radius: var(--r-full);
-    font-size: var(--text-caption);
-    font-weight: var(--w-medium);
-  }
-  .xh-copy { grid-area: copy; display: grid; gap: var(--gap-group); justify-items: start; }
-  .xh-h1 {
-    font-size: var(--text-body);
-    font-weight: var(--w-medium);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.78);
-  }
-  .xh-display { font-size: clamp(2.8rem, 6.4vw, 7rem); margin-bottom: var(--sp-8); }
+  .xh-copy { grid-area: copy; display: grid; gap: var(--gap-block); justify-items: start; }
+  .xh-title { font-size: calc(clamp(3rem, 7.4vw, 8rem) * var(--x-display-scale)); max-width: 11ch; }
   .xh-actions { display: flex; flex-wrap: wrap; gap: var(--sp-12); }
-  .xh-note {
-    max-width: 30ch;
-    font-size: var(--text-caption);
-    line-height: 1.45;
-    color: rgba(255, 255, 255, 0.78);
-    text-align: right;
+  .xh-side { grid-area: side; display: grid; gap: var(--gap-group); justify-items: end; }
+  /* Пилюли-факты: крупнее, стекло без обводки */
+  .xh-chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-8); margin: 0; padding: 0; list-style: none; }
+  .xh-chips li {
+    padding: 14px 24px;
+    border-radius: var(--r-full);
+    background: var(--x-glass);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    backdrop-filter: blur(24px) saturate(140%);
+    font-size: var(--text-body-lg);
+    color: var(--color-white);
   }
+  .xh-note { max-width: 30ch; font-size: var(--text-caption); line-height: 1.45; color: rgba(255, 255, 255, 0.8); text-align: right; }
 
   /* ================= Секции ================= */
-  .xs { position: relative; isolation: isolate; padding-block: calc(var(--section-gap) * 1.2); }
-  .xs > .container { position: relative; z-index: 1; }
-  .xs-title { font-size: clamp(2.4rem, 5vw, 5.2rem); margin-bottom: var(--gap-block); }
+  .xs { position: relative; padding-block: calc(var(--section-gap) * 1.2); }
+  .xs-title { font-size: calc(clamp(2.4rem, 5vw, 5.2rem) * var(--x-display-scale)); max-width: 18ch; margin-bottom: var(--gap-block); }
+  .xs-lead { max-width: var(--measure-lead); margin: calc(var(--gap-block) * -0.6) 0 var(--gap-block); font-size: var(--text-lead); line-height: 1.45; color: rgba(255, 255, 255, 0.85); }
 
-  /* ---- Направления: по две в ряд, вширь — фото слева на всю высоту, текст справа
-     (03.11.2026: в сетке 3×2 у коротких карточек выходили дыры). Пары подобраны по длине
-     списка, высота в ряду общая; фото тянется на неё, остаток — над ценой ---- */
+  /* ---- Направления: по две вширь, фото до краёв карточки ---- */
   .xd { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-16); }
   .xd-card {
     position: relative;
     display: grid;
     grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-    gap: var(--sp-8);
-    padding: 10px;
+    overflow: hidden;
     border-radius: var(--r-tile);
     background: var(--x-panel);
     color: var(--x-ink);
   }
-  .xd-media { position: relative; min-height: 100%; border-radius: var(--r-panel); overflow: hidden; background: #11131b; }
+  .xd-media { position: relative; min-height: 100%; background: #11131b; }
   .xd-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s var(--ease-out-expo); }
   .xd-card:hover .xd-media img { transform: scale(1.04); }
-  .xd-body { display: flex; flex-direction: column; gap: var(--gap-group); padding: var(--sp-20) 18px 18px; }
-  .xd-lead { font-size: var(--text-body); line-height: 1.5; color: rgba(1, 2, 5, 0.66); }
-  .xd-title {
-    font-family: var(--x-font-display);
-    font-weight: 500;
-    text-transform: uppercase;
-    font-size: clamp(1.8rem, 2.4vw, 2.6rem);
-    line-height: 0.95;
-  }
-  .xd-title a::after { content: ''; position: absolute; inset: 0; border-radius: inherit; }   /* вся карточка — ссылка */
+  .xd-body { display: flex; flex-direction: column; gap: var(--gap-group); padding: var(--sp-28) var(--sp-24) var(--sp-24); }
+  .xd-title { font-size: calc(clamp(1.8rem, 2.4vw, 2.6rem) * var(--x-display-scale)); }
+  .xd-title a::after { content: ''; position: absolute; inset: 0; }   /* вся карточка — ссылка */
+  .xd-lead { font-size: var(--text-body); line-height: 1.5; }
   .xd-list { position: relative; z-index: 1; margin: 0; padding: 0; list-style: none; }
   .xd-list a {
     display: flex;
@@ -414,76 +600,246 @@ const cats = [...categories].sort((a, b) => (ORDER.indexOf(a.id) + 99) % 99 - (O
     transition: color var(--t-hover-out) var(--ease-out);
   }
   .xd-list a:hover { color: #2b4fd8; transition-duration: var(--t-hover-in); }
-  .xd-price { flex: none; color: rgba(1, 2, 5, 0.55); font-variant-numeric: tabular-nums; }
-  .xd-from { margin-top: auto; padding-top: var(--sp-4); font-family: var(--x-font-display); font-weight: 500; font-size: 2rem; line-height: 1; white-space: nowrap; }
-  .xd-from small { font-size: 0.5em; color: var(--x-dim-ink); text-transform: uppercase; }
-  @media (max-width: 1100px) { .xd { grid-template-columns: minmax(0, 1fr); } }
+  .xd-price { flex: none; font-variant-numeric: tabular-nums; }
 
-  /* ---- Лента карточек ---- */
-  .xr {
+  /* ---- Калькулятор: вкладки-папки над белой панелью ---- */
+  .xc-tabs {
     display: flex;
-    align-items: flex-start;   /* карточки по содержимому, без растяжки до самой высокой */
-    gap: var(--sp-16);
+    gap: 4px;
     overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: var(--gutter);
-    padding: 0 var(--gutter) var(--sp-8);
     scrollbar-width: none;
-    outline: 0;
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
   }
-  .xr::-webkit-scrollbar { display: none; }
-  .xr-card {
+  .xc-tabs::-webkit-scrollbar { display: none; }
+  .xc-tab {
     flex: none;
-    width: clamp(260px, 26vw, 360px);
-    scroll-snap-align: start;
-    padding: 10px 10px var(--sp-20);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-12);
+    height: 60px;
+    padding: 0 var(--sp-16) 0 var(--sp-20);
+    border: 0;
+    border-radius: 20px 20px 0 0;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+    font: inherit;
+    font-size: var(--text-body);
+    cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .xc-tab:hover { background: rgba(255, 255, 255, 0.14); transition-duration: var(--t-hover-in); }
+  .xc-tab[aria-selected='true'] { background: var(--x-panel); color: var(--x-ink); }
+  /* «ушки» папки: вогнутые скругления у основания активной вкладки */
+  .xc-tab[aria-selected='true']::before,
+  .xc-tab[aria-selected='true']::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle at var(--cx) 0, transparent 19.5px, var(--x-panel) 20px);
+  }
+  .xc-tab[aria-selected='true']::before { left: -20px; --cx: 0; }
+  .xc-tab[aria-selected='true']::after { right: -20px; --cx: 100%; }
+  .xc-tab:first-child[aria-selected='true']::before { display: none; }
+  .xc-count {
+    display: grid;
+    place-items: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: var(--r-full);
+    border: 1px solid currentColor;
+    font-size: var(--text-caption);
+    font-weight: var(--w-medium);
+    opacity: 0.7;
+  }
+  .xc-tab[aria-selected='true'] .xc-count { opacity: 1; }
+  /* выбранные услуги в направлении — залитый счётчик */
+  .xc-count.is-picked { background: #2b4fd8; border-color: #2b4fd8; color: var(--color-white); opacity: 1; }
+
+  .xc-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr);
+    gap: var(--sp-40);
+    padding: clamp(20px, 2.6vw, 40px);
     border-radius: var(--r-tile);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.04));
-    border: 1px solid var(--x-line);
-    transition: background-color var(--t-hover-out) var(--ease-out), border-color var(--t-hover-out) var(--ease-out);
+    background: var(--x-panel);
+    color: var(--x-ink);
   }
-  .xr-card:hover { border-color: rgba(122, 150, 255, 0.5); }
-  .xr-photo { position: relative; aspect-ratio: 4 / 3.4; border-radius: 24px; overflow: hidden; background: #11131b; }
-  .xr-photo img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s var(--ease-out-expo); }
-  .xr-card:hover .xr-photo img { transform: scale(1.04); }
-  .xr-cat { position: absolute; top: 12px; left: 12px; padding: 7px 12px; border-radius: var(--r-full); font-size: 0.8125rem; color: var(--color-white); }
-  .xr-meta { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--sp-12); padding: var(--sp-16) 10px 0; }
-  .xr-title { font-size: var(--text-lead); line-height: 1.25; letter-spacing: var(--track-lead); }
-  .xr-price { font-family: var(--x-font-display); font-weight: 500; font-size: 1.5rem; white-space: nowrap; }
+  .xc-panel[data-first='1'] { border-top-left-radius: 0; }
+  .xc-car { display: grid; gap: var(--gap-inner); align-content: start; position: sticky; top: calc(var(--header-h) + var(--sp-16)); }
+  .xc-car-label { font-size: var(--text-caption); font-weight: var(--w-medium); letter-spacing: 0.06em; text-transform: uppercase; }
+  .xc-car-field :global(.combo) { --combo-field: var(--color-white); --combo-field-hover: #fafafa; max-width: none; }
+  .xc-car-note { font-size: var(--text-body); line-height: 1.45; }
+  .xc-list { display: grid; gap: var(--sp-24); }
+  .xc-list :global(.xc-chips) { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
+  .xc-list :global(.xc-chip) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 44px;
+    padding: 0 var(--sp-20);
+    border: 0;
+    border-radius: var(--r-full);
+    background: var(--color-white);
+    color: var(--x-ink);
+    font: inherit;
+    font-size: var(--text-body);
+    cursor: pointer;
+  }
+  .xc-list :global(.xc-chip:hover) { background: #e6e8ec; }
+  .xc-list :global(.xc-chip.is-on) { background: var(--x-ink); color: var(--color-white); }
+  .xc-list :global(.xc-chip b) { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--r-full); background: #2b4fd8; color: var(--color-white); font-size: 0.75rem; font-weight: var(--w-medium); }
+  .xc-sec-title { margin-bottom: var(--sp-8); font-size: var(--text-caption); font-weight: var(--w-medium); letter-spacing: 0.06em; text-transform: uppercase; }
+  .xc-list :global(ul) { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+  .xc-list :global(.xc-row) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--sp-16);
+    padding: 14px var(--sp-16);
+    border-radius: var(--r-input);
+    background: var(--color-white);
+    cursor: pointer;
+    transition: background-color var(--t-hover-out) var(--ease-out);
+  }
+  .xc-list :global(.xc-row:hover) { background: #e9ebef; transition-duration: var(--t-hover-in); }
+  .xc-list :global(.xc-row input) { position: absolute; opacity: 0; pointer-events: none; }
+  .xc-list :global(.xc-box) {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    border: 1.5px solid rgba(1, 2, 5, 0.3);
+  }
+  .xc-list :global(.xc-box svg) { width: 16px; height: 16px; fill: none; stroke: transparent; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .xc-list :global(.xc-row.is-on) { background: #e3e8ff; }
+  .xc-list :global(.xc-row.is-on .xc-box) { background: #2b4fd8; border-color: #2b4fd8; }
+  .xc-list :global(.xc-row.is-on .xc-box svg) { stroke: var(--color-white); }
+  .xc-list :global(.xc-row input:focus-visible + .xc-box) { outline: 2px solid #2b4fd8; outline-offset: 2px; }
+  .xc-list :global(.xc-name) { font-size: var(--text-body); line-height: 1.35; }
+  .xc-list :global(.xc-name small) { display: block; margin-top: 2px; font-size: var(--text-caption); }
+  .xc-list :global(.xc-price) { font-size: var(--text-body); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-  /* ---- Всплывающая кнопка ---- */
-  .x-float {
+  /* Итог — капсула, прилипает к низу экрана, пока калькулятор на виду */
+  .xc-sum {
+    position: sticky;
+    bottom: calc(var(--sp-16) + env(safe-area-inset-bottom));
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-16);
+    margin-top: var(--sp-16);
+    padding: 8px 8px 8px var(--sp-24);
+    border-radius: var(--r-full);
+    background: rgba(20, 22, 30, 0.72);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    backdrop-filter: blur(24px) saturate(140%);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
+  }
+  .xc-sum[hidden] { display: none; }
+  .xc-sum-text { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-12); font-size: var(--text-body); }
+  .xc-sum-text b { font-family: var(--x-font-display); font-weight: var(--x-display-weight); font-variation-settings: var(--x-display-vars); font-size: 1.6rem; }
+  .xc-lead { margin-top: var(--sp-64); }
+
+  /* ---- Гарантии с иконками ---- */
+  .xg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-16); margin: 0; padding: 0; list-style: none; }
+  .xg-item {
+    display: grid;
+    align-content: start;
+    gap: var(--gap-group);
+    padding: var(--sp-28) var(--sp-24);
+    border-radius: var(--r-tile);
+    background: rgba(255, 255, 255, 0.06);
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+  }
+  .xg-icon {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(59, 108, 255, 0.9), rgba(122, 92, 255, 0.9));
+    box-shadow: 0 10px 30px rgba(59, 108, 255, 0.35);
+  }
+  .xg-icon svg { width: 28px; height: 28px; fill: none; stroke: var(--color-white); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .xg-title { margin-top: var(--sp-8); font-size: var(--text-subhead); letter-spacing: var(--track-lead); line-height: 1.2; }
+  .xg-text { font-size: var(--text-body); line-height: 1.55; }
+
+  /* ---- Переключатель шрифта ---- */
+  .xfont {
     position: fixed;
-    left: 50%;
-    bottom: calc(var(--sp-20) + env(safe-area-inset-bottom));
-    z-index: 40;
-    translate: -50% 140%;
-    opacity: 0;
-    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.2);
-    transition: translate 0.5s var(--ease-out-expo), opacity 0.3s var(--ease-out);
+    right: var(--gutter);
+    top: calc(var(--header-h) + var(--sp-8));
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    max-width: calc(100vw - 24px);
+    overflow-x: auto;
+    padding: 6px;
+    border-radius: var(--r-full);
+    background: rgba(20, 22, 30, 0.8);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    scrollbar-width: none;
   }
-  .x-float.is-on { translate: -50% 0; opacity: 1; }
+  .xfont-label { padding: 0 10px; font-size: var(--text-caption); color: rgba(255, 255, 255, 0.7); }
+  .xfont button {
+    flex: none;
+    height: 36px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: var(--r-full);
+    background: transparent;
+    color: var(--color-white);
+    font: inherit;
+    font-size: var(--text-caption);
+    cursor: pointer;
+  }
+  .xfont button:hover { background: rgba(255, 255, 255, 0.1); }
+  .xfont button.is-on { background: var(--color-white); color: var(--x-ink); }
 
-  /* ================= Телефон ================= */
+  /* ================= Планшет и телефон ================= */
+  @media (max-width: 1100px) {
+    .xd { grid-template-columns: minmax(0, 1fr); }
+    .xg { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .xc-panel { grid-template-columns: minmax(0, 1fr); gap: var(--sp-24); }
+    .xc-car { position: static; }
+  }
   @media (max-width: 860px) {
     .xh { min-height: 100lvh; border-radius: 0 0 var(--r-tile) var(--r-tile); }
     .xh-media { object-position: 50% 30%; }
     .xh-scrim { background: linear-gradient(to bottom, rgba(1, 2, 5, 0.5) 0%, rgba(1, 2, 5, 0) 20%), linear-gradient(to top, rgba(1, 2, 5, 0.95) 0%, rgba(1, 2, 5, 0.7) 40%, rgba(1, 2, 5, 0) 70%); }
-    .xh-in { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto; grid-template-areas: 'side' '.' 'copy'; padding-bottom: calc(var(--sp-24) + (100lvh - 100svh)); }
+    .xh-in { grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr auto auto; grid-template-areas: '.' 'side' 'copy'; padding-bottom: calc(var(--sp-24) + (100lvh - 100svh)); }
     .xh-side { justify-items: start; }
     .xh-chips { justify-content: flex-start; }
-    .xh-chips li { padding: 8px 14px; font-size: 0.8125rem; }
-    .xh-display { font-size: 13vw; }
-    .xh-actions { width: 100%; }
-    .xh-actions .xbtn--light { width: 100%; justify-content: space-between; }
-    .xh-actions .xbtn--glass { display: none; }
+    .xh-chips li { padding: 12px 20px; font-size: var(--text-body); }
     .xh-note { display: none; }
+    .xh-title { font-size: calc(14vw * var(--x-display-scale)); }
+    .xh-copy { gap: var(--sp-24); width: 100%; }
+    .xh-actions { width: 100%; }
+    .xh-actions .xbtn--light { width: 100%; }
+    .xh-actions .xbtn--glass { display: none; }
 
-    .xs-title { font-size: 11.5vw; }
+    .xs-title { font-size: calc(11.5vw * var(--x-display-scale)); }
     .xd-card { grid-template-columns: minmax(0, 1fr); }
     .xd-media { min-height: 0; aspect-ratio: 16 / 10; }
-    .xd-body { padding: var(--sp-16) 10px 10px; }
-    .xr-card { width: 78vw; }
+    .xd-body { padding: var(--sp-20) var(--sp-20) var(--sp-16); }
+    .xc-tab { height: 52px; }
+    .xc-panel { padding: var(--sp-16); }
+    .xc-list :global(.xc-row) { padding: 12px; gap: var(--sp-12); }
+    .xc-sum { padding-left: var(--sp-16); }
+    .xc-sum .xbtn { padding: 0 var(--sp-20); height: 48px; font-size: var(--text-body); }
+    .xg { grid-template-columns: minmax(0, 1fr); }
+    .xfont { left: 12px; right: 12px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .xh-video { display: none; }
