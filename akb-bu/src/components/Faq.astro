@@ -28,7 +28,9 @@ const { title, items = [] } = Astro.props;
   .faq {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-    gap: var(--sp-24) var(--sp-80);
+    /* по вертикали (телефон: заголовок над списком) — --gap-block, как у всех секций;
+       было 24 — вопросы липли к заголовку (03.11.2026) */
+    gap: var(--gap-block) var(--sp-80);
     align-items: start;
   }
   /* Заголовок — по Porsche: крупно, обычный вес (вес 800 Яндекса снят 19.10.2026) */

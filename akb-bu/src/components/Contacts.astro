@@ -77,7 +77,8 @@ const routeHref = `https://yandex.ru/maps/?rtext=~${lat}%2C${lon}&rtt=auto`;
 </script>
 
 <style>
-  .contacts { display: grid; gap: var(--sp-40); }
+  /* заголовок ↔ содержимое — --gap-block, как у всех секций (03.11.2026: на телефоне было 32) */
+  .contacts { display: grid; gap: var(--gap-block); }
   .contacts-title {
     font-size: var(--text-heading-xl);
     max-width: var(--measure-head);
@@ -142,7 +143,6 @@ const routeHref = `https://yandex.ru/maps/?rtext=~${lat}%2C${lon}&rtt=auto`;
 
   @media (max-width: 860px) {
     .contacts-grid { grid-template-columns: minmax(0, 1fr); gap: var(--sp-24); }
-    .contacts { gap: var(--sp-32); }
     .contacts-col { gap: var(--sp-4); }
   }
   /* Телефон: основная кнопка — во всю ширину */
