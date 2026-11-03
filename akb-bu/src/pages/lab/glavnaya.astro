@@ -14,7 +14,8 @@ import Header from '../../components/Header.astro';
 import SiteFooter from '../../components/SiteFooter.astro';
 import content from '../../data/content.json';
 import { categories, rub } from '../../lib/catalog.js';
-import { directionSlug, sectionSlug } from '../../lib/pages.js';
+import { siteCategories } from '../../lib/sections.js';
+import { directionSlug, sectionSlug, pageDirections, pageServices } from '../../lib/pages.js';
 import { asset, url } from '../../lib/paths.js';
 import { typo } from '../../lib/typo.js';
 
@@ -33,6 +34,30 @@ const cards = categories.flatMap((c) =>
     href: pageOf(sectionSlug(s.id), `${calc}?cat=${c.id}&sheet=${s.id}`),
   })),
 );
+
+/* Описание направления — лид его страницы (pages.json); у направления из одной страницы — лид той страницы */
+const leadOf = (catId) => {
+  const d = pageDirections.find((x) => x.cat.id === catId);
+  if (!d) return '';
+  if (d.lead) return d.lead;
+  const page = d.page && pageServices.find((x) => (x.slug ?? x.page) === d.page);
+  return page?.lead ?? '';
+};
+
+/* Строки карточки: разделы направления; у направления из одного раздела (химчистка, PDR) —
+   услуги этого раздела, иначе карточка одной высоты с соседями стояла бы пустой */
+const firstPrice = (svc, labels) => {
+  for (const l of labels) { const c = svc.prices[l]; if (c) return c.value ?? c.min ?? null; }
+  return null;
+};
+const rowsOf = (c) => {
+  if (c.items.length > 1)
+    return c.items.map((s) => ({ title: s.title, from: s.from, href: pageOf(sectionSlug(s.id), `${calc}?cat=${c.id}&sheet=${s.id}`) }));
+  const sec = siteCategories.find((x) => x.id === c.id)?.sections[0];
+  if (!sec) return [];
+  const href = pageOf(sectionSlug(sec.id) ?? directionSlug(c.id), `${calc}?cat=${c.id}&sheet=${sec.id}`);
+  return sec.services.slice(0, 4).map((x) => ({ title: x.service.name, from: firstPrice(x.service, x.sheet.classLabels), href }));
+};
 
 const chips = ['С 2014 года', '3 поста в Москве', 'Климат-камера для плёнки и керамики'];
 ---
@@ -82,7 +107,7 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
       <div class="container">
         <h2 class="x-display xs-title">
           <span>Шесть направлений.</span>
-          <span class="x-dim">Одна планка качества.</span>
+          <span>Одна планка качества.</span>
         </h2>
 
         <div class="xd">
@@ -95,12 +120,13 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
               )}
               <div class="xd-body">
                 <h3 class="xd-title">{c.title}</h3>
+                {leadOf(c.id) && <p class="xd-lead">{typo(leadOf(c.id))}</p>}
                 <ul class="xd-list">
-                  {c.items.map((s) => (
+                  {rowsOf(c).map((r) => (
                     <li>
-                      <a href={pageOf(sectionSlug(s.id), `${calc}?cat=${c.id}&sheet=${s.id}`)}>
-                        <span>{s.title}</span>
-                        <span class="xd-price">от {rub(s.from)}</span>
+                      <a href={r.href}>
+                        <span>{typo(r.title)}</span>
+                        {r.from != null && <span class="xd-price">от {rub(r.from)}</span>}
                       </a>
                     </li>
                   ))}
@@ -124,7 +150,7 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
       <div class="container">
         <h2 class="x-display xs-title">
           <span>С чего начинают</span>
-          <span class="x-dim">наши клиенты</span>
+          <span>наши клиенты</span>
         </h2>
       </div>
       <div class="xr" tabindex="0" aria-label="Популярные услуги">
@@ -342,21 +368,25 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
   .xs > .container { position: relative; z-index: 1; }
   .xs-title { font-size: clamp(2.4rem, 5vw, 5.2rem); margin-bottom: var(--gap-block); }
 
-  /* ---- Направления: карточки по содержимому, колонками (правило дизайн-системы) ---- */
-  .xd { columns: 3; column-gap: var(--sp-16); }
+  /* ---- Направления: на ПК — ровная сетка, карточки одной высоты (03.11.2026, прямая просьба;
+     исключение из правила «плашки по содержимому», как плитки направлений на главной).
+     Низ карточки — цена и кнопка — прижат к низу, у всех на одной линии ---- */
+  .xd { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--sp-16); }   /* 1fr — все ряды одной высоты */
   .xd-card {
-    break-inside: avoid;
-    margin-bottom: var(--sp-16);
-    display: grid;
+    display: flex;
+    flex-direction: column;
     padding: 10px;
     border-radius: var(--r-tile);
     background: var(--x-panel);
     color: var(--x-ink);
   }
-  .xd-media { position: relative; display: block; aspect-ratio: 16 / 10; border-radius: var(--r-panel); overflow: hidden; background: #11131b; }
-  .xd-media img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s var(--ease-out-expo); }
+  /* Фото забирает остаток высоты: карточки одного размера, а у короткого списка внизу нет дыры —
+     фото просто выше. Минимум — чтобы у самой длинной карточки фото не схлопнулось */
+  .xd-media { position: relative; display: block; flex: 1 1 auto; min-height: 200px; border-radius: var(--r-panel); overflow: hidden; background: #11131b; }
+  .xd-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s var(--ease-out-expo); }
   .xd-card:hover .xd-media img { transform: scale(1.04); }
-  .xd-body { display: grid; gap: var(--gap-group); padding: var(--sp-20) 14px 14px; }
+  .xd-body { flex: none; display: flex; flex-direction: column; gap: var(--gap-group); padding: var(--sp-20) 14px 14px; }
+  .xd-lead { font-size: var(--text-body); line-height: 1.5; color: rgba(1, 2, 5, 0.66); }
   .xd-title {
     font-family: var(--x-font-display);
     font-weight: 500;
@@ -379,8 +409,8 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
   .xd-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-12); padding-top: var(--sp-4); }
   .xd-from { font-family: var(--x-font-display); font-weight: 500; font-size: 2rem; line-height: 1; white-space: nowrap; }
   .xd-from small { font-size: 0.5em; color: var(--x-dim-ink); text-transform: uppercase; }
-  @media (max-width: 1100px) { .xd { columns: 2; } }
-  @media (max-width: 680px) { .xd { columns: 1; } }
+  @media (max-width: 1100px) { .xd { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 680px) { .xd { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; } }   /* телефон: по содержимому */
 
   /* ---- Лента карточек ---- */
   .xr {
@@ -444,6 +474,7 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
 
     .xs-title { font-size: 11.5vw; }
     .xd-foot .xbtn { width: 100%; justify-content: space-between; }
+    .xd-media { flex: none; min-height: 0; aspect-ratio: 16 / 10; }
     .xr-card { width: 78vw; }
   }
   @media (prefers-reduced-motion: reduce) {
