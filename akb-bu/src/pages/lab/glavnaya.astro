@@ -59,7 +59,18 @@ const rowsOf = (c) => {
   return sec.services.slice(0, 4).map((x) => ({ title: x.service.name, from: firstPrice(x.service, x.sheet.classLabels), href }));
 };
 
-const chips = ['С 2014 года', '3 поста в Москве', 'Климат-камера для плёнки и керамики'];
+/* Факты на первом экране — только проверяемые, из content.json (03.11.2026: «с 2014 года»,
+   «3 поста» сняты — к нам не относится) */
+const { contacts } = content;
+const chips = [
+  contacts.hours.replace(/^./, (ch) => ch.toUpperCase()),
+  contacts.address.replace(/^Москва,\s*/, ''),
+];   /* «цена по классу» — не плашкой: она уже подписью внизу справа */
+
+/* Направления парами по длине списка: в ряду две карточки, высота у пары общая и почти не
+   расходится — дыр нет (03.11.2026). Порядок пар — от ходового к редкому */
+const ORDER = ['uhod', 'plenki', 'pokrytiya', 'himchistka', 'polirovka', 'pdr'];
+const cats = [...categories].sort((a, b) => (ORDER.indexOf(a.id) + 99) % 99 - (ORDER.indexOf(b.id) + 99) % 99);
 ---
 
 <Layout title={`Главная — эксперимент | ${brand.name}`} noindex>
@@ -111,15 +122,17 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
         </h2>
 
         <div class="xd">
-          {categories.map((c, i) => (
+          {cats.map((c) => (
             <article class="xd-card">
               {c.media && (
-                <a class="xd-media" href={pageOf(directionSlug(c.id), `${calc}?cat=${c.id}`)} tabindex="-1" aria-hidden="true">
+                <div class="xd-media" aria-hidden="true">
                   <img src={asset(c.media)} alt="" loading="lazy" decoding="async" />
-                </a>
+                </div>
               )}
               <div class="xd-body">
-                <h3 class="xd-title">{c.title}</h3>
+                <!-- кнопки на карточке сняты (03.11.2026): ведёт вся карточка — ссылка заголовка
+                     растянута на неё, строки разделов поверх ведут каждая на свой раздел -->
+                <h3 class="xd-title"><a href={pageOf(directionSlug(c.id), `${calc}?cat=${c.id}`)}>{c.title}</a></h3>
                 {leadOf(c.id) && <p class="xd-lead">{typo(leadOf(c.id))}</p>}
                 <ul class="xd-list">
                   {rowsOf(c).map((r) => (
@@ -131,13 +144,7 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
                     </li>
                   ))}
                 </ul>
-                <div class="xd-foot">
-                  <p class="xd-from"><small>от</small> {rub(c.from)}</p>
-                  <a class="xbtn xbtn--dark" href={pageOf(directionSlug(c.id), `${calc}?cat=${c.id}`)}>
-                    <span>Услуги и цены</span>
-                    <span class="xbtn-cap" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 10h12m-5-5 5 5-5 5" /></svg></span>
-                  </a>
-                </div>
+                <p class="xd-from"><small>от</small> {rub(c.from)}</p>
               </div>
             </article>
           ))}
@@ -339,6 +346,7 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
     list-style: none;
   }
   .xh-chips li {
+    color: var(--color-white);
     padding: 10px 18px;
     border-radius: var(--r-full);
     font-size: var(--text-caption);
@@ -368,24 +376,24 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
   .xs > .container { position: relative; z-index: 1; }
   .xs-title { font-size: clamp(2.4rem, 5vw, 5.2rem); margin-bottom: var(--gap-block); }
 
-  /* ---- Направления: на ПК — ровная сетка, карточки одной высоты (03.11.2026, прямая просьба;
-     исключение из правила «плашки по содержимому», как плитки направлений на главной).
-     Низ карточки — цена и кнопка — прижат к низу, у всех на одной линии ---- */
-  .xd { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: var(--sp-16); }   /* 1fr — все ряды одной высоты */
+  /* ---- Направления: по две в ряд, вширь — фото слева на всю высоту, текст справа
+     (03.11.2026: в сетке 3×2 у коротких карточек выходили дыры). Пары подобраны по длине
+     списка, высота в ряду общая; фото тянется на неё, остаток — над ценой ---- */
+  .xd { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-16); }
   .xd-card {
-    display: flex;
-    flex-direction: column;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: var(--sp-8);
     padding: 10px;
     border-radius: var(--r-tile);
     background: var(--x-panel);
     color: var(--x-ink);
   }
-  /* Фото забирает остаток высоты: карточки одного размера, а у короткого списка внизу нет дыры —
-     фото просто выше. Минимум — чтобы у самой длинной карточки фото не схлопнулось */
-  .xd-media { position: relative; display: block; flex: 1 1 auto; min-height: 200px; border-radius: var(--r-panel); overflow: hidden; background: #11131b; }
+  .xd-media { position: relative; min-height: 100%; border-radius: var(--r-panel); overflow: hidden; background: #11131b; }
   .xd-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s var(--ease-out-expo); }
   .xd-card:hover .xd-media img { transform: scale(1.04); }
-  .xd-body { flex: none; display: flex; flex-direction: column; gap: var(--gap-group); padding: var(--sp-20) 14px 14px; }
+  .xd-body { display: flex; flex-direction: column; gap: var(--gap-group); padding: var(--sp-20) 18px 18px; }
   .xd-lead { font-size: var(--text-body); line-height: 1.5; color: rgba(1, 2, 5, 0.66); }
   .xd-title {
     font-family: var(--x-font-display);
@@ -394,7 +402,8 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
     font-size: clamp(1.8rem, 2.4vw, 2.6rem);
     line-height: 0.95;
   }
-  .xd-list { margin: 0; padding: 0; list-style: none; }
+  .xd-title a::after { content: ''; position: absolute; inset: 0; border-radius: inherit; }   /* вся карточка — ссылка */
+  .xd-list { position: relative; z-index: 1; margin: 0; padding: 0; list-style: none; }
   .xd-list a {
     display: flex;
     justify-content: space-between;
@@ -406,11 +415,9 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
   }
   .xd-list a:hover { color: #2b4fd8; transition-duration: var(--t-hover-in); }
   .xd-price { flex: none; color: rgba(1, 2, 5, 0.55); font-variant-numeric: tabular-nums; }
-  .xd-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-12); padding-top: var(--sp-4); }
-  .xd-from { font-family: var(--x-font-display); font-weight: 500; font-size: 2rem; line-height: 1; white-space: nowrap; }
+  .xd-from { margin-top: auto; padding-top: var(--sp-4); font-family: var(--x-font-display); font-weight: 500; font-size: 2rem; line-height: 1; white-space: nowrap; }
   .xd-from small { font-size: 0.5em; color: var(--x-dim-ink); text-transform: uppercase; }
-  @media (max-width: 1100px) { .xd { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (max-width: 680px) { .xd { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; } }   /* телефон: по содержимому */
+  @media (max-width: 1100px) { .xd { grid-template-columns: minmax(0, 1fr); } }
 
   /* ---- Лента карточек ---- */
   .xr {
@@ -465,7 +472,6 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
     .xh-in { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'chips' '.' 'copy'; padding-bottom: calc(var(--sp-24) + (100lvh - 100svh)); }
     .xh-chips { justify-self: start; justify-content: flex-start; }
     .xh-chips li { padding: 8px 14px; font-size: 0.8125rem; }
-    .xh-chips li:nth-child(3) { display: none; }
     .xh-display { font-size: 13vw; }
     .xh-actions { width: 100%; }
     .xh-actions .xbtn--light { width: 100%; justify-content: space-between; }
@@ -473,8 +479,9 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
     .xh-note { display: none; }
 
     .xs-title { font-size: 11.5vw; }
-    .xd-foot .xbtn { width: 100%; justify-content: space-between; }
-    .xd-media { flex: none; min-height: 0; aspect-ratio: 16 / 10; }
+    .xd-card { grid-template-columns: minmax(0, 1fr); }
+    .xd-media { min-height: 0; aspect-ratio: 16 / 10; }
+    .xd-body { padding: var(--sp-16) 10px 10px; }
     .xr-card { width: 78vw; }
   }
   @media (prefers-reduced-motion: reduce) {
