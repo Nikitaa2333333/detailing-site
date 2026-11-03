@@ -4,19 +4,13 @@
    Итерации и отвергнутое — docs/journal.md за 03.11.2026. Сейчас:
    — первый экран — ролик во весь экран, заголовок «Премиальный детейлинг в Москве» крупным
      шрифтом заголовков, пилюли-факты (часы, адрес), две скруглённые кнопки без капса;
-   — шрифт заголовков — на выбор переключателем (Oswald, Roboto Flex узкий, Unbounded,
-     Inter Tight, Geologica, Dela Gothic One), капс — только в заголовках;
+   — шрифт заголовков — Oswald (выбран 03.11.2026 из шести), капс — только в заголовках;
    — палитра: чёрный, синие и сиреневые свечения одним слоем за всей страницей;
    — направления — карточки вширь парами, фото до краёв;
    — калькулятор: машина → вкладки-папки направлений → услуги галочками → итог → заявка;
    — дальше блоки рабочей главной: сезонные пакеты, гарантии с иконками, контакты, вопросы.
    Цены — только из прайса (lib/sections.js, catalog.js), руками не вписаны. */
 import '@fontsource-variable/oswald';
-import '@fontsource-variable/roboto-flex/full.css';
-import '@fontsource-variable/unbounded';
-import '@fontsource-variable/inter-tight';
-import '@fontsource-variable/geologica';
-import '@fontsource/dela-gothic-one';
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Section from '../../components/Section.astro';
@@ -94,14 +88,6 @@ const icons = [
   '<path d="M4 8h3l2-3h6l2 3h3v11H4V8Z"/><circle cx="12" cy="13" r="3.5"/>',
 ];
 
-const fonts = [
-  { id: 'oswald', name: 'Oswald' },
-  { id: 'flex', name: 'Roboto Flex' },
-  { id: 'unbounded', name: 'Unbounded' },
-  { id: 'inter', name: 'Inter Tight' },
-  { id: 'geologica', name: 'Geologica' },
-  { id: 'dela', name: 'Dela Gothic' },
-];
 ---
 
 <Layout title={`Главная — эксперимент | ${brand.name}`} noindex>
@@ -238,20 +224,9 @@ const fonts = [
 
   <SiteFooter brand={brand} contacts={false} />
 
-  <!-- Переключатель шрифта заголовков — только для выбора, на сайт не поедет -->
-  <div class="xfont" role="group" aria-label="Шрифт заголовков">
-    <span class="xfont-label">Шрифт</span>
-    {fonts.map((f) => <button type="button" data-font={f.id}>{f.name}</button>)}
-  </div>
 </Layout>
 
 <script is:inline>
-  /* шрифт — до отрисовки, без мигания: ?font=… или прошлый выбор */
-  (function () {
-    var f = new URLSearchParams(location.search).get('font');
-    try { f = f || localStorage.getItem('x-font'); } catch (e) {}
-    document.documentElement.dataset.xfont = f || 'oswald';
-  })();
   (function () {
     var v = document.querySelector('.xh-video');
     if (v && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -267,17 +242,6 @@ const fonts = [
   import { loadCars } from '../../lib/car-index-client.js';
   import { carCombo, classText, PREMIUM } from '../../lib/car-combo.js';
   import { typo } from '../../lib/typo.js';
-
-  /* ---- Переключатель шрифта ---- */
-  const root = document.documentElement;
-  const fontBtns = [...document.querySelectorAll<HTMLButtonElement>('.xfont [data-font]')];
-  const markFont = () => fontBtns.forEach((b) => b.classList.toggle('is-on', b.dataset.font === root.dataset.xfont));
-  fontBtns.forEach((b) => b.addEventListener('click', () => {
-    root.dataset.xfont = b.dataset.font!;
-    try { localStorage.setItem('x-font', b.dataset.font!); } catch {}
-    markFont();
-  }));
-  markFont();
 
   /* ---- Калькулятор ---- */
   type Svc = { k: string; n: string; d: string; p: (number | null)[] };
@@ -437,14 +401,8 @@ const fonts = [
     --x-display-scale: 1;
     --x-display-vars: normal;
   }
-  /* Варианты шрифта заголовков: размер подравнен по ширине, чтобы строки не прыгали */
-  :global(html[data-xfont='flex']) { --x-font-display: 'Roboto Flex Variable', sans-serif; --x-display-weight: 800; --x-display-vars: 'wdth' 25, 'opsz' 144; --x-display-scale: 1.04; --x-display-track: 0; }
-  :global(html[data-xfont='unbounded']) { --x-font-display: 'Unbounded Variable', sans-serif; --x-display-weight: 600; --x-display-scale: 0.6; --x-display-track: -0.02em; --x-display-lh: 1.05; }
-  :global(html[data-xfont='inter']) { --x-font-display: 'Inter Tight Variable', sans-serif; --x-display-weight: 800; --x-display-case: none; --x-display-scale: 0.86; --x-display-track: -0.045em; --x-display-lh: 0.98; }
-  :global(html[data-xfont='geologica']) { --x-font-display: 'Geologica Variable', sans-serif; --x-display-weight: 700; --x-display-case: none; --x-display-scale: 0.82; --x-display-track: -0.04em; --x-display-lh: 1; }
-  :global(html[data-xfont='dela']) { --x-font-display: 'Dela Gothic One', sans-serif; --x-display-weight: 400; --x-display-scale: 0.66; --x-display-track: -0.01em; --x-display-lh: 1.05; }
 
-  .x, .x-bg, .xfont {
+  .x, .x-bg {
     --x-ink: #010205;
     --x-blue: #3b6cff;
     --x-violet: #7a5cff;
@@ -599,7 +557,7 @@ const fonts = [
     font-size: var(--text-body);
     transition: color var(--t-hover-out) var(--ease-out);
   }
-  .xd-list a:hover { color: #2b4fd8; transition-duration: var(--t-hover-in); }
+  .xd-list a:hover { color: rgba(1, 2, 5, 0.6); transition-duration: var(--t-hover-in); }
   .xd-price { flex: none; font-variant-numeric: tabular-nums; }
 
   /* ---- Калькулятор: вкладки-папки над белой панелью ---- */
@@ -657,8 +615,9 @@ const fonts = [
     opacity: 0.7;
   }
   .xc-tab[aria-selected='true'] .xc-count { opacity: 1; }
+  .xc-tab:not([aria-selected='true']) .xc-count.is-picked { background: var(--color-white); border-color: var(--color-white); color: var(--x-ink); }
   /* выбранные услуги в направлении — залитый счётчик */
-  .xc-count.is-picked { background: #2b4fd8; border-color: #2b4fd8; color: var(--color-white); opacity: 1; }
+  .xc-count.is-picked { background: var(--x-ink); border-color: var(--x-ink); color: var(--color-white); opacity: 1; }
 
   .xc-panel {
     display: grid;
@@ -692,7 +651,8 @@ const fonts = [
   }
   .xc-list :global(.xc-chip:hover) { background: #e6e8ec; }
   .xc-list :global(.xc-chip.is-on) { background: var(--x-ink); color: var(--color-white); }
-  .xc-list :global(.xc-chip b) { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--r-full); background: #2b4fd8; color: var(--color-white); font-size: 0.75rem; font-weight: var(--w-medium); }
+  .xc-list :global(.xc-chip.is-on b) { background: var(--color-white); color: var(--x-ink); }
+  .xc-list :global(.xc-chip b) { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--r-full); background: var(--x-ink); color: var(--color-white); font-size: 0.75rem; font-weight: var(--w-medium); }
   .xc-sec-title { margin-bottom: var(--sp-8); font-size: var(--text-caption); font-weight: var(--w-medium); letter-spacing: 0.06em; text-transform: uppercase; }
   .xc-list :global(ul) { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
   .xc-list :global(.xc-row) {
@@ -717,10 +677,10 @@ const fonts = [
     border: 1.5px solid rgba(1, 2, 5, 0.3);
   }
   .xc-list :global(.xc-box svg) { width: 16px; height: 16px; fill: none; stroke: transparent; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-  .xc-list :global(.xc-row.is-on) { background: #e3e8ff; }
-  .xc-list :global(.xc-row.is-on .xc-box) { background: #2b4fd8; border-color: #2b4fd8; }
+  .xc-list :global(.xc-row.is-on) { background: #dcdfe4; }
+  .xc-list :global(.xc-row.is-on .xc-box) { background: var(--x-ink); border-color: var(--x-ink); }
   .xc-list :global(.xc-row.is-on .xc-box svg) { stroke: var(--color-white); }
-  .xc-list :global(.xc-row input:focus-visible + .xc-box) { outline: 2px solid #2b4fd8; outline-offset: 2px; }
+  .xc-list :global(.xc-row input:focus-visible + .xc-box) { outline: 2px solid var(--x-ink); outline-offset: 2px; }
   .xc-list :global(.xc-name) { font-size: var(--text-body); line-height: 1.35; }
   .xc-list :global(.xc-name small) { display: block; margin-top: 2px; font-size: var(--text-caption); }
   .xc-list :global(.xc-price) { font-size: var(--text-body); font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -765,47 +725,11 @@ const fonts = [
     width: 56px;
     height: 56px;
     border-radius: 18px;
-    background: linear-gradient(135deg, rgba(59, 108, 255, 0.9), rgba(122, 92, 255, 0.9));
-    box-shadow: 0 10px 30px rgba(59, 108, 255, 0.35);
+    background: var(--x-glass);   /* без синего: цветного акцента в интерфейсе нет */
   }
   .xg-icon svg { width: 28px; height: 28px; fill: none; stroke: var(--color-white); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
   .xg-title { margin-top: var(--sp-8); font-size: var(--text-subhead); letter-spacing: var(--track-lead); line-height: 1.2; }
   .xg-text { font-size: var(--text-body); line-height: 1.55; }
-
-  /* ---- Переключатель шрифта ---- */
-  .xfont {
-    position: fixed;
-    right: var(--gutter);
-    top: calc(var(--header-h) + var(--sp-8));
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    max-width: calc(100vw - 24px);
-    overflow-x: auto;
-    padding: 6px;
-    border-radius: var(--r-full);
-    background: rgba(20, 22, 30, 0.8);
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-    scrollbar-width: none;
-  }
-  .xfont-label { padding: 0 10px; font-size: var(--text-caption); color: rgba(255, 255, 255, 0.7); }
-  .xfont button {
-    flex: none;
-    height: 36px;
-    padding: 0 14px;
-    border: 0;
-    border-radius: var(--r-full);
-    background: transparent;
-    color: var(--color-white);
-    font: inherit;
-    font-size: var(--text-caption);
-    cursor: pointer;
-  }
-  .xfont button:hover { background: rgba(255, 255, 255, 0.1); }
-  .xfont button.is-on { background: var(--color-white); color: var(--x-ink); }
 
   /* ================= Планшет и телефон ================= */
   @media (max-width: 1100px) {
@@ -839,7 +763,6 @@ const fonts = [
     .xc-sum { padding-left: var(--sp-16); }
     .xc-sum .xbtn { padding: 0 var(--sp-20); height: 48px; font-size: var(--text-body); }
     .xg { grid-template-columns: minmax(0, 1fr); }
-    .xfont { left: 12px; right: 12px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .xh-video { display: none; }
