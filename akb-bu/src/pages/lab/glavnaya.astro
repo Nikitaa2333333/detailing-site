@@ -3,9 +3,8 @@
    Рабочая главная (pages/index.astro) не тронута — сравнить и перенести удачное.
    Что взято из референсов пользователя:
    — крупная узкая капс-типографика (Oswald) и двухтоновые позиционирующие заголовки;
-   — гигантское бледное слово за кадром, кадр перекрывает его низ (приём «CARZONE»);
    — палитра: глубокий чёрный, синие свечения, тонкие линии, стекло (финансовое приложение);
-   — вкладки-папки с числом внутри (отчёт об обслуживании);
+   (вкладки-папки и слово за кадром пробовали — сняты 03.11.2026: папки — в калькулятор);
    — капс-кнопка со стрелкой в белой капсуле и всплывающая «Записаться» (Rentra);
    — лента карточек без точек и круглых стрелок (Rentra, второй экран).
    Цены — из прайса (catalog.js), руками не вписаны. */
@@ -42,49 +41,42 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
   <Header overlay />
 
   <main class="x">
-    <!-- ============ Первый экран ============ -->
+    <!-- ============ Первый экран: ролик во весь экран ============ -->
+    <!-- 03.11.2026: слово за кадром и кадр-плашка на фоне сняты («плашка на плашке») —
+         первый экран и есть видео, текст и кнопки поверх него -->
     <section class="xh" data-bg="#010205">
-      <div class="x-glow" aria-hidden="true"><i></i><i></i><i></i></div>
-      <svg class="x-lines" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M-40 640 C 360 420, 820 760, 1480 380" />
-        <path d="M-40 700 C 420 500, 860 820, 1480 450" />
-        <path d="M-40 260 C 300 340, 900 120, 1480 220" />
-      </svg>
+      <img class="xh-media" src={asset(hero.poster)} alt="" fetchpriority="high" decoding="async" />
+      <video class="xh-media xh-video" muted loop playsinline preload="auto" poster={asset(hero.poster)} aria-hidden="true"
+        data-src={asset(hero.video)} data-src-small={asset(hero.videoSmall)}></video>
+      <div class="xh-scrim" aria-hidden="true"></div>
 
       <div class="container xh-in">
-        <p class="xh-ghost" aria-hidden="true">Детейлинг</p>
+        <ul class="xh-chips">
+          {chips.map((c) => <li class="x-glass">{typo(c)}</li>)}
+        </ul>
 
-        <div class="xh-card">
-          <img class="xh-media" src={asset(hero.poster)} alt="" fetchpriority="high" decoding="async" />
-          <video class="xh-media xh-video" muted loop playsinline preload="auto" poster={asset(hero.poster)} aria-hidden="true"
-            data-src={asset(hero.video)} data-src-small={asset(hero.videoSmall)}></video>
-          <div class="xh-scrim" aria-hidden="true"></div>
-
-          <ul class="xh-chips">
-            {chips.map((c) => <li class="x-glass">{typo(c)}</li>)}
-          </ul>
-
-          <div class="xh-copy">
-            <h1 class="xh-h1">Премиальный детейлинг в&nbsp;Москве</h1>
-            <p class="x-display xh-display">
-              <span>Для тех, кто</span>
-              <span class="x-dim">замечает детали</span>
-            </p>
-            <div class="xh-actions">
-              <a class="xbtn xbtn--light" href={calc}>
-                <span>Рассчитать стоимость</span>
-                <span class="xbtn-cap" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 10h12m-5-5 5 5-5 5" /></svg></span>
-              </a>
-              <a class="xbtn xbtn--glass" href="#napravleniya"><span>Выбрать услугу</span></a>
-            </div>
+        <div class="xh-copy">
+          <h1 class="xh-h1">Премиальный детейлинг в&nbsp;Москве</h1>
+          <p class="x-display xh-display">
+            <span>Для тех, кто</span>
+            <span class="x-dim">замечает детали</span>
+          </p>
+          <div class="xh-actions">
+            <a class="xbtn xbtn--light" href={calc}>
+              <span>Рассчитать стоимость</span>
+              <span class="xbtn-cap" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 10h12m-5-5 5 5-5 5" /></svg></span>
+            </a>
+            <a class="xbtn xbtn--glass" href="#napravleniya"><span>Выбрать услугу</span></a>
           </div>
-
-          <p class="xh-note">{typo('Стоимость — по классу автомобиля, точная цифра — после осмотра при вас.')}</p>
         </div>
+
+        <p class="xh-note">{typo('Стоимость — по классу автомобиля, точная цифра — после осмотра при вас.')}</p>
       </div>
     </section>
 
-    <!-- ============ Направления: вкладки-папки ============ -->
+    <!-- ============ Направления: все шесть открыты сразу ============ -->
+    <!-- 03.11.2026: вкладки-папки сняты с главной («сразу всё должно открываться»),
+         папки — потом в калькулятор. Карточки по содержимому, колонками -->
     <section class="xs" id="napravleniya">
       <div class="x-glow x-glow--side" aria-hidden="true"><i></i><i></i></div>
       <div class="container">
@@ -93,47 +85,35 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
           <span class="x-dim">Одна планка качества.</span>
         </h2>
 
-        <div class="xf" data-folders>
-          <div class="xf-tabs" role="tablist" aria-label="Направления">
-            {categories.map((c, i) => (
-              <button class="xf-tab" type="button" role="tab" id={`xf-tab-${c.id}`} aria-controls={`xf-panel-${c.id}`}
-                aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1}>
-                <span>{c.title}</span>
-                <b class="xf-count">{c.items.length}</b>
-              </button>
-            ))}
-          </div>
-
+        <div class="xd">
           {categories.map((c, i) => (
-            <div class="xf-panel" role="tabpanel" id={`xf-panel-${c.id}`} aria-labelledby={`xf-tab-${c.id}`} hidden={i !== 0}>
-              <div class="xf-body">
-                <p class="xf-kicker">Направление {String(i + 1).padStart(2, '0')} / {String(categories.length).padStart(2, '0')}</p>
-                <h3 class="xf-title">{c.title}</h3>
-                <ul class="xf-list">
+            <article class="xd-card">
+              {c.media && (
+                <a class="xd-media" href={pageOf(directionSlug(c.id), `${calc}?cat=${c.id}`)} tabindex="-1" aria-hidden="true">
+                  <img src={asset(c.media)} alt="" loading="lazy" decoding="async" />
+                </a>
+              )}
+              <div class="xd-body">
+                <h3 class="xd-title">{c.title}</h3>
+                <ul class="xd-list">
                   {c.items.map((s) => (
                     <li>
                       <a href={pageOf(sectionSlug(s.id), `${calc}?cat=${c.id}&sheet=${s.id}`)}>
                         <span>{s.title}</span>
-                        <span class="xf-price">от {rub(s.from)}</span>
+                        <span class="xd-price">от {rub(s.from)}</span>
                       </a>
                     </li>
                   ))}
                 </ul>
-                <div class="xf-foot">
-                  <p class="xf-from"><small>от</small> {rub(c.from)}</p>
+                <div class="xd-foot">
+                  <p class="xd-from"><small>от</small> {rub(c.from)}</p>
                   <a class="xbtn xbtn--dark" href={pageOf(directionSlug(c.id), `${calc}?cat=${c.id}`)}>
                     <span>Услуги и цены</span>
                     <span class="xbtn-cap" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M4 10h12m-5-5 5 5-5 5" /></svg></span>
                   </a>
                 </div>
               </div>
-              {c.media && (
-                <div class="xf-media">
-                  <img src={asset(c.media)} alt="" loading={i === 0 ? 'eager' : 'lazy'} decoding="async" />
-                  <span class="xf-tag x-glass">Цена для 1-го класса</span>
-                </div>
-              )}
-            </div>
+            </article>
           ))}
         </div>
       </div>
@@ -174,22 +154,6 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
 </Layout>
 
 <script is:inline>
-  /* Огромное слово — ровно во всю ширину колонки: кегль подгоняем замером, CSS-кегль — запасной */
-  (function () {
-    var g = document.querySelector('.xh-ghost');
-    if (!g) return;
-    var fit = function () {
-      g.style.fontSize = '100px';
-      var w = g.clientWidth, t = g.scrollWidth;   /* ширина самого блока, без полей контейнера */
-      var range = document.createRange(); range.selectNodeContents(g);
-      var tw = range.getBoundingClientRect().width || t;
-      var px = Math.min(100 * w / tw, 360);
-      g.style.fontSize = px + 'px';
-      g.parentElement.style.setProperty('--ghost', px + 'px');
-    };
-    (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(fit);
-    addEventListener('resize', fit);
-  })();
   (function () {
     var v = document.querySelector('.xh-video');
     if (v && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -202,31 +166,6 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
 </script>
 
 <script>
-  /* Вкладки-папки: клик и стрелки ← → */
-  const box = document.querySelector<HTMLElement>('[data-folders]');
-  if (box) {
-    const tabs = [...box.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
-    const select = (t: HTMLButtonElement, focus = false) => {
-      tabs.forEach((x) => {
-        const on = x === t;
-        x.setAttribute('aria-selected', String(on));
-        x.tabIndex = on ? 0 : -1;
-        document.getElementById(x.getAttribute('aria-controls')!)!.hidden = !on;
-      });
-      box.style.setProperty('--first', t === tabs[0] ? '1' : '0');
-      if (focus) t.focus();
-      t.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
-    };
-    tabs.forEach((t, i) => {
-      t.addEventListener('click', () => select(t));
-      t.addEventListener('keydown', (e) => {
-        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-        e.preventDefault();
-        select(tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length], true);
-      });
-    });
-  }
-
   /* «Записаться» всплывает, когда первый экран ушёл */
   const btn = document.querySelector<HTMLElement>('[data-float]');
   const hero = document.querySelector('.xh');
@@ -288,8 +227,6 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
   .x-glow i:nth-child(3) { width: 60vw; height: 24vw; left: 20vw; bottom: -14vw; background: var(--x-blue); opacity: 0.25; }
   .x-glow--side i:nth-child(1) { top: 30%; left: auto; right: -20vw; }
   .x-glow--side i:nth-child(2) { top: auto; bottom: 0; right: auto; left: -16vw; }
-  .x-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  .x-lines path { fill: none; stroke: var(--x-line); stroke-width: 1; vector-effect: non-scaling-stroke; }
 
   /* ---- Кнопка: капс + стрелка в капсуле ---- */
   .xbtn {
@@ -332,58 +269,45 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
   }
   .xbtn--glass:hover { background: rgba(255, 255, 255, 0.16); }
 
-  /* ================= Первый экран ================= */
+  /* ================= Первый экран: ролик во весь экран ================= */
   .xh {
     position: relative;
     isolation: isolate;
     min-height: 100svh;
-    padding: calc(var(--header-h) + var(--sp-8)) 0 var(--sp-24);
     display: flex;
-  }
-  .xh-in { position: relative; z-index: 1; display: flex; flex-direction: column; width: 100%; }
-  /* Огромное слово: градиентом от белого к синему и в ничто; кадр перекрывает его низ */
-  .xh-ghost {
-    font-family: var(--x-font-display);
-    font-weight: 600;
-    text-transform: uppercase;
-    text-align: center;
-    font-size: min(19vw, 300px);
-    line-height: 0.8;
-    letter-spacing: -0.005em;
-    white-space: nowrap;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(150, 175, 255, 0.55) 45%, rgba(90, 120, 255, 0.0) 78%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    user-select: none;
-  }
-  .xh-card {
-    position: relative;
-    flex: 1;
-    min-height: clamp(420px, 60svh, 680px);
-    margin-top: calc(var(--ghost, min(19vw, 300px)) * -0.16);   /* кадр перекрывает низ слова, буквы читаются */
-    border-radius: var(--r-tile);
     overflow: hidden;
-    background: #0b0d14;
-    box-shadow: 0 40px 120px rgba(40, 80, 255, 0.18), inset 0 0 0 1px var(--x-line);
+    border-radius: 0 0 var(--r-hero) var(--r-hero);
+    background: var(--x-ink);
   }
-  .xh-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 70% center; }
+  .xh-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 70% center; z-index: -2; }
   .xh-scrim {
     position: absolute;
     inset: 0;
+    z-index: -1;
     background:
-      linear-gradient(to top, rgba(1, 2, 5, 0.92) 0%, rgba(1, 2, 5, 0.55) 32%, rgba(1, 2, 5, 0) 62%),
-      linear-gradient(to right, rgba(1, 2, 5, 0.6) 0%, rgba(1, 2, 5, 0) 50%);
+      linear-gradient(to bottom, rgba(1, 2, 5, 0.55) 0%, rgba(1, 2, 5, 0) 22%),
+      linear-gradient(to top, rgba(1, 2, 5, 0.92) 0%, rgba(1, 2, 5, 0.5) 34%, rgba(1, 2, 5, 0) 62%),
+      linear-gradient(to right, rgba(1, 2, 5, 0.55) 0%, rgba(1, 2, 5, 0) 52%);
+  }
+  .xh-in {
+    position: relative;
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas: 'chips chips' '. .' 'copy note';
+    align-items: end;
+    gap: var(--sp-24);
+    padding-top: calc(var(--header-h) + var(--sp-16));
+    padding-bottom: clamp(32px, 4vw, 56px);
   }
   .xh-chips {
-    position: absolute;
-    top: var(--sp-24);
-    right: var(--sp-24);
+    grid-area: chips;
+    justify-self: end;
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: var(--sp-8);
-    max-width: 60%;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -394,31 +318,22 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
     font-size: var(--text-caption);
     font-weight: var(--w-medium);
   }
-  .xh-copy {
-    position: absolute;
-    left: clamp(24px, 3.2vw, 48px);
-    bottom: clamp(24px, 3.2vw, 48px);
-    display: grid;
-    gap: var(--gap-group);
-    justify-items: start;
-  }
+  .xh-copy { grid-area: copy; display: grid; gap: var(--gap-group); justify-items: start; }
   .xh-h1 {
     font-size: var(--text-body);
     font-weight: var(--w-medium);
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.72);
+    color: rgba(255, 255, 255, 0.78);
   }
-  .xh-display { font-size: clamp(2.6rem, 5.6vw, 6rem); margin-bottom: var(--sp-8); }
+  .xh-display { font-size: clamp(2.8rem, 6.4vw, 7rem); margin-bottom: var(--sp-8); }
   .xh-actions { display: flex; flex-wrap: wrap; gap: var(--sp-12); }
   .xh-note {
-    position: absolute;
-    right: clamp(24px, 3.2vw, 48px);
-    bottom: clamp(24px, 3.2vw, 48px);
+    grid-area: note;
     max-width: 30ch;
     font-size: var(--text-caption);
     line-height: 1.45;
-    color: rgba(255, 255, 255, 0.72);
+    color: rgba(255, 255, 255, 0.78);
     text-align: right;
   }
 
@@ -427,109 +342,45 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
   .xs > .container { position: relative; z-index: 1; }
   .xs-title { font-size: clamp(2.4rem, 5vw, 5.2rem); margin-bottom: var(--gap-block); }
 
-  /* ---- Вкладки-папки ---- */
-  .xf { --first: 1; }
-  .xf-tabs {
-    display: flex;
-    gap: 4px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    margin-inline: calc(var(--gutter) * -1);
-    padding-inline: var(--gutter);
-  }
-  .xf-tabs::-webkit-scrollbar { display: none; }
-  .xf-tab {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--sp-12);
-    height: 60px;
-    padding: 0 var(--sp-16) 0 var(--sp-20);
-    border: 0;
-    border-radius: 20px 20px 0 0;
-    background: rgba(255, 255, 255, 0.07);
-    color: rgba(255, 255, 255, 0.78);
-    font: inherit;
-    font-size: var(--text-body);
-    cursor: pointer;
-    position: relative;
-    transition: background-color var(--t-hover-out) var(--ease-out), color var(--t-hover-out) var(--ease-out);
-  }
-  .xf-tab:hover { background: rgba(255, 255, 255, 0.13); color: var(--color-white); }
-  .xf-tab[aria-selected='true'] { background: var(--x-panel); color: var(--x-ink); }
-  /* «ушки» папки: вогнутые скругления у основания активной вкладки */
-  .xf-tab[aria-selected='true']::before,
-  .xf-tab[aria-selected='true']::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    width: 20px;
-    height: 20px;
-    background: radial-gradient(circle at var(--cx) 0, transparent 19.5px, var(--x-panel) 20px);
-  }
-  .xf-tab[aria-selected='true']::before { left: -20px; --cx: 0; }
-  .xf-tab[aria-selected='true']::after { right: -20px; --cx: 100%; }
-  .xf-tab:first-child[aria-selected='true']::before { display: none; }
-  .xf-count {
+  /* ---- Направления: карточки по содержимому, колонками (правило дизайн-системы) ---- */
+  .xd { columns: 3; column-gap: var(--sp-16); }
+  .xd-card {
+    break-inside: avoid;
+    margin-bottom: var(--sp-16);
     display: grid;
-    place-items: center;
-    min-width: 28px;
-    height: 28px;
-    padding: 0 8px;
-    border-radius: var(--r-full);
-    border: 1px solid currentColor;
-    font-size: var(--text-caption);
-    font-weight: var(--w-medium);
-    opacity: 0.7;
-  }
-  .xf-tab[aria-selected='true'] .xf-count { background: var(--x-ink); border-color: var(--x-ink); color: var(--color-white); opacity: 1; }
-
-  .xf-panel {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-    gap: var(--sp-32);
-    padding: clamp(20px, 2.6vw, 40px);
+    padding: 10px;
     border-radius: var(--r-tile);
-    border-top-left-radius: calc(var(--r-tile) * (1 - var(--first)));
     background: var(--x-panel);
     color: var(--x-ink);
   }
-  .xf-panel[hidden] { display: none; }
-  .xf-body { display: flex; flex-direction: column; gap: var(--gap-group); min-width: 0; }
-  .xf-kicker { font-size: var(--text-caption); letter-spacing: 0.08em; text-transform: uppercase; color: var(--x-dim-ink); }
-  .xf-title {
+  .xd-media { position: relative; display: block; aspect-ratio: 16 / 10; border-radius: var(--r-panel); overflow: hidden; background: #11131b; }
+  .xd-media img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s var(--ease-out-expo); }
+  .xd-card:hover .xd-media img { transform: scale(1.04); }
+  .xd-body { display: grid; gap: var(--gap-group); padding: var(--sp-20) 14px 14px; }
+  .xd-title {
     font-family: var(--x-font-display);
     font-weight: 500;
     text-transform: uppercase;
-    font-size: clamp(2rem, 3.6vw, 3.8rem);
+    font-size: clamp(1.8rem, 2.4vw, 2.6rem);
     line-height: 0.95;
   }
-  .xf-list { margin: var(--sp-8) 0 0; padding: 0; list-style: none; }
-  .xf-list a {
+  .xd-list { margin: 0; padding: 0; list-style: none; }
+  .xd-list a {
     display: flex;
     justify-content: space-between;
     gap: var(--sp-16);
-    padding: 14px 0;
+    padding: 12px 0;
     border-top: 1px solid rgba(1, 2, 5, 0.1);
-    font-size: var(--text-body-lg);
+    font-size: var(--text-body);
     transition: color var(--t-hover-out) var(--ease-out);
   }
-  .xf-list a:hover { color: #2b4fd8; }
-  .xf-price { flex: none; color: rgba(1, 2, 5, 0.55); font-variant-numeric: tabular-nums; }
-  .xf-foot { margin-top: auto; padding-top: var(--sp-16); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-16); }
-  .xf-from { font-family: var(--x-font-display); font-weight: 500; font-size: clamp(2rem, 3vw, 3rem); line-height: 1; }
-  .xf-from small { font-size: 0.5em; color: var(--x-dim-ink); text-transform: uppercase; }
-  .xf-media { position: relative; border-radius: var(--r-panel); overflow: hidden; min-height: 360px; }
-  .xf-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .xf-tag {
-    position: absolute;
-    left: var(--sp-16);
-    bottom: var(--sp-16);
-    padding: 8px 14px;
-    border-radius: var(--r-full);
-    font-size: var(--text-caption);
-    color: var(--color-white);
-  }
+  .xd-list a:hover { color: #2b4fd8; transition-duration: var(--t-hover-in); }
+  .xd-price { flex: none; color: rgba(1, 2, 5, 0.55); font-variant-numeric: tabular-nums; }
+  .xd-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-12); padding-top: var(--sp-4); }
+  .xd-from { font-family: var(--x-font-display); font-weight: 500; font-size: 2rem; line-height: 1; white-space: nowrap; }
+  .xd-from small { font-size: 0.5em; color: var(--x-dim-ink); text-transform: uppercase; }
+  @media (max-width: 1100px) { .xd { columns: 2; } }
+  @media (max-width: 680px) { .xd { columns: 1; } }
 
   /* ---- Лента карточек ---- */
   .xr {
@@ -578,14 +429,13 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
 
   /* ================= Телефон ================= */
   @media (max-width: 860px) {
-    .xh { padding-top: calc(var(--header-h) + var(--sp-16)); }
-    .xh-card { min-height: 0; flex: 1; }
+    .xh { min-height: 100lvh; border-radius: 0 0 var(--r-tile) var(--r-tile); }
     .xh-media { object-position: 50% 30%; }
-    .xh-scrim { background: linear-gradient(to top, rgba(1, 2, 5, 0.95) 0%, rgba(1, 2, 5, 0.7) 42%, rgba(1, 2, 5, 0) 72%); }
-    .xh-chips { top: var(--sp-16); left: var(--sp-16); right: var(--sp-16); max-width: none; justify-content: flex-start; }
+    .xh-scrim { background: linear-gradient(to bottom, rgba(1, 2, 5, 0.5) 0%, rgba(1, 2, 5, 0) 20%), linear-gradient(to top, rgba(1, 2, 5, 0.95) 0%, rgba(1, 2, 5, 0.7) 40%, rgba(1, 2, 5, 0) 70%); }
+    .xh-in { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'chips' '.' 'copy'; padding-bottom: calc(var(--sp-24) + (100lvh - 100svh)); }
+    .xh-chips { justify-self: start; justify-content: flex-start; }
     .xh-chips li { padding: 8px 14px; font-size: 0.8125rem; }
     .xh-chips li:nth-child(3) { display: none; }
-    .xh-copy { left: var(--sp-20); right: var(--sp-20); bottom: var(--sp-20); }
     .xh-display { font-size: 13vw; }
     .xh-actions { width: 100%; }
     .xh-actions .xbtn--light { width: 100%; justify-content: space-between; }
@@ -593,10 +443,7 @@ const chips = ['С 2014 года', '3 поста в Москве', 'Климат
     .xh-note { display: none; }
 
     .xs-title { font-size: 11.5vw; }
-    .xf-panel { grid-template-columns: minmax(0, 1fr); }
-    .xf-media { order: -1; min-height: 0; aspect-ratio: 4 / 3; }
-    .xf-tab { height: 52px; }
-    .xf-foot .xbtn { width: 100%; justify-content: space-between; }
+    .xd-foot .xbtn { width: 100%; justify-content: space-between; }
     .xr-card { width: 78vw; }
   }
   @media (prefers-reduced-motion: reduce) {
