@@ -651,6 +651,22 @@ const icons = [
   .xg-title { margin-top: var(--sp-8); font-size: var(--text-subhead); letter-spacing: var(--track-lead); line-height: 1.2; }
   .xg-text { font-size: var(--text-body); line-height: 1.55; }
 
+  /* Сезонные пакеты на телефоне — без карусели и точек (03.11.2026, повторная просьба):
+     карточки одна под другой, почти до края экрана, как остальные модули */
+  @media (max-width: 699px) {
+    .x :global(.packs) {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--sp-12);
+      margin-inline: calc(8px - var(--gutter));
+      padding-inline: 0;
+      overflow: visible;
+      scroll-snap-type: none;
+    }
+    .x :global(.pack) { flex: none; }
+    .x :global(.packs-dots) { display: none !important; }
+  }
+
   /* ================= Планшет и телефон ================= */
   @media (max-width: 1100px) {
     .xd { grid-template-columns: minmax(0, 1fr); }
